@@ -190,14 +190,14 @@ export default function Dashboard() {
   const [entries, setEntries] = useState([{ merchantName: "", amount: "", walletAddress: "" }]);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [uploadStep, setUploadStep] = useState<"idle" | "loading" | "preview" | "submitting" | "success">("idle");
-  const [parsedRows, setParsedRows] = useState<{ name: string; amount: number; wallet: string }[]>([]);
+  const [parsedRows, setParsedRows] = useState<{ name: string; amount: number; wallet: string; ccy?: string }[]>([]);
   const [createdBatch, setCreatedBatch] = useState<any>(null);
   const [demoRows] = useState([
-    { name: "TechFlow Solutions", amount: 12500, wallet: "0x742d35Cc6634C0532925a3b844Bc9e7595FbD180" },
-    { name: "Nordic Supplies", amount: 8750, wallet: "0x8Ba1f109551bD432803012645aac136c9b5bBA72" },
-    { name: "GreenLeaf Organics", amount: 6200, wallet: "0x2946259E0334f33A064106302415aD3391BeD384" },
-    { name: "CloudScale Hosting", amount: 8300, wallet: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db" },
-    { name: "DataBridge Analytics", amount: 7800, wallet: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2" },
+    { name: "TechFlow Solutions", amount: 12500, wallet: "0x742d35Cc6634C0532925a3b844Bc9e7595FbD180", ccy: "EUR" },
+    { name: "Nordic Supplies", amount: 8750, wallet: "0x8Ba1f109551bD432803012645aac136c9b5bBA72", ccy: "EUR" },
+    { name: "GreenLeaf Organics", amount: 6200, wallet: "0x2946259E0334f33A064106302415aD3391BeD384", ccy: "USD" },
+    { name: "CloudScale Hosting", amount: 8300, wallet: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", ccy: "USD" },
+    { name: "DataBridge Analytics", amount: 7800, wallet: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", ccy: "AED" },
   ]);
   const [page, setPage] = useState<"dashboard" | "batches" | "merchants" | "audit" | "settings" | "reconciliation" | "alerts" | "revenue" | "accounts">("dashboard");
   const [auditFilter, setAuditFilter] = useState("all");
@@ -396,11 +396,19 @@ export default function Dashboard() {
       const nameIdx = header.findIndex(h => h.includes("merchant") || h.includes("name"));
       const amountIdx = header.findIndex(h => h.includes("amount") || h.includes("eur") || h.includes("usd") || h.includes("aud"));
       const walletIdx = header.findIndex(h => h.includes("wallet") || h.includes("address"));
-      if (nameIdx === -1 || amountIdx === -1 || walletIdx === -1) { setUploadErr("CSV needs columns: merchant/name, amount, wallet/address"); return; }
+      const ccyIdx = header.findIndex(h => h === "currency" || h === "ccy" || h.includes("currency"));
+      if (nameIdx === -1 || amountIdx === -1 || walletIdx === -1) { setUploadErr("CSV needs columns: merchant/name, amount, wallet/address (optional: currency)"); return; }
+      const badCcys = new Set<string>();
       const rows = lines.slice(1).map(line => {
         const cols = line.split(",").map(c => c.trim());
-        return { name: cols[nameIdx], amount: parseFloat(cols[amountIdx]), wallet: cols[walletIdx] };
+        let ccy: string | undefined = undefined;
+        if (ccyIdx !== -1 && cols[ccyIdx]) {
+          const c = cols[ccyIdx].toUpperCase();
+          if (SUPPORTED_CCYS.includes(c)) ccy = c; else badCcys.add(cols[ccyIdx]);
+        }
+        return { name: cols[nameIdx], amount: parseFloat(cols[amountIdx]), wallet: cols[walletIdx], ccy };
       }).filter(r => r.name && !isNaN(r.amount) && r.amount > 0 && r.wallet);
+      if (badCcys.size) { setUploadErr(`Unsupported currencies in CSV: ${[...badCcys].join(", ")}. Supported: ${SUPPORTED_CCYS.join(", ")}`); return; }
       if (!rows.length) { setUploadErr("No valid rows found in CSV"); return; }
       setParsedRows(rows);
       setUploadErr(null);
@@ -409,21 +417,26 @@ export default function Dashboard() {
     reader.readAsText(file);
   };
 
-  // Submit parsed rows to API
-  const submitBatch = async (rows: { name: string; amount: number; wallet: string }[]) => {
+  // Submit parsed rows — auto-splits into one batch per detected currency
+  const submitBatch = async (rows: { name: string; amount: number; wallet: string; ccy?: string }[]) => {
     setUploadStep("submitting");
     try {
-      const r = await fetch("/api/batches", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entries: rows.map(r => ({ merchantName: r.name, amount: r.amount.toString(), walletAddress: r.wallet })),
-          currency: batchCurrency, payoutTiming: batchTiming, scheduledDate: batchTiming === "scheduled" ? batchDate : null,
-          createdBy: currentUser?.email || "paystrax",
-        }),
-      });
-      if (!r.ok) { const e = await r.json(); throw new Error(e.message); }
-      const batch = await r.json();
-      setCreatedBatch(batch);
+      const groups = new Map<string, typeof rows>();
+      for (const r of rows) { const c = r.ccy || batchCurrency; if (!groups.has(c)) groups.set(c, []); groups.get(c)!.push(r); }
+      const created: any[] = [];
+      for (const [ccy, g] of groups) {
+        const r = await fetch("/api/batches", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entries: g.map(x => ({ merchantName: x.name, amount: x.amount.toString(), walletAddress: x.wallet })),
+            currency: ccy, payoutTiming: batchTiming, scheduledDate: batchTiming === "scheduled" ? batchDate : null,
+            createdBy: currentUser?.email || "paystrax",
+          }),
+        });
+        if (!r.ok) { const e = await r.json(); throw new Error(`${ccy}: ${e.message}`); }
+        created.push(await r.json());
+      }
+      setCreatedBatch(created.length === 1 ? created[0] : { multi: true, batches: created });
       setUploadStep("success");
       qc.invalidateQueries();
     } catch (e: any) {
@@ -525,7 +538,8 @@ export default function Dashboard() {
   });
 
   // Currency helpers
-  const CSYM: Record<string, string> = { EUR: "€", USD: "$", AUD: "A$" };
+  const CSYM: Record<string, string> = { EUR: "€", USD: "$", AUD: "A$", GBP: "£", CHF: "Fr ", SEK: "kr ", NOK: "kr ", DKK: "kr ", PLN: "zł ", AED: "AED " };
+const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", "AUD", "AED"];
 
   // Derived stats
   const totalVol = batches.reduce((s: number, b: any) => s + parseFloat(b.totalFiat || b.totalEur || 0), 0);
@@ -581,7 +595,7 @@ export default function Dashboard() {
 
   // CSV template download
   const downloadTemplate = () => {
-    const csv = "merchant_name,amount,wallet_address\nTechFlow Solutions,5000.00,0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18\nNordic Supplies,3200.50,0x8Ba1f109551bD432803012645Ac136ddd64DBA72\n";
+    const csv = "merchant_name,amount,currency,wallet_address\nTechFlow Solutions,5000.00,EUR,0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18\nNordic Supplies,3200.50,USD,0x8Ba1f109551bD432803012645Ac136ddd64DBA72\nDelta Pharma,1800.00,AED,0x5d3F2E7A91c04B7dE2586B2C21A00e614EdA4b3f\n";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "paystrax-batch-template.csv"; a.click();
@@ -1082,7 +1096,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {filtered.map((b: any) => {
-                      const sym = ({ EUR: "€", USD: "$", AUD: "A$" } as any)[b.currency] || "€";
+                      const sym = (CSYM as any)[b.currency] || "€";
                       return (
                         <tr key={b.id} className="cursor-pointer transition-colors"
                           style={{ borderTop: '1px solid var(--line)' }}
@@ -1570,7 +1584,7 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {a.kind === "payout_failed" && (<>
                         <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
-                          <span style={{ fontWeight: 600 }}>{a.merchant}</span> — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
+                          <span style={{ fontWeight: 600 }}>{a.merchant}</span> — {(CSYM as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
                           <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.batchRef}</span>
                         </p>
                         <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>
@@ -1891,7 +1905,7 @@ export default function Dashboard() {
                       background: batchCurrency === c ? 'var(--tint-blue)' : '#FFFFFF',
                       color: batchCurrency === c ? 'var(--blue)' : 'var(--text-3)',
                     }}>
-                    {{ EUR: "€", USD: "$", AUD: "A$" }[c]} {c}
+                    {(CSYM as any)[c]} {c}
                   </button>
                 ))}
               </div>
@@ -1923,7 +1937,7 @@ export default function Dashboard() {
 
           <div style={{ borderRadius: 12, padding: 12, marginBottom: 16, border: '1px solid var(--line)', background: 'var(--inset-2)' }}>
             <p style={{ fontSize: 11, fontWeight: 500, marginBottom: 8, color: 'var(--text-3)' }}>Required CSV columns:</p>
-            <p style={{ fontSize: 10, color: 'var(--text-4)', marginBottom: 8 }}>A 9 bps (0.09%) platform fee is deducted from the batch total before conversion to USDC.</p>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', marginBottom: 8 }}>A 9 bps (0.09%) platform fee is deducted from the batch total before conversion. Add an optional <code style={{ fontFamily: "'Geist Mono', ui-monospace, monospace" }}>currency</code> column and Fybrus auto-detects it, splitting the upload into one batch per currency.</p>
             <div className="flex gap-2">
               {["merchant_name", "amount", "wallet_address"].map(col => (
                 <code key={col} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'var(--tint-blue)', color: 'var(--blue)' }}>{col}</code>
@@ -1972,7 +1986,7 @@ export default function Dashboard() {
 
         {/* ── Step 3: Approval preview (also shown during submitting) ── */}
         {(uploadStep === "preview" || uploadStep === "submitting") && (() => {
-          const sym = ({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency] || "€";
+          const sym = (CSYM as any)[batchCurrency] || "€";
           const total = parsedRows.reduce((s, r) => s + r.amount, 0);
           const isDemo = parsedRows === demoRows;
           return (
@@ -1986,12 +2000,29 @@ export default function Dashboard() {
               </div>
 
               {/* Summary strip */}
+              {(() => {
+                const groups = new Map<string, { n: number; total: number }>();
+                parsedRows.forEach(r => { const c = r.ccy || batchCurrency; const g = groups.get(c) || { n: 0, total: 0 }; g.n++; g.total += r.amount; groups.set(c, g); });
+                if (groups.size <= 1) return null;
+                return (
+                  <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--tint-green)', border: '1px solid var(--green-line)' }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', marginBottom: 6 }}>Currencies auto-detected — {groups.size} batches will be created</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {[...groups.entries()].map(([c, g]) => (
+                        <span key={c} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: 'var(--surface)', border: '1px solid var(--green-line)', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
+                          {c} · {(CSYM as any)[c] || ""}{g.total.toLocaleString("en", { minimumFractionDigits: 2 })} <span style={{ color: 'var(--text-4)', fontWeight: 400 }}>({g.n})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="grid grid-cols-4 gap-3" style={{ marginBottom: 20 }}>
                 {[
                   { label: "Merchants", value: parsedRows.length.toString() },
-                  { label: "Currency", value: batchCurrency },
+                  { label: "Currency", value: new Set(parsedRows.map(r => r.ccy || batchCurrency)).size > 1 ? "Mixed (auto)" : (parsedRows[0]?.ccy || batchCurrency) },
                   { label: "Timing", value: batchTiming === "asap" ? "ASAP" : batchDate || "Scheduled" },
-                  { label: "Total", value: `${sym}${total.toLocaleString("en", { minimumFractionDigits: 2 })}` },
+                  { label: "Total", value: new Set(parsedRows.map(r => r.ccy || batchCurrency)).size > 1 ? `${parsedRows.length} rows` : `${sym}${total.toLocaleString("en", { minimumFractionDigits: 2 })}` },
                 ].map(s => (
                   <div key={s.label} style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
                     <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{s.label}</p>
@@ -2015,7 +2046,10 @@ export default function Dashboard() {
                       <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
                         <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>{i + 1}</td>
                         <td style={{ padding: '10px 12px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>{r.name}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{sym}{r.amount.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
+                          {(CSYM as any)[r.ccy || batchCurrency] || ""}{r.amount.toLocaleString("en", { minimumFractionDigits: 2 })}
+                          <span style={{ fontSize: 9, fontWeight: 600, marginLeft: 6, padding: '1px 6px', borderRadius: 999, background: 'var(--inset)', color: 'var(--text-3)' }}>{r.ccy || batchCurrency}</span>
+                        </td>
                         <td style={{ padding: '10px 12px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{r.wallet.slice(0, 8)}...{r.wallet.slice(-4)}</td>
                         <td style={{ padding: '10px 12px' }}>
                           <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: 'var(--tint-green)', color: 'var(--green)' }}>Valid</span>
@@ -2050,7 +2084,7 @@ export default function Dashboard() {
                     style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: uploadStep === "submitting" ? 'var(--text-2)' : 'var(--ink)', color: '#FFFFFF', cursor: uploadStep === "submitting" ? 'not-allowed' : 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
                     onMouseEnter={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = 'var(--cta-hover)'; }} onMouseLeave={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = 'var(--ink)'; }}>
                     {uploadStep === "submitting" && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {uploadStep === "submitting" ? "Creating Batch..." : "Approve & Create Batch"}
+                    {uploadStep === "submitting" ? "Creating…" : (new Set(parsedRows.map(r => r.ccy || batchCurrency)).size > 1 ? `Approve & Create ${new Set(parsedRows.map(r => r.ccy || batchCurrency)).size} Batches` : "Approve & Create Batch")}
                   </button>
                 </div>
               </div>
@@ -2059,7 +2093,36 @@ export default function Dashboard() {
         })()}
 
         {/* ── Step 4: Success ── */}
-        {uploadStep === "success" && createdBatch && (
+        {uploadStep === "success" && createdBatch?.multi && (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--tint-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--green)' }} />
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>{createdBatch.batches.length} Batches Created</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 18 }}>One batch per detected currency — each funds independently when its wire arrives.</p>
+            <div style={{ textAlign: 'left', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden', marginBottom: 18 }}>
+              {createdBatch.batches.map((b: any, i: number) => {
+                const acct = (accounts as any[]).find((a: any) => a.status !== 'closed' && a.currency === b.currency);
+                return (
+                  <div key={b.id} className="flex items-center justify-between gap-3" style={{ padding: '11px 14px', borderTop: i > 0 ? '1px solid var(--line)' : 'none' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{b.batchRef} <span style={{ fontWeight: 500, fontFamily: 'Geist, sans-serif', color: 'var(--text-3)' }}>· {b.merchantCount} merchants</span></p>
+                      <p style={{ fontSize: 10.5, color: 'var(--text-4)', marginTop: 2 }}>{acct ? `wire to ${acct.iban} (${acct.bic})` : `no ${b.currency} collection account yet — open one on the Accounts page`}</p>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{(CSYM as any)[b.currency] || ""}{parseFloat(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })} {b.currency}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-center gap-2">
+              <button onClick={() => { setShowUpload(false); setUploadStep("idle"); setParsedRows([]); setCreatedBatch(null); resetBatchOpts(); setPage("batches"); }}
+                style={{ padding: '10px 22px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>View batches</button>
+              <button onClick={() => { setShowUpload(false); setUploadStep("idle"); setParsedRows([]); setCreatedBatch(null); resetBatchOpts(); }}
+                style={{ padding: '10px 22px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'transparent', color: 'var(--text-2)', border: '1px solid var(--line-strong)', cursor: 'pointer' }}>Done</button>
+            </div>
+          </div>
+        )}
+        {uploadStep === "success" && createdBatch && !createdBatch.multi && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--tint-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--green)' }} />
@@ -2075,7 +2138,7 @@ export default function Dashboard() {
               <div style={{ padding: '12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
                 <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>Total Amount</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-                  {({ EUR: "€", USD: "$", AUD: "A$" } as any)[createdBatch.currency] || "€"}{parseFloat(createdBatch.totalFiat || createdBatch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}
+                  {(CSYM as any)[createdBatch.currency] || "€"}{parseFloat(createdBatch.totalFiat || createdBatch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div style={{ padding: '12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
@@ -2095,7 +2158,7 @@ export default function Dashboard() {
                     { label: "BIC / SWIFT", value: "AIBKIE2D" },
                     { label: "Bank", value: "AIB, Dublin" },
                     { label: "Payment Reference", value: createdBatch?.batchRef || "—" },
-                    { label: "Amount", value: `${({ EUR: "€", USD: "$", AUD: "A$" } as any)[createdBatch?.currency] || "€"}${parseFloat(createdBatch?.totalFiat || createdBatch?.totalEur || 0).toLocaleString("en", { minimumFractionDigits: 2 })} ${createdBatch?.currency || "EUR"}` },
+                    { label: "Amount", value: `${(CSYM as any)[createdBatch?.currency] || "€"}${parseFloat(createdBatch?.totalFiat || createdBatch?.totalEur || 0).toLocaleString("en", { minimumFractionDigits: 2 })} ${createdBatch?.currency || "EUR"}` },
                   ].map(r => (
                     <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: 10, color: 'var(--amber-strong)' }}>{r.label}</span>
@@ -2146,7 +2209,7 @@ export default function Dashboard() {
                     background: batchCurrency === c ? 'var(--tint-blue)' : '#FFFFFF',
                     color: batchCurrency === c ? 'var(--blue)' : 'var(--text-3)',
                   }}>
-                  {{ EUR: "€", USD: "$", AUD: "A$" }[c]} {c}
+                  {(CSYM as any)[c]} {c}
                 </button>
               ))}
             </div>
@@ -2196,7 +2259,7 @@ export default function Dashboard() {
                   if (match && !u[i].walletAddress) u[i].walletAddress = match.walletAddress;
                   setEntries(u);
                 }} />
-              <input placeholder={`${({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]} Amount`} type="number" value={e.amount}
+              <input placeholder={`${(CSYM as any)[batchCurrency]} Amount`} type="number" value={e.amount}
                 className="w-28 outline-none"
                 style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
                 onFocus={ev => ev.currentTarget.style.borderColor = 'var(--ink)'} onBlur={ev => ev.currentTarget.style.borderColor = 'var(--line-strong)'}
@@ -2227,8 +2290,8 @@ export default function Dashboard() {
         </button>
         {entries.filter(e => e.amount).length > 0 && (
           <p style={{ fontSize: 12, marginTop: 8, color: 'var(--text-2)' }}>
-            Batch total: <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span>
-            {" "}<span style={{ color: 'var(--text-4)' }}>· Platform fee (9 bps): {({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{(entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) * 0.0009).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} — deducted before conversion</span>
+            Batch total: <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{(CSYM as any)[batchCurrency]}{entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span>
+            {" "}<span style={{ color: 'var(--text-4)' }}>· Platform fee (9 bps): {(CSYM as any)[batchCurrency]}{(entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) * 0.0009).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} — deducted before conversion</span>
             {" "}<span style={{ color: 'var(--text-3)' }}>{batchCurrency}</span>
             {batchTiming === "scheduled" && batchDate && <span style={{ color: 'var(--text-3)' }}> &middot; Scheduled: {new Date(batchDate).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}</span>}
           </p>
@@ -2543,7 +2606,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 16 }}>
               <div style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
                 <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{detail.batch.currency || "EUR"} Total</p>
-                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: 'var(--ink)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}{parseFloat(detail.batch.totalFiat || detail.batch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
+                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: 'var(--ink)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{(CSYM as any)[detail.batch.currency as string] || "€"}{parseFloat(detail.batch.totalFiat || detail.batch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
               </div>
               <div style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
                 <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>USDC Total</p>
@@ -2560,7 +2623,7 @@ export default function Dashboard() {
               <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
                 <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>Fees</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? 'var(--ink)' : 'var(--text-faint)' }}>
-                  {detail.batch.feeBps ? `${{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
+                  {detail.batch.feeBps ? `${(CSYM as any)[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                 </p>
                 {detail.batch.feeBps
                   ? <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Paystrax markup <span style={{ color: 'var(--green)' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>

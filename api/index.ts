@@ -24,6 +24,7 @@ class ProviderNotConfiguredError extends Error {
 const USD_FALLBACK: Record<string, number> = {
   USD: 1.0, EUR: 1.08, GBP: 1.27, AUD: 0.66, CAD: 0.73,
   CHF: 1.11, JPY: 0.0064, SEK: 0.095, NOK: 0.094, DKK: 0.145,
+  PLN: 0.26, AED: 0.2723, // AED is USD-pegged at 3.6725
 };
 function mockRate(base: string): number {
   const b = USD_FALLBACK[base.toUpperCase()] ?? 1.0;
@@ -416,7 +417,7 @@ app.get("/api/batches/:id", async (req, res) => {
 app.post("/api/batches", async (req, res) => {
   const { entries, currency = "EUR", payoutTiming = "asap", scheduledDate, createdBy = "paystrax" } = req.body;
   if (!entries?.length) return res.status(400).json({ message: "No entries" });
-  const VALID_CURRENCIES = ["EUR", "USD", "AUD"];
+  const VALID_CURRENCIES = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", "AUD", "AED"];
   if (!VALID_CURRENCIES.includes(currency.toUpperCase())) return res.status(400).json({ message: `Currency must be one of: ${VALID_CURRENCIES.join(", ")}` });
   if (!["asap", "scheduled"].includes(payoutTiming)) return res.status(400).json({ message: "Payout timing must be 'asap' or 'scheduled'" });
   if (payoutTiming === "scheduled" && (!scheduledDate || new Date(scheduledDate) < new Date())) return res.status(400).json({ message: "Scheduled date must be in the future" });
