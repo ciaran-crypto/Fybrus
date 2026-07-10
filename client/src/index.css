@@ -2,15 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* ── Fybrus dark system ── */
+  --bg: #0E0F0D;
+  --surface: #171815;
+  --inset: #1E1F1B;
+  --inset-2: #1B1C18;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --track: rgba(255, 255, 255, 0.08);
+
+  --ink: #F1F0E9;
+  --text-2: #C7C5B9;
+  --text-3: #9A988C;
+  --text-4: #7B796F;
+  --text-faint: #565549;
+
+  --cta: #12A87E;
+  --cta-hover: #17BD8F;
+  --cta-soft: rgba(43, 217, 165, 0.35);
+
+  --green: #34D9A4;
+  --green-line: rgba(52, 217, 164, 0.32);
+  --tint-green: rgba(52, 217, 164, 0.10);
+  --blue: #6FA5FF;
+  --blue-line: rgba(111, 165, 255, 0.32);
+  --tint-blue: rgba(111, 165, 255, 0.10);
+  --amber: #F5B04C;
+  --amber-strong: #FFC46B;
+  --amber-line: rgba(245, 176, 76, 0.34);
+  --tint-amber: rgba(245, 176, 76, 0.10);
+  --red: #FF7268;
+  --red-line: rgba(255, 114, 104, 0.34);
+  --tint-red: rgba(255, 114, 104, 0.10);
+
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.045),
+                 0 10px 28px -14px rgba(0, 0, 0, 0.55),
+                 0 28px 64px -32px rgba(0, 0, 0, 0.55);
+  --shadow-modal: inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+                  0 24px 64px -16px rgba(0, 0, 0, 0.8);
+}
+
 body {
   margin: 0;
   font-family: 'Geist', -apple-system, system-ui, sans-serif;
-  /* warm paper with a soft light source top-left — reads as depth, not flat beige */
+  /* deep charcoal with a faint teal aurora top-left — depth without noise */
   background:
-    radial-gradient(1100px 480px at 18% -8%, rgba(255, 255, 253, 0.9) 0%, rgba(255, 255, 253, 0) 60%),
-    linear-gradient(180deg, #FAF9F4 0%, #F5F4EE 100%);
+    radial-gradient(1100px 520px at 12% -12%, rgba(43, 217, 165, 0.07) 0%, rgba(43, 217, 165, 0) 55%),
+    radial-gradient(900px 400px at 95% 0%, rgba(111, 165, 255, 0.04) 0%, rgba(111, 165, 255, 0) 50%),
+    linear-gradient(180deg, #111210 0%, #0D0E0C 100%);
   background-attachment: fixed;
-  color: #1B1A16;
+  color: var(--ink);
   min-height: 100vh;
   font-size: 13px;
   letter-spacing: 0.001em;
@@ -20,27 +62,26 @@ body {
   font-feature-settings: "ss01" on, "cv05" on;
 }
 
-::selection { background: #10493C; color: #EAFFF7; }
+::selection { background: #2BD9A5; color: #06231B; }
 
-/* Smooth everything that changes state */
 button, a, tr, input, select, textarea {
   transition: background .18s ease, color .18s ease, border-color .18s ease,
               opacity .18s ease, box-shadow .22s ease, transform .18s ease;
 }
 button:active { transform: translateY(0.5px); }
 
-/* Refined focus — soft teal ring, brand-coherent */
+input, select, textarea { color-scheme: dark; }
+
 input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 148, 118, 0.18), 0 0 0 1px rgba(16, 148, 118, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(43, 217, 165, 0.22), 0 0 0 1px rgba(43, 217, 165, 0.55) !important;
 }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(27,26,22,0.12); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
-::-webkit-scrollbar-thumb:hover { background: rgba(27,26,22,0.22); background-clip: content-box; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); background-clip: content-box; }
 
-/* Cards lift gently on hover when they're interactive */
 @media (prefers-reduced-motion: no-preference) {
-  .lift:hover { transform: translateY(-1px); box-shadow: 0 2px 3px rgba(27,26,22,0.03), 0 14px 32px -14px rgba(27,26,22,0.10), 0 32px 64px -30px rgba(27,26,22,0.12) !important; }
+  .lift:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.06), 0 14px 36px -14px rgba(0,0,0,0.6), 0 0 24px -8px rgba(43,217,165,0.12) !important; }
 }

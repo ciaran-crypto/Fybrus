@@ -21,16 +21,16 @@ const AUDIT_CATEGORIES = [
 /* ─── Status config ──────────────────────────────────────── */
 const STATUS_FLOW = ["pending", "funded", "converting", "sending", "completed"];
 const SC: Record<string, { label: string; color: string; bg: string; dot: string; icon: any }> = {
-  pending:    { label: "Awaiting Funding",  color: "#D97706", bg: "#FFFBEB",  dot: "#FBBF24", icon: Clock },
-  funded:     { label: "Funded",            color: "#1D4ED8", bg: "#EFF6FF",  dot: "#2563EB", icon: DollarSign },
-  converting: { label: "Converting",        color: "#374151", bg: "#F1F0E9",  dot: "#6B7280", icon: RefreshCw },
-  sending:    { label: "Sending",           color: "#374151", bg: "#F1F0E9",  dot: "#6B7280", icon: ArrowUpRight },
-  completed:  { label: "Completed",         color: "#059669", bg: "#ECFDF5",  dot: "#10B981", icon: CheckCircle2 },
-  failed:     { label: "Failed",            color: "#DC2626", bg: "#FEF2F2",  dot: "#EF4444", icon: AlertCircle },
-  confirmed:  { label: "Confirmed",         color: "#059669", bg: "#ECFDF5",  dot: "#10B981", icon: CheckCircle2 },
-  processing: { label: "Processing",        color: "#374151", bg: "#F1F0E9",  dot: "#6B7280", icon: RefreshCw },
-  active:     { label: "Active",            color: "#059669", bg: "#ECFDF5",  dot: "#10B981", icon: CheckCircle2 },
-  disabled:   { label: "Disabled",          color: "#6B7280", bg: "#F1F0E9",  dot: "#9CA3AF", icon: X },
+  pending:    { label: "Awaiting Funding",  color: "var(--amber)", bg: "var(--tint-amber)",  dot: "#FBBF24", icon: Clock },
+  funded:     { label: "Funded",            color: "var(--blue)", bg: "var(--tint-blue)",  dot: "#2563EB", icon: DollarSign },
+  converting: { label: "Converting",        color: "var(--text-2)", bg: "var(--inset)",  dot: "#6B7280", icon: RefreshCw },
+  sending:    { label: "Sending",           color: "var(--text-2)", bg: "var(--inset)",  dot: "#6B7280", icon: ArrowUpRight },
+  completed:  { label: "Completed",         color: "var(--green)", bg: "var(--tint-green)",  dot: "#10B981", icon: CheckCircle2 },
+  failed:     { label: "Failed",            color: "var(--red)", bg: "var(--tint-red)",  dot: "#EF4444", icon: AlertCircle },
+  confirmed:  { label: "Confirmed",         color: "var(--green)", bg: "var(--tint-green)",  dot: "#10B981", icon: CheckCircle2 },
+  processing: { label: "Processing",        color: "var(--text-2)", bg: "var(--inset)",  dot: "#6B7280", icon: RefreshCw },
+  active:     { label: "Active",            color: "var(--green)", bg: "var(--tint-green)",  dot: "#10B981", icon: CheckCircle2 },
+  disabled:   { label: "Disabled",          color: "#6B7280", bg: "var(--inset)",  dot: "#9CA3AF", icon: X },
 };
 
 const STATUS_HINT: Record<string, string> = {
@@ -65,8 +65,8 @@ function Steps({ current }: { current: string }) {
         return (
           <div key={s} className="flex items-center" style={{ gap: 1 }}>
             <div title={["Pending", "Funded", "Convert", "Send", "Done"][i]}
-              className="rounded-full" style={{ width: 6, height: 6, background: on ? c.dot : '#CBC9BF' }} />
-            {i < 4 && <div style={{ width: 4, height: 1, background: i < idx ? c.dot : '#ECEAE0' }} />}
+              className="rounded-full" style={{ width: 6, height: 6, background: on ? c.dot : 'var(--text-faint)' }} />
+            {i < 4 && <div style={{ width: 4, height: 1, background: i < idx ? c.dot : 'var(--line)' }} />}
           </div>
         );
       })}
@@ -79,11 +79,11 @@ function Overlay({ open, onClose, children, wide }: { open: boolean; onClose: ()
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 60 }} role="dialog" aria-modal="true"
       onKeyDown={e => { if (e.key === "Escape") onClose(); }}>
-      <div className="absolute inset-0" style={{ background: 'rgba(20,19,15,0.4)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
       <div className={"relative max-h-[85vh] overflow-y-auto max-w-[95vw] " + (wide ? "w-[920px]" : "w-[500px]")}
-        style={{ background: '#FFFFFF', borderRadius: 24, padding: 30, border: '1px solid rgba(27,26,22,0.05)', boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 24px 48px -20px rgba(27,26,22,0.18), 0 48px 96px -32px rgba(27,26,22,0.22)', zIndex: 61 }}>
-        <button onClick={onClose} className="absolute top-5 right-5 transition-colors" style={{ color: '#6E6C62' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#1B1A16')} onMouseLeave={e => (e.currentTarget.style.color = '#6E6C62')}
+        style={{ background: 'var(--surface)', borderRadius: 24, padding: 30, border: '1px solid var(--line)', boxShadow: 'var(--shadow-modal)', zIndex: 61 }}>
+        <button onClick={onClose} className="absolute top-5 right-5 transition-colors" style={{ color: 'var(--text-3)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--ink)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}
           aria-label="Close dialog"><X className="w-4 h-4" /></button>
         {children}
       </div>
@@ -105,7 +105,7 @@ function copyText(text: string) {
   // Show a brief toast
   const t = document.createElement("div");
   t.textContent = "Copied!";
-  t.style.cssText = "position:fixed;bottom:24px;right:24px;background:#1B1A16;color:#FFFFFF;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)";
+  t.style.cssText = "position:fixed;bottom:24px;right:24px;background:var(--ink);color:#FFFFFF;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)";
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 1500);
 }
@@ -125,39 +125,39 @@ function LoginScreen({ onLogin, error: externalError }: { onLogin: (email: strin
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F6F1' }}>
-      <div className="w-[400px]" style={{ background: '#FFFFFF', padding: 40, borderRadius: 26, border: '1px solid rgba(27,26,22,0.05)', boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 32px 64px -32px rgba(27,26,22,0.25)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+      <div className="w-[400px]" style={{ background: 'var(--surface)', padding: 40, borderRadius: 26, border: '1px solid var(--line)', boxShadow: 'var(--shadow-modal)' }}>
         <div className="mb-6">
-          <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.01em', color: '#1B1A16' }}>PAYSTRAX<span style={{ color: '#059669' }}>.</span></span>
-          <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.06em', color: '#6E6C62', textTransform: 'uppercase' as const, marginTop: 4 }}>Payments Portal</p>
+          <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.01em', color: 'var(--ink)' }}>PAYSTRAX<span style={{ color: 'var(--green)' }}>.</span></span>
+          <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.06em', color: 'var(--text-3)', textTransform: 'uppercase' as const, marginTop: 4 }}>Payments Portal</p>
         </div>
 
-        <p style={{ fontSize: 13, color: '#615F56' }} className="mb-6">Sign in to your dashboard</p>
+        <p style={{ fontSize: 13, color: 'var(--text-2)' }} className="mb-6">Sign in to your dashboard</p>
 
         <div className="space-y-3">
           <div>
-            <label className="block mb-1" style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const }}>Email</label>
+            <label className="block mb-1" style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Email</label>
             <input value={email} onChange={e => setEmail(e.target.value)} autoFocus
               onKeyDown={e => e.key === "Enter" && handleLogin()}
               className="w-full outline-none transition-colors"
-              style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16', background: '#FFFFFF' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
+              style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)', background: 'var(--surface)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
           </div>
           <div>
-            <label className="block mb-1" style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const }}>Password</label>
+            <label className="block mb-1" style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Password</label>
             <input type="password" value={pass} onChange={e => { setPass(e.target.value); setLocalErr(false); }}
               onKeyDown={e => e.key === "Enter" && handleLogin()}
               placeholder="Enter your password"
               className="w-full outline-none transition-colors"
-              style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16', background: '#FFFFFF' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
-            {localErr && <p style={{ fontSize: 11, color: '#DC2626' }} className="mt-1">Please enter your password</p>}
-            {externalError && <p style={{ fontSize: 11, color: '#DC2626' }} className="mt-1">{externalError}</p>}
+              style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)', background: 'var(--surface)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
+            {localErr && <p style={{ fontSize: 11, color: 'var(--red)' }} className="mt-1">Please enter your password</p>}
+            {externalError && <p style={{ fontSize: 11, color: 'var(--red)' }} className="mt-1">{externalError}</p>}
           </div>
           <button onClick={handleLogin} disabled={loading}
             className="w-full mt-2 transition-colors disabled:opacity-60"
-            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#222222'; }} onMouseLeave={e => e.currentTarget.style.background = '#1B1A16'}>
+            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--cta-hover)'; }} onMouseLeave={e => e.currentTarget.style.background = 'var(--ink)'}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Sign In"}
           </button>
         </div>
@@ -593,7 +593,7 @@ export default function Dashboard() {
   }} error={loginError} />;
 
   return (
-    <div style={{ fontFamily: "'Geist', -apple-system, system-ui, sans-serif", background: '#F7F6F1', minHeight: '100vh', display: 'flex' }}>
+    <div style={{ fontFamily: "'Geist', -apple-system, system-ui, sans-serif", background: 'var(--bg)', minHeight: '100vh', display: 'flex' }}>
       <style>{`
         .sidebar-nav-item:not(.sidebar-nav-active):hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.85) !important; }
         input:focus, select:focus, textarea:focus { border-color: rgba(16,148,118,0.55) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(16,148,118,0.15) !important; }
@@ -603,7 +603,7 @@ export default function Dashboard() {
         td, .tabular-nums { font-variant-numeric: tabular-nums; }
       `}</style>
       {/* ─ Sidebar ─ */}
-      <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 234, background: 'linear-gradient(178deg, #161613 0%, #201E19 70%, #232019 100%)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
+      <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 234, background: '#121310', borderRight: '1px solid var(--line)', display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
         {/* Logo */}
         <div style={{ padding: '0 8px', marginBottom: 32 }}>
           <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.01em', color: '#FFFFFF' }}>PAYSTRAX<span style={{ color: '#34D399' }}>.</span></span>
@@ -640,7 +640,7 @@ export default function Dashboard() {
                 <Icon style={{ width: 16, height: 16 }} />
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.key === "alerts" && (alertsData?.total ?? 0) > 0 && (
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 999, background: '#DC2626', color: '#FFFFFF' }}>{alertsData.total}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 999, background: 'var(--red)', color: '#FFFFFF' }}>{alertsData.total}</span>
                 )}
               </button>
             );
@@ -694,41 +694,41 @@ export default function Dashboard() {
       {/* ─ Right content ─ */}
       <div style={{ flex: 1, marginLeft: 234, minHeight: '100vh' }}>
         {/* ─ Header ─ */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid rgba(27,26,22,0.06)', padding: '15px 32px' }}>
-          <h1 style={{ fontSize: 17, fontWeight: 600, color: '#1B1A16', letterSpacing: '-0.02em' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(16,17,15,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid var(--line)', padding: '15px 32px' }}>
+          <h1 style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
             {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : page === "accounts" ? "Collection Accounts" : "Audit & Compliance"}
           </h1>
           <div className="flex items-center gap-2">
             {/* Integration mode badge — reflects /api/providers */}
             {providers && (
               <div title={`FX ${providers.fx?.mode} · Settlement ${providers.settlement?.mode} · Fiat ${providers.fiat?.mode} · Screening ${providers.screening?.mode} · Travel rule ${providers.travelRule?.mode}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <Zap style={{ width: 12, height: 12, color: providers.fx?.live ? '#059669' : '#96948A' }} />
-                <span style={{ fontSize: 11, fontWeight: 500, color: '#54524A' }}>
-                  FX <b style={{ color: providers.fx?.live ? '#059669' : '#96948A' }}>{providers.fx?.live ? 'Live · ECB' : 'Mock'}</b>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+                <Zap style={{ width: 12, height: 12, color: providers.fx?.live ? 'var(--green)' : 'var(--text-4)' }} />
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>
+                  FX <b style={{ color: providers.fx?.live ? 'var(--green)' : 'var(--text-4)' }}>{providers.fx?.live ? 'Live · ECB' : 'Mock'}</b>
                 </span>
-                <span style={{ fontSize: 11, color: '#CBC9BF' }}>·</span>
-                <span style={{ fontSize: 11, fontWeight: 500, color: '#96948A' }}>Rails Mock</span>
+                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>·</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-4)' }}>Rails Mock</span>
               </div>
             )}
             {(page === "dashboard" || page === "batches") && currentUser?.role !== "viewer" && (
               <>
                 <button onClick={() => setShowManual(true)} className="flex items-center gap-1.5 transition-colors"
-                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid #E5E3D9', color: '#615F56', background: '#FFFFFF' }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#CBC9BF'} onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E3D9'}>
+                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--line)', color: 'var(--text-2)', background: 'var(--surface)' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--text-faint)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line)'}>
                   <Plus className="w-3.5 h-3.5" /> Manual Entry
                 </button>
                 <button onClick={() => setShowUpload(true)} className="flex items-center gap-1.5 transition-colors"
-                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#222222'} onMouseLeave={e => e.currentTarget.style.background = '#1B1A16'}>
+                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--cta-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--ink)'}>
                   <Upload className="w-3.5 h-3.5" /> Upload Batch
                 </button>
               </>
             )}
             {page === "merchants" && (
               <button onClick={() => setShowAddMerchant(true)} className="flex items-center gap-1.5 transition-colors"
-                style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#222222'} onMouseLeave={e => e.currentTarget.style.background = '#1B1A16'}>
+                style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--cta-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--ink)'}>
                 <UserPlus className="w-3.5 h-3.5" /> Register Merchant
               </button>
             )}
@@ -745,9 +745,9 @@ export default function Dashboard() {
                   n >= 1e6 ? `${sym}${(n / 1e6).toFixed(n >= 2e7 ? 1 : 2)}M`
                   : n >= 1e3 ? `${sym}${(n / 1e3).toFixed(0)}k`
                   : `${sym}${n.toFixed(0)}`;
-                const heroNum = { fontSize: 30, fontWeight: 650, letterSpacing: '-0.02em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' as const, lineHeight: 1.1 };
-                const card = { background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)' };
-                const label = { fontSize: 10, fontWeight: 500 as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#96948A' };
+                const heroNum = { fontSize: 30, fontWeight: 650, letterSpacing: '-0.02em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' as const, lineHeight: 1.1 };
+                const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-card)' };
+                const label = { fontSize: 10, fontWeight: 500 as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--text-4)' };
 
                 const inFlight = active.reduce((s: number, b: any) => s + num(b.totalFiat || b.totalEur), 0);
                 const s = analytics?.summary;
@@ -773,46 +773,84 @@ export default function Dashboard() {
                         <p style={{ ...heroNum, marginTop: 6 }}>{s ? abbr("€", s.volume30d || 0) : "—"}</p>
                         <div className="flex items-end" style={{ gap: 2, height: 26, marginTop: 10 }} aria-hidden="true">
                           {daysArr.map((v, i) => (
-                            <div key={i} style={{ flex: 1, height: Math.max(2, (v / maxDay) * 26), borderRadius: 1.5, background: v > 0 ? (i === 29 ? '#059669' : '#A7D9C4') : '#EFEDE4' }} />
+                            <div key={i} style={{ flex: 1, height: Math.max(2, (v / maxDay) * 26), borderRadius: 1.5, background: v > 0 ? (i === 29 ? 'var(--green)' : 'var(--cta-soft)') : 'var(--line)' }} />
                           ))}
                         </div>
-                        <p style={{ fontSize: 9, color: '#B5B3A8', marginTop: 5 }}>daily volume · last 30 days</p>
+                        <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 5 }}>daily volume · last 30 days</p>
                       </div>
                       <div style={{ ...card, padding: '18px 20px 14px' }} title="Fiat in batches currently awaiting funding or processing">
                         <p style={label}>In Flight</p>
                         <p style={{ ...heroNum, marginTop: 6 }}>{abbr("€", inFlight)}</p>
-                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 10 }}>
                           {pendingBatches.length > 0
-                            ? <><span style={{ color: '#D97706', fontWeight: 600 }}>{pendingBatches.length} awaiting funding</span>{active.length > pendingBatches.length ? ` · ${active.length - pendingBatches.length} processing` : ""}</>
+                            ? <><span style={{ color: 'var(--amber)', fontWeight: 600 }}>{pendingBatches.length} awaiting funding</span>{active.length > pendingBatches.length ? ` · ${active.length - pendingBatches.length} processing` : ""}</>
                             : active.length > 0 ? `${active.length} processing` : "nothing pending"}
                         </p>
                       </div>
                       <div style={{ ...card, padding: '18px 20px 14px' }} title="Fybrus platform fee — 9 bps on every settled batch, deducted before conversion">
                         <p style={label}>Fees Collected · 9 bps</p>
-                        <p style={{ ...heroNum, marginTop: 6, color: '#059669' }}>{s ? abbr("€", s.totalFees || 0) : "—"}</p>
-                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>across {s?.completedBatches ?? "—"} settled batches</p>
+                        <p style={{ ...heroNum, marginTop: 6, color: 'var(--green)' }}>{s ? abbr("€", s.totalFees || 0) : "—"}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 10 }}>across {s?.completedBatches ?? "—"} settled batches</p>
                       </div>
                       <div style={{ ...card, padding: '18px 20px 14px' }} title="Average time from funds received to USDC confirmed on-chain — a stablecoin rail settles in minutes, not banking days">
                         <p style={label}>Avg Settlement</p>
                         <p style={{ ...heroNum, marginTop: 6 }}>{s && s.avgSettlementMinutes > 0 ? `${Math.round(s.avgSettlementMinutes)} min` : "—"}</p>
-                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>funds received → confirmed</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 10 }}>funds received → confirmed</p>
                       </div>
+                    </div>
+
+
+                    {/* ─ Volume trend ─ */}
+                    <div style={{ ...card, padding: '18px 20px 10px' }}>
+                      <div className="flex items-baseline justify-between">
+                        <p style={label}>Volume · last 30 days</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-4)' }}>peak day {abbr("€", maxDay)}</p>
+                      </div>
+                      {(() => {
+                        const W = 960, H = 132, PAD = 6, BASE = H - 18, TOP = 14;
+                        const pts = daysArr.map((v, i) => [PAD + (i / 29) * (W - PAD * 2), BASE - (v / maxDay) * (BASE - TOP)] as [number, number]);
+                        let d = `M ${pts[0][0]},${pts[0][1]}`;
+                        for (let i = 1; i < pts.length; i++) {
+                          const mx = (pts[i - 1][0] + pts[i][0]) / 2, my = (pts[i - 1][1] + pts[i][1]) / 2;
+                          d += ` Q ${pts[i - 1][0]},${pts[i - 1][1]} ${mx},${my}`;
+                        }
+                        d += ` L ${pts[29][0]},${pts[29][1]}`;
+                        const area = d + ` L ${W - PAD},${BASE} L ${PAD},${BASE} Z`;
+                        return (
+                          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 132, display: 'block', marginTop: 8 }} aria-label="Daily payout volume, last 30 days">
+                            <defs>
+                              <linearGradient id="volFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stopColor="#2BD9A5" stopOpacity="0.30" />
+                                <stop offset="1" stopColor="#2BD9A5" stopOpacity="0.02" />
+                              </linearGradient>
+                            </defs>
+                            {[0.33, 0.66].map(f => (
+                              <line key={f} x1={PAD} x2={W - PAD} y1={BASE - f * (BASE - TOP)} y2={BASE - f * (BASE - TOP)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                            ))}
+                            <line x1={PAD} x2={W - PAD} y1={BASE} y2={BASE} stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+                            <path d={area} fill="url(#volFill)" />
+                            <path d={d} fill="none" stroke="#2BD9A5" strokeWidth="2.25" strokeLinecap="round" />
+                            <circle cx={pts[29][0]} cy={pts[29][1]} r="4" fill="#2BD9A5" />
+                            <circle cx={pts[29][0]} cy={pts[29][1]} r="8" fill="#2BD9A5" opacity="0.18" />
+                          </svg>
+                        );
+                      })()}
                     </div>
 
                     {/* ─ Needs attention + currency mix ─ */}
                     <div className="grid grid-cols-3 gap-4">
                       <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
-                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #EFEDE4' }}>
-                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Needs attention</p>
+                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Needs attention</p>
                           {pendingBatches.length > 0 && (() => {
                             const acct = (accounts as any[]).find((a: any) => a.status !== 'closed' && a.currency === pendingBatches[0]?.currency) || (accounts as any[]).find((a: any) => a.status !== 'closed');
                             if (!acct) return (
-                              <button onClick={() => setPage("accounts")} style={{ fontSize: 11, fontWeight: 500, color: '#1D4ED8', background: 'none', border: 'none', cursor: 'pointer' }}>Open a collection account →</button>
+                              <button onClick={() => setPage("accounts")} style={{ fontSize: 11, fontWeight: 500, color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer' }}>Open a collection account →</button>
                             );
                             return (
-                              <button onClick={() => copyText(acct.iban.replace(/ /g, ""))} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
+                              <button onClick={() => copyText(acct.iban.replace(/ /g, ""))} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}
                                 title={`${acct.currency} collection account · ${acct.bankName}`}
-                                onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                                onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                                 <Copy className="w-3 h-3" /> {acct.currency} · {acct.iban} · {acct.bic}
                               </button>
                             );
@@ -820,33 +858,33 @@ export default function Dashboard() {
                         </div>
                         {pendingBatches.length === 0 && (
                           <div className="flex items-center gap-2.5" style={{ padding: '18px 16px' }}>
-                            <CheckCircle2 className="w-4 h-4" style={{ color: '#059669' }} />
-                            <p style={{ fontSize: 12.5, color: '#1B1A16' }}>All clear — nothing awaiting funding.{active.length > 0 ? ` ${active.length} batch${active.length > 1 ? "es" : ""} processing.` : ""}</p>
+                            <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--green)' }} />
+                            <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>All clear — nothing awaiting funding.{active.length > 0 ? ` ${active.length} batch${active.length > 1 ? "es" : ""} processing.` : ""}</p>
                           </div>
                         )}
                         {pendingBatches.slice(0, 4).map((b: any) => {
                           const sym = (CSYM as any)[b.currency] || "€";
                           return (
-                            <div key={b.id} className="flex items-center justify-between" style={{ padding: '13px 16px', borderTop: '1px solid #F4F3EC' }}>
+                            <div key={b.id} className="flex items-center justify-between" style={{ padding: '13px 16px', borderTop: '1px solid var(--inset-2)' }}>
                               <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#F59E0B', flexShrink: 0 }} />
-                                <button onClick={() => setSelectedId(b.id)} style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                <button onClick={() => setSelectedId(b.id)} style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                                   onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{b.batchRef}</button>
-                                <span style={{ fontSize: 11, color: '#96948A' }}>{b.merchantCount} merchants · created {timeAgo(b.createdAt)}</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-4)' }}>{b.merchantCount} merchants · created {timeAgo(b.createdAt)}</span>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} {b.currency}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} {b.currency}</span>
                                 <button onClick={() => simulateSettlementMut.mutate(b.batchRef)} disabled={simulateSettlementMut.isPending}
                                   title="Posts the same webhook Banking Circle sends when the fiat lands"
                                   className="disabled:opacity-40"
-                                  style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>
+                                  style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>
                                   {simulateSettlementMut.isPending ? "Funding…" : "Fund now"}
                                 </button>
                               </div>
                             </div>
                           );
                         })}
-                        {pendingBatches.length > 0 && <p style={{ fontSize: 10, color: '#B5B3A8', padding: '8px 16px 10px' }}>Demo IBAN — “Fund now” simulates the bank’s settlement webhook. In production Banking Circle triggers this automatically.</p>}
+                        {pendingBatches.length > 0 && <p style={{ fontSize: 10, color: 'var(--text-4)', padding: '8px 16px 10px' }}>Demo IBAN — “Fund now” simulates the bank’s settlement webhook. In production Banking Circle triggers this automatically.</p>}
                       </div>
 
                       <div style={{ ...card, padding: 16 }}>
@@ -858,19 +896,19 @@ export default function Dashboard() {
                             return (
                               <div key={c} title={`${(CSYM as any)[c] || ""}${v.toLocaleString("en", { minimumFractionDigits: 2 })}`}>
                                 <div className="flex items-baseline justify-between">
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: '#54524A' }}>{c}</span>
-                                  <span style={{ fontSize: 15, fontWeight: 650, letterSpacing: '-0.01em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{abbr((CSYM as any)[c] || "", v)}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)' }}>{c}</span>
+                                  <span style={{ fontSize: 15, fontWeight: 650, letterSpacing: '-0.01em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{abbr((CSYM as any)[c] || "", v)}</span>
                                 </div>
-                                <div style={{ height: 4, borderRadius: 2, background: '#EFEDE4', overflow: 'hidden', marginTop: 5 }}>
-                                  <div style={{ width: `${share}%`, height: '100%', borderRadius: 2, background: c === 'EUR' ? '#1B1A16' : c === 'USD' ? '#059669' : '#D97706' }} />
+                                <div style={{ height: 4, borderRadius: 2, background: 'var(--track)', overflow: 'hidden', marginTop: 5 }}>
+                                  <div style={{ width: `${share}%`, height: '100%', borderRadius: 2, background: c === 'EUR' ? 'var(--ink)' : c === 'USD' ? 'var(--green)' : 'var(--amber)' }} />
                                 </div>
                               </div>
                             );
                           })}
                         </div>
-                        <div className="flex justify-between" style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid #F0EFE4', fontSize: 11, color: '#6E6C62' }}>
+                        <div className="flex justify-between" style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--line)', fontSize: 11, color: 'var(--text-3)' }}>
                           <span>{batches.length} batches · {merchants.length} merchants</span>
-                          <span style={{ color: '#059669', fontWeight: 600 }}>{done.length} settled</span>
+                          <span style={{ color: 'var(--green)', fontWeight: 600 }}>{done.length} settled</span>
                         </div>
                       </div>
                     </div>
@@ -878,10 +916,10 @@ export default function Dashboard() {
                     {/* ─ Recent batches + right rail ─ */}
                     <div className="grid grid-cols-3 gap-4">
                       <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
-                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
-                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Recent Batches</p>
-                          <button onClick={() => setPage("batches")} style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
-                            onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Recent Batches</p>
+                          <button onClick={() => setPage("batches")} style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                             View all →
                           </button>
                         </div>
@@ -889,27 +927,27 @@ export default function Dashboard() {
                           const sym = (CSYM as any)[b.currency] || "€";
                           return (
                             <div key={b.id} className="flex items-center justify-between cursor-pointer transition-colors"
-                              style={{ padding: '13px 16px', borderTop: '1px solid #F4F3EC' }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                              style={{ padding: '13px 16px', borderTop: '1px solid var(--inset-2)' }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'var(--inset)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                               onClick={() => setSelectedId(b.id)}>
                               <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-                                <span style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>{b.batchRef}</span>
-                                <span style={{ fontSize: 11, color: '#96948A' }}>{b.merchantCount} merchants · {timeAgo(b.createdAt)}</span>
+                                <span style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)' }}>{b.batchRef}</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-4)' }}>{b.merchantCount} merchants · {timeAgo(b.createdAt)}</span>
                               </div>
                               <div className="flex items-center gap-4">
-                                <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} <span style={{ fontSize: 10, color: '#96948A', fontWeight: 500 }}>{b.currency}</span></span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} <span style={{ fontSize: 10, color: 'var(--text-4)', fontWeight: 500 }}>{b.currency}</span></span>
                                 <Badge status={b.status} />
                               </div>
                             </div>
                           );
                         })}
-                        {batches.length === 0 && <p style={{ padding: '20px 16px', fontSize: 12, color: '#6E6C62' }}>No batches yet. Upload a CSV to get started.</p>}
+                        {batches.length === 0 && <p style={{ padding: '20px 16px', fontSize: 12, color: 'var(--text-3)' }}>No batches yet. Upload a CSV to get started.</p>}
                       </div>
 
                       <div className="space-y-4">
                         {!analytics && (
                           <div className="flex items-center justify-center" style={{ ...card, padding: 32 }}>
-                            <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#CBC9BF' }} />
+                            <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--text-faint)' }} />
                           </div>
                         )}
                         {analytics && (
@@ -917,10 +955,10 @@ export default function Dashboard() {
                             <div style={{ ...card, padding: 16 }}>
                               <p style={{ ...label, marginBottom: 10 }}>Settlement Metrics</p>
                               <div className="space-y-3">
-                                <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? '#059669' : '#D97706' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: '#96948A', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
-                                <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: '#1B1A16' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: '#D97706', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
-                                <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg FX Rate</span><span style={{ fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
-                                <div title="Paystrax markup earned on settled payouts — see the Revenue page" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Markup Owed (Paystrax)</span><button onClick={() => setPage("revenue")} style={{ fontWeight: 600, color: '#1D4ED8', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{revenue ? abbr("€", revenue.markupOwed || 0) : "View →"}</button></div>
+                                <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? 'var(--green)' : 'var(--amber)' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: 'var(--text-4)', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
+                                <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: 'var(--ink)' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: 'var(--amber)', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
+                                <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Avg FX Rate</span><span style={{ fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
+                                <div title="Paystrax markup earned on settled payouts — see the Revenue page" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Markup Owed (Paystrax)</span><button onClick={() => setPage("revenue")} style={{ fontWeight: 600, color: 'var(--blue)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{revenue ? abbr("€", revenue.markupOwed || 0) : "View →"}</button></div>
                               </div>
                             </div>
 
@@ -929,20 +967,20 @@ export default function Dashboard() {
                               {(() => {
                                 const counts = analytics.payoutStatusCounts || {};
                                 const total = Object.values(counts).reduce((s: number, v: any) => s + v, 0) as number;
-                                if (total === 0) return <p style={{ fontSize: 12, color: '#6E6C62' }}>No payouts</p>;
+                                if (total === 0) return <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No payouts</p>;
                                 return (
                                   <div className="space-y-2">
                                     {Object.entries(counts).map(([status, val]) => {
                                       const pct = ((val as number) / total) * 100;
-                                      const color = SC[status]?.dot || '#CBC9BF';
+                                      const color = SC[status]?.dot || 'var(--text-faint)';
                                       const lbl = status === 'pending' ? 'Pending' : SC[status]?.label || status;
                                       return (
                                         <div key={status}>
                                           <div className="flex justify-between" style={{ fontSize: 11, marginBottom: 2 }}>
-                                            <span style={{ color: '#54524A' }}>{lbl}</span>
-                                            <span style={{ fontWeight: 500, color: '#1B1A16' }}>{val as number} <span style={{ color: '#6E6C62' }}>({pct.toFixed(0)}%)</span></span>
+                                            <span style={{ color: 'var(--text-2)' }}>{lbl}</span>
+                                            <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{val as number} <span style={{ color: 'var(--text-3)' }}>({pct.toFixed(0)}%)</span></span>
                                           </div>
-                                          <div style={{ height: 4, borderRadius: 2, background: '#ECEAE0', overflow: 'hidden' }}>
+                                          <div style={{ height: 4, borderRadius: 2, background: 'var(--track)', overflow: 'hidden' }}>
                                             <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color }} />
                                           </div>
                                         </div>
@@ -964,17 +1002,17 @@ export default function Dashboard() {
 
           {/* ─ Batches tab ─ */}
           {page === "batches" && (
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'auto' }}>
-              <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
-                <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>{filtered.length} {filtered.length === 1 ? "Batch" : "Batches"}</h2>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'auto' }}>
+              <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>{filtered.length} {filtered.length === 1 ? "Batch" : "Batches"}</h2>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5" style={{ background: '#F4F3EC', borderRadius: 8, padding: '6px 12px', border: '1px solid transparent' }}>
-                    <Search className="w-3.5 h-3.5" style={{ color: '#CBC9BF' }} />
+                  <div className="flex items-center gap-1.5" style={{ background: 'var(--inset-2)', borderRadius: 8, padding: '6px 12px', border: '1px solid transparent' }}>
+                    <Search className="w-3.5 h-3.5" style={{ color: 'var(--text-faint)' }} />
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search batches..."
-                      className="outline-none" style={{ background: 'transparent', fontSize: 12, color: '#1B1A16', width: 120 }} />
+                      className="outline-none" style={{ background: 'transparent', fontSize: 12, color: 'var(--ink)', width: 120 }} />
                   </div>
                   <select value={currencyFilter} onChange={e => setCurrencyFilter(e.target.value)} aria-label="Filter by currency"
-                    style={{ padding: '7px 10px', borderRadius: 8, fontSize: 12, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#54524A', cursor: 'pointer' }}>
+                    style={{ padding: '7px 10px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}>
                     <option value="all">All currencies</option>
                     <option value="EUR">EUR</option>
                     <option value="USD">USD</option>
@@ -982,7 +1020,7 @@ export default function Dashboard() {
                   </select>
                   <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} aria-label="Filter by status"
                     className="outline-none cursor-pointer"
-                    style={{ padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#54524A' }}>
+                    style={{ padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--text-2)' }}>
                     <option value="all">All statuses</option>
                     <option value="pending">Pending</option>
                     <option value="funded">Funded</option>
@@ -990,22 +1028,22 @@ export default function Dashboard() {
                     <option value="sending">Sending</option>
                     <option value="completed">Completed</option>
                   </select>
-                  <button onClick={downloadTemplate} className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62' }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                  <button onClick={downloadTemplate} className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                     <FileDown className="w-3.5 h-3.5" /> CSV Template
                   </button>
-                  <button onClick={() => window.open("/api/reports/csv", "_blank")} className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62' }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                  <button onClick={() => window.open("/api/reports/csv", "_blank")} className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                     <Download className="w-3.5 h-3.5" /> Export CSV
                   </button>
                 </div>
               </div>
               {isLoading ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#CBC9BF' }} /></div>
+                <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--text-faint)' }} /></div>
               ) : filtered.length === 0 ? (
                 <div className="text-center py-16">
-                  <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: '#CBC9BF' }} />
-                  <p style={{ fontSize: 13, color: '#6E6C62' }}>
+                  <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-faint)' }} />
+                  <p style={{ fontSize: 13, color: 'var(--text-3)' }}>
                     {batches.length === 0 ? "No batches yet. Upload a CSV or add entries manually." : "No batches match your filters."}
                   </p>
                 </div>
@@ -1013,10 +1051,10 @@ export default function Dashboard() {
                 <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', minWidth: 700 }}>
                   <thead>
-                    <tr style={{ background: '#F8F7F2' }}>
+                    <tr style={{ background: 'var(--inset)' }}>
                       {["Batch", "Ccy", "#", "FIAT Total", "USDC", "Timing", "Status", "Created"].map((h, i) => (
                         <th key={h} style={{
-                          fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195',
+                          fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)',
                           paddingTop: 8, paddingBottom: 8, paddingLeft: i === 0 ? 16 : 12, paddingRight: i === 7 ? 16 : 12,
                           textAlign: i === 0 ? 'left' : i === 3 || i === 4 || i === 7 ? 'right' : 'center',
                         }}>{h}</th>
@@ -1028,32 +1066,32 @@ export default function Dashboard() {
                       const sym = ({ EUR: "€", USD: "$", AUD: "A$" } as any)[b.currency] || "€";
                       return (
                         <tr key={b.id} className="cursor-pointer transition-colors"
-                          style={{ borderTop: '1px solid #EFEDE4' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          style={{ borderTop: '1px solid var(--line)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--inset)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           onClick={() => setSelectedId(b.id)}>
-                          <td style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 10, fontSize: 11, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', whiteSpace: 'nowrap' }}>{b.batchRef}</td>
+                          <td style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 10, fontSize: 11, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)', whiteSpace: 'nowrap' }}>{b.batchRef}</td>
                           <td style={{ padding: '8px 6px', textAlign: 'center' }}>
                             <span style={{
                               fontSize: 8, fontWeight: 600, letterSpacing: '0.07em', padding: '2px 5px', borderRadius: 4,
-                              background: '#EFEDE4', color: '#54524A',
+                              background: 'var(--track)', color: 'var(--text-2)',
                             }}>{b.currency || "EUR"}</span>
                           </td>
-                          <td style={{ padding: '8px 6px', fontSize: 12, textAlign: 'center', color: '#54524A' }}>{b.merchantCount}</td>
-                          <td style={{ padding: '8px 10px', fontSize: 13, fontWeight: 600, textAlign: 'right', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{sym}{parseFloat(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '8px 10px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: b.totalUsdc ? '#1B1A16' : '#CBC9BF' }}>
+                          <td style={{ padding: '8px 6px', fontSize: 12, textAlign: 'center', color: 'var(--text-2)' }}>{b.merchantCount}</td>
+                          <td style={{ padding: '8px 10px', fontSize: 13, fontWeight: 600, textAlign: 'right', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{sym}{parseFloat(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '8px 10px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: b.totalUsdc ? 'var(--ink)' : 'var(--text-faint)' }}>
                             {b.totalUsdc ? `$${parseFloat(b.totalUsdc).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                           </td>
                           <td style={{ padding: '8px 6px', textAlign: 'center' }}>
                             {b.payoutTiming === "scheduled" && b.scheduledDate ? (
-                              <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 5px', borderRadius: 4, background: '#EFEDE4', color: '#54524A' }}>
+                              <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 5px', borderRadius: 4, background: 'var(--track)', color: 'var(--text-2)' }}>
                                 {new Date(b.scheduledDate).toLocaleDateString("en-IE", { day: "numeric", month: "short" })}
                               </span>
                             ) : (
-                              <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 5px', borderRadius: 4, background: '#EFEDE4', color: '#54524A' }}>ASAP</span>
+                              <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 5px', borderRadius: 4, background: 'var(--track)', color: 'var(--text-2)' }}>ASAP</span>
                             )}
                           </td>
                           <td style={{ padding: '8px 6px', textAlign: 'center' }}><Badge status={b.status} /></td>
-                          <td style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12, paddingRight: 16, textAlign: 'right', fontSize: 11, color: '#777777', whiteSpace: 'nowrap' }}>{timeAgo(b.createdAt)}</td>
+                          <td style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12, paddingRight: 16, textAlign: 'right', fontSize: 11, color: 'var(--text-4)', whiteSpace: 'nowrap' }}>{timeAgo(b.createdAt)}</td>
                         </tr>
                       );
                     })}
@@ -1076,9 +1114,9 @@ export default function Dashboard() {
                   { label: "USDC Confirmed", value: reconciliation?.totals?.usdcConfirmed, pre: "$" },
                   { label: "Exceptions", value: reconciliation?.exceptionBatches, pre: "", flag: true },
                 ].map((k) => (
-                  <div key={k.label} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: '14px 16px' }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>{k.label}</p>
-                    <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, fontVariantNumeric: 'tabular-nums', color: k.flag ? ((k.value ?? 0) > 0 ? '#DC2626' : '#059669') : '#1B1A16' }}>
+                  <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: '14px 16px' }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>{k.label}</p>
+                    <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, fontVariantNumeric: 'tabular-nums', color: k.flag ? ((k.value ?? 0) > 0 ? 'var(--red)' : 'var(--green)') : 'var(--ink)' }}>
                       {k.pre}{typeof k.value === "number" ? k.value.toLocaleString("en", { minimumFractionDigits: k.flag ? 0 : 2, maximumFractionDigits: k.flag ? 0 : 2 }) : "—"}
                     </p>
                   </div>
@@ -1086,62 +1124,62 @@ export default function Dashboard() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                <p style={{ fontSize: 12, color: '#615F56' }}>
-                  {reconciliation ? <><b style={{ color: '#059669' }}>{reconciliation.reconciledBatches}</b> reconciled · <b style={{ color: (reconciliation.exceptionBatches ?? 0) > 0 ? '#DC2626' : '#059669' }}>{reconciliation.exceptionBatches}</b> with exceptions</> : "Loading…"}
+                <p style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                  {reconciliation ? <><b style={{ color: 'var(--green)' }}>{reconciliation.reconciledBatches}</b> reconciled · <b style={{ color: (reconciliation.exceptionBatches ?? 0) > 0 ? 'var(--red)' : 'var(--green)' }}>{reconciliation.exceptionBatches}</b> with exceptions</> : "Loading…"}
                 </p>
                 <div className="flex items-center gap-2">
                   <input value={reconSearch} onChange={e => setReconSearch(e.target.value)} placeholder="Search batch ref…"
-                    className="outline-none" style={{ width: 170, padding: '7px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }} />
+                    className="outline-none" style={{ width: 170, padding: '7px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }} />
                   {[["all", "All"], ["exceptions", "Exceptions"], ["reconciled", "Reconciled"]].map(([k, label]) => (
                     <button key={k} onClick={() => setReconFilter(k)}
-                      style={{ fontSize: 11, fontWeight: 500, padding: '6px 12px', borderRadius: 999, border: '1px solid ' + (reconFilter === k ? '#1B1A16' : '#DCDAD0'), background: reconFilter === k ? '#1B1A16' : '#FFFFFF', color: reconFilter === k ? '#FFFFFF' : '#54524A', cursor: 'pointer' }}>
+                      style={{ fontSize: 11, fontWeight: 500, padding: '6px 12px', borderRadius: 999, border: '1px solid ' + (reconFilter === k ? 'var(--ink)' : 'var(--line-strong)'), background: reconFilter === k ? 'var(--ink)' : '#FFFFFF', color: reconFilter === k ? '#FFFFFF' : 'var(--text-2)', cursor: 'pointer' }}>
                       {label}
                     </button>
                   ))}
-                  <a href="/api/reconciliation/csv" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid #E5E3D9', color: '#54524A', textDecoration: 'none' }}>
+                  <a href="/api/reconciliation/csv" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--line)', color: 'var(--text-2)', textDecoration: 'none' }}>
                     <Download style={{ width: 14, height: 14 }} /> Export CSV
                   </a>
                 </div>
               </div>
 
               {/* Reconciliation table */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid #ECEAE0', background: '#F8F7F2' }}>
+                      <tr style={{ borderBottom: '1px solid var(--line)', background: 'var(--inset)' }}>
                         {["Batch", "Ccy", "Status", "Fiat Exp.", "Fiat Rcvd", "USDC Conv.", "USDC Conf.", "Payouts", "Reconciliation"].map((h, i) => (
-                          <th key={h} style={{ padding: '10px 14px', textAlign: i > 2 && i < 7 ? 'right' : 'left', fontSize: 10, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#A3A195' }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 14px', textAlign: i > 2 && i < 7 ? 'right' : 'left', fontSize: 10, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-4)' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {filteredRecon.map((r: any) => (
-                        <tr key={r.batchRef} style={{ borderBottom: '1px solid #F5F5F5' }}>
+                        <tr key={r.batchRef} style={{ borderBottom: '1px solid var(--line)' }}>
                           <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
                             <button onClick={() => r.batchId && setSelectedId(r.batchId)} title="Open batch detail"
-                              style={{ fontWeight: 600, color: '#1B1A16', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', textDecoration: 'none' }}
+                              style={{ fontWeight: 600, color: 'var(--ink)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', textDecoration: 'none' }}
                               onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                               {r.batchRef}
                             </button>
                           </td>
-                          <td style={{ padding: '10px 14px', color: '#615F56' }}>{r.currency}</td>
+                          <td style={{ padding: '10px 14px', color: 'var(--text-2)' }}>{r.currency}</td>
                           <td style={{ padding: '10px 14px' }}><Badge status={r.status} /></td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#333333' }}>{r.fiatExpected.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#333333' }}>{r.fiatReceived.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#333333' }}>{r.usdcConverted.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#333333' }}>{r.usdcConfirmed.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '10px 14px', color: '#615F56', fontVariantNumeric: 'tabular-nums' }}>{r.payoutsConfirmed}/{r.payoutsTotal}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-2)' }}>{r.fiatExpected.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-2)' }}>{r.fiatReceived.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-2)' }}>{r.usdcConverted.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-2)' }}>{r.usdcConfirmed.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '10px 14px', color: 'var(--text-2)', fontVariantNumeric: 'tabular-nums' }}>{r.payoutsConfirmed}/{r.payoutsTotal}</td>
                           <td style={{ padding: '10px 14px' }}>
                             {r.reconciled ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: '#059669' }}><CheckCircle2 style={{ width: 13, height: 13 }} /> Reconciled</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: 'var(--green)' }}><CheckCircle2 style={{ width: 13, height: 13 }} /> Reconciled</span>
                             ) : (
-                              <span title={r.exceptions.join(" · ")} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: '#DC2626' }}><AlertCircle style={{ width: 13, height: 13 }} /> {r.exceptions.length} issue{r.exceptions.length > 1 ? "s" : ""}</span>
+                              <span title={r.exceptions.join(" · ")} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: 'var(--red)' }}><AlertCircle style={{ width: 13, height: 13 }} /> {r.exceptions.length} issue{r.exceptions.length > 1 ? "s" : ""}</span>
                             )}
                             {r.status === "pending" && currentUser?.role !== "viewer" && (
                               <button onClick={() => simulateSettlementMut.mutate(r.batchRef)} disabled={simulateSettlementMut.isPending}
                                 title="Posts the same webhook Banking Circle sends when fiat lands"
-                                style={{ marginLeft: 10, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#1D4ED8' }}>
+                                style={{ marginLeft: 10, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--blue)' }}>
                                 Demo: Simulate settlement
                               </button>
                             )}
@@ -1149,16 +1187,16 @@ export default function Dashboard() {
                         </tr>
                       ))}
                       {reconciliation && filteredRecon.length === 0 && reconciliation.rows.length > 0 && (
-                        <tr><td colSpan={10} style={{ padding: '24px 16px', fontSize: 12, color: '#96948A', textAlign: 'center' }}>No batches match. <button onClick={() => { setReconSearch(""); setReconFilter("all"); }} style={{ color: '#1D4ED8', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Clear filters</button></td></tr>
+                        <tr><td colSpan={10} style={{ padding: '24px 16px', fontSize: 12, color: 'var(--text-4)', textAlign: 'center' }}>No batches match. <button onClick={() => { setReconSearch(""); setReconFilter("all"); }} style={{ color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Clear filters</button></td></tr>
                       )}
                       {reconciliation && reconciliation.rows.length === 0 && (
-                        <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: '#96948A' }}>No batches yet.</td></tr>
+                        <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: 'var(--text-4)' }}>No batches yet.</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
               </div>
-              <p style={{ fontSize: 11, color: '#96948A', marginTop: 2 }}>
+              <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>
                 Money trail reconciled across the lifecycle: fiat received (Banking Circle) → converted (live ECB rate) → USDC sent → confirmed on-chain. Exceptions flag any mismatch.
               </p>
             </>
@@ -1166,19 +1204,19 @@ export default function Dashboard() {
 
           {/* ─ Merchants tab ─ */}
           {page === "merchants" && (
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 20px', borderBottom: '1px solid #ECEAE0' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+              <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div>
-                    <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Registered Merchants</h2>
-                    <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 2 }}>Register each merchant's wallet address once. They'll be matched automatically on batch uploads.</p>
+                    <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Registered Merchants</h2>
+                    <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Register each merchant's wallet address once. They'll be matched automatically on batch uploads.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input value={merchantSearch} onChange={e => setMerchantSearch(e.target.value)} placeholder="Search name, wallet, email, KYC ref…"
-                      className="outline-none" style={{ width: 240, padding: '7px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }} />
+                      className="outline-none" style={{ width: 240, padding: '7px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }} />
                     {[["all", "All"], ["active", "Active"], ["disabled", "Disabled"], ["flagged", "Flagged"]].map(([k, label]) => (
                       <button key={k} onClick={() => setMerchantFilter(k)}
-                        style={{ fontSize: 11, fontWeight: 500, padding: '6px 12px', borderRadius: 999, border: '1px solid ' + (merchantFilter === k ? '#1B1A16' : '#DCDAD0'), background: merchantFilter === k ? '#1B1A16' : '#FFFFFF', color: merchantFilter === k ? '#FFFFFF' : '#54524A', cursor: 'pointer' }}>
+                        style={{ fontSize: 11, fontWeight: 500, padding: '6px 12px', borderRadius: 999, border: '1px solid ' + (merchantFilter === k ? 'var(--ink)' : 'var(--line-strong)'), background: merchantFilter === k ? 'var(--ink)' : '#FFFFFF', color: merchantFilter === k ? '#FFFFFF' : 'var(--text-2)', cursor: 'pointer' }}>
                         {label}
                       </button>
                     ))}
@@ -1187,11 +1225,11 @@ export default function Dashboard() {
               </div>
               {merchants.length === 0 ? (
                 <div className="text-center" style={{ padding: '64px 0' }}>
-                  <Users className="w-10 h-10 mx-auto" style={{ color: '#CBC9BF', marginBottom: 12 }} />
-                  <p style={{ fontSize: 13, color: '#6E6C62', marginBottom: 12 }}>No merchants registered yet.</p>
+                  <Users className="w-10 h-10 mx-auto" style={{ color: 'var(--text-faint)', marginBottom: 12 }} />
+                  <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>No merchants registered yet.</p>
                   <button onClick={() => setShowAddMerchant(true)}
                     className="inline-flex items-center gap-1.5"
-                    style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}>
+                    style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}>
                     <UserPlus className="w-3.5 h-3.5" /> Register First Merchant
                   </button>
                 </div>
@@ -1199,33 +1237,33 @@ export default function Dashboard() {
                 <div style={{ overflowX: 'auto' }}>
                 <table className="w-full" style={{ minWidth: 600 }}>
                   <thead>
-                    <tr style={{ background: '#F8F7F2' }}>
+                    <tr style={{ background: 'var(--inset)' }}>
                       {["Name", "Wallet Address", "KYC", "Screening", "Status", "Registered", ""].map((h, i) => (
-                        <th key={h || "actions"} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: i === 6 ? 'right' : 'left' }}>{h}</th>
+                        <th key={h || "actions"} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: i === 6 ? 'right' : 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMerchants.map((m: any) => (
                       <tr key={m.id} className="transition-colors"
-                        style={{ borderTop: '1px solid #EFEDE4' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        style={{ borderTop: '1px solid var(--line)' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--inset)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                         <td style={{ padding: '13px 16px' }}>
-                          <span style={{ fontSize: 12, fontWeight: 500, display: 'block', color: m.status === "disabled" ? '#96948A' : '#1B1A16' }}>{m.name}</span>
-                          {m.email && <span style={{ fontSize: 10, color: '#96948A', display: 'block', marginTop: 1 }}>{m.email}</span>}
+                          <span style={{ fontSize: 12, fontWeight: 500, display: 'block', color: m.status === "disabled" ? 'var(--text-4)' : 'var(--ink)' }}>{m.name}</span>
+                          {m.email && <span style={{ fontSize: 10, color: 'var(--text-4)', display: 'block', marginTop: 1 }}>{m.email}</span>}
                         </td>
                         <td style={{ padding: '13px 16px' }}>
                           <div className="flex items-center gap-1.5">
-                            <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{m.walletAddress.slice(0, 8)}...{m.walletAddress.slice(-4)}</span>
-                            <button onClick={() => copyText(m.walletAddress)} style={{ color: '#CBC9BF', background: 'none', border: 'none', cursor: 'pointer' }}
-                              onMouseEnter={e => e.currentTarget.style.color = '#615F56'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}
+                            <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{m.walletAddress.slice(0, 8)}...{m.walletAddress.slice(-4)}</span>
+                            <button onClick={() => copyText(m.walletAddress)} style={{ color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
+                              onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}
                               aria-label="Copy wallet address"><Copy className="w-3 h-3" /></button>
                           </div>
                         </td>
                         {/* KYC reliance attestation — verification lives on the relying party's system */}
                         <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                           <span title={`KYC performed by ${m.kycReliedOn || "Paystrax (acquirer)"}${m.kycRef ? ` · ref ${m.kycRef}` : ""}${m.kycAttestedAt ? ` · attested ${new Date(m.kycAttestedAt).toLocaleDateString()}` : ""}`}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#EFF6FF', color: '#1D4ED8' }}>
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-blue)', color: 'var(--blue)' }}>
                             <ShieldCheck style={{ width: 11, height: 11 }} /> Relied · {(m.kycReliedOn || "Paystrax").split(" ")[0]}
                           </span>
                         </td>
@@ -1233,37 +1271,37 @@ export default function Dashboard() {
                         <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                           {m.walletScreenStatus === "flagged" ? (
                             <span title={`Flagged by ${m.walletScreenProvider}${m.walletScreenedAt ? ` · ${new Date(m.walletScreenedAt).toLocaleString()}` : ""}`}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#FEF2F2', color: '#DC2626' }}>
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-red)', color: 'var(--red)' }}>
                               <AlertCircle style={{ width: 11, height: 11 }} /> Flagged
                             </span>
                           ) : m.walletScreenStatus === "clear" ? (
                             <span title={`Screened clear by ${m.walletScreenProvider}${m.walletScreenedAt ? ` · ${new Date(m.walletScreenedAt).toLocaleString()}` : ""}`}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#ECFDF5', color: '#059669' }}>
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-green)', color: 'var(--green)' }}>
                               <CheckCircle2 style={{ width: 11, height: 11 }} /> Clear
                             </span>
                           ) : (
                             <button onClick={() => screenMerchantMut.mutate(m.id)} disabled={screenMerchantMut.isPending}
-                              style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#B45309' }}>
+                              style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--amber-strong)' }}>
                               Screen now
                             </button>
                           )}
                         </td>
                         <td style={{ padding: '13px 16px' }}><Badge status={m.status || "active"} /></td>
-                        <td style={{ padding: '13px 16px', fontSize: 11, color: '#777777', whiteSpace: 'nowrap' }}>{timeAgo(m.createdAt)}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 11, color: 'var(--text-4)', whiteSpace: 'nowrap' }}>{timeAgo(m.createdAt)}</td>
                         <td style={{ padding: '13px 16px', textAlign: 'right' }}>
                           {currentUser?.role !== "viewer" && (
                             <div className="flex items-center gap-1 justify-end">
                               <button onClick={() => setEditingMerchant({ ...m })}
-                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#54524A' }}
-                                onMouseEnter={e => e.currentTarget.style.borderColor = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.borderColor = '#DCDAD0'}>
+                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}
+                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line-strong)'}>
                                 Edit
                               </button>
                               <button onClick={() => updateMerchantMut.mutate({ id: m.id, status: m.status === "disabled" ? "active" : "disabled" })}
-                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: m.status === "disabled" ? '#059669' : '#D97706' }}>
+                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: m.status === "disabled" ? 'var(--green)' : 'var(--amber)' }}>
                                 {m.status === "disabled" ? "Enable" : "Disable"}
                               </button>
                               <button onClick={() => { if (window.confirm(`Delete ${m.name}? This cannot be undone.`)) deleteMerchantMut.mutate(m.id); }}
-                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid #FCA5A5', background: '#FFFFFF', cursor: 'pointer', color: '#DC2626' }}>
+                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid var(--red-line)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--red)' }}>
                                 Delete
                               </button>
                             </div>
@@ -1274,9 +1312,9 @@ export default function Dashboard() {
                   </tbody>
                 </table>
                 {filteredMerchants.length === 0 && merchants.length > 0 && (
-                  <p style={{ padding: '24px 16px', fontSize: 12, color: '#96948A', textAlign: 'center' }}>No merchants match “{merchantSearch || merchantFilter}”. <button onClick={() => { setMerchantSearch(""); setMerchantFilter("all"); }} style={{ color: '#1D4ED8', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Clear filters</button></p>
+                  <p style={{ padding: '24px 16px', fontSize: 12, color: 'var(--text-4)', textAlign: 'center' }}>No merchants match “{merchantSearch || merchantFilter}”. <button onClick={() => { setMerchantSearch(""); setMerchantFilter("all"); }} style={{ color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Clear filters</button></p>
                 )}
-                {deleteMerchantMut.isError && <p style={{ padding: '8px 16px', fontSize: 11, color: '#DC2626' }}>{(deleteMerchantMut.error as Error).message}</p>}
+                {deleteMerchantMut.isError && <p style={{ padding: '8px 16px', fontSize: 11, color: 'var(--red)' }}>{(deleteMerchantMut.error as Error).message}</p>}
                 </div>
               )}
             </div>
@@ -1286,77 +1324,77 @@ export default function Dashboard() {
           {page === "accounts" && (
             <div className="space-y-5">
               <div className="flex items-start justify-between gap-4">
-                <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', padding: '10px 14px', borderRadius: 10, background: '#F4F3EC', border: '1px solid #ECEAE0', flex: 1 }}>
+                <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)', flex: 1 }}>
                   Collection accounts are the IBANs your payout fiat arrives into — one per currency. Open an account below and share its details with the paying entity. In production these are <strong>virtual IBANs issued by Banking Circle</strong>; in the demo they are generated instantly with the same shape.
                 </p>
                 <button onClick={() => { setShowOpenAccount(true); setOpenedAccount(null); setNewAccountLabel(""); }}
                   className="flex items-center gap-1.5"
-                  style={{ padding: '13px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ padding: '13px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
                   <Landmark className="w-3.5 h-3.5" /> Open account
                 </button>
               </div>
 
               {accounts.length === 0 ? (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
-                  <Landmark className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 10 }} />
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>No collection accounts yet</p>
-                  <p style={{ fontSize: 12, color: '#6E6C62', marginTop: 2 }}>Open your first account to receive payout funding. 9 currencies available.</p>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
+                  <Landmark className="w-8 h-8 mx-auto" style={{ color: 'var(--text-faint)', marginBottom: 10 }} />
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>No collection accounts yet</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Open your first account to receive payout funding. 9 currencies available.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   {accounts.map((a: any) => (
-                    <div key={a.id} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
+                    <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
                       <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
                         <div className="flex items-center gap-2.5">
-                          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', padding: '4px 10px', borderRadius: 8, background: '#1B1A16', color: '#FFFFFF' }}>{a.currency}</span>
-                          {a.label && <span style={{ fontSize: 12, color: '#54524A' }}>{a.label}</span>}
+                          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', padding: '4px 10px', borderRadius: 8, background: 'var(--cta)', color: '#FFFFFF' }}>{a.currency}</span>
+                          {a.label && <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{a.label}</span>}
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge status={a.status === 'closed' ? 'disabled' : 'active'} />
                           {currentUser?.role !== "viewer" && (
                             <button onClick={() => closeAccountMut.mutate({ id: a.id, status: a.status === 'closed' ? 'active' : 'closed' })}
-                              style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: a.status === 'closed' ? '#059669' : '#B45309' }}>
+                              style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: a.status === 'closed' ? 'var(--green)' : 'var(--amber-strong)' }}>
                               {a.status === 'closed' ? 'Reopen' : 'Close'}
                             </button>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <p style={{ fontSize: 15, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '0.01em', color: '#1B1A16' }}>{a.iban}</p>
+                        <p style={{ fontSize: 15, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '0.01em', color: 'var(--ink)' }}>{a.iban}</p>
                         <button onClick={() => copyText(a.iban.replace(/ /g, ""))} aria-label="Copy IBAN"
-                          style={{ color: '#CBC9BF', background: 'none', border: 'none', cursor: 'pointer' }}
-                          onMouseEnter={e => e.currentTarget.style.color = '#54524A'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}>
+                          style={{ color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}>
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="flex gap-5" style={{ marginTop: 8, fontSize: 11, color: '#6E6C62' }}>
-                        <span>BIC <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A', fontWeight: 500 }}>{a.bic}</span></span>
+                      <div className="flex gap-5" style={{ marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
+                        <span>BIC <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)', fontWeight: 500 }}>{a.bic}</span></span>
                         <span>{a.bankName}</span>
-                        <span style={{ marginLeft: 'auto', color: '#96948A' }}>opened {timeAgo(a.createdAt)}</span>
+                        <span style={{ marginLeft: 'auto', color: 'var(--text-4)' }}>opened {timeAgo(a.createdAt)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <p style={{ fontSize: 10, color: '#B5B3A8' }}>Demo accounts — IBANs are generated locally. In production, opening an account provisions a virtual IBAN at Banking Circle and appears here within seconds.</p>
+              <p style={{ fontSize: 10, color: 'var(--text-4)' }}>Demo accounts — IBANs are generated locally. In production, opening an account provisions a virtual IBAN at Banking Circle and appears here within seconds.</p>
             </div>
           )}
 
           {/* ─ Revenue & Fees tab ─ */}
           {page === "revenue" && (
             <div className="space-y-5">
-              <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', padding: '10px 14px', borderRadius: 10, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
+              <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
                 Fybrus charges a fixed <strong>{settings ? (settings.fybrusFeeBps/100).toFixed(2) : "0.09"}%</strong> ({settings?.fybrusFeeBps ?? 9} bps) on each payout. On top of that, Paystrax sets its own markup — collected from merchants and <strong>owed back to Paystrax by Fybrus</strong>. The numbers below are settled (confirmed) payouts only.
               </p>
 
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Owed to Paystrax (markup)", val: revenue?.markupOwed, color: '#059669', hint: "Your markup on settled payouts — rebated to you by Fybrus." },
-                  { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: '#1B1A16', hint: "What Paystrax pays Fybrus for the settled payouts." },
-                  { label: "Net Delivered to Merchants", val: revenue?.netToMerchants, color: '#54524A', hint: "USDC value delivered after all fees.", usd: true },
+                  { label: "Owed to Paystrax (markup)", val: revenue?.markupOwed, color: 'var(--green)', hint: "Your markup on settled payouts — rebated to you by Fybrus." },
+                  { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: 'var(--ink)', hint: "What Paystrax pays Fybrus for the settled payouts." },
+                  { label: "Net Delivered to Merchants", val: revenue?.netToMerchants, color: 'var(--text-2)', hint: "USDC value delivered after all fees.", usd: true },
                 ].map((c) => (
-                  <div key={c.label} title={c.hint} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 16 }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>{c.label}</p>
+                  <div key={c.label} title={c.hint} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 16 }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>{c.label}</p>
                     <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.color }}>
                       {c.usd ? "$" : "€"}{(c.val || 0).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
@@ -1365,49 +1403,49 @@ export default function Dashboard() {
               </div>
 
               {/* Markup control */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 20 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Default Paystrax markup</p>
-                <p style={{ fontSize: 11, color: '#6E6C62', marginBottom: 12 }}>Applied to every merchant unless overridden individually (Merchants → Edit). Set in basis points — 100 bps = 1%.</p>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Default Paystrax markup</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 12 }}>Applied to every merchant unless overridden individually (Merchants → Edit). Set in basis points — 100 bps = 1%.</p>
                 <div className="flex items-center gap-3">
                   <input type="number" min={0} max={1000}
                     value={markupInput !== "" ? markupInput : (settings?.defaultMarkupBps ?? "")}
                     onChange={e => setMarkupInput(e.target.value)}
-                    className="outline-none" style={{ width: 120, padding: '8px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', color: '#1B1A16' }} />
-                  <span style={{ fontSize: 12, color: '#6E6C62' }}>bps ({(((markupInput !== "" ? Number(markupInput) : (settings?.defaultMarkupBps ?? 0)))/100).toFixed(2)}%)</span>
+                    className="outline-none" style={{ width: 120, padding: '8px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid var(--line-strong)', color: 'var(--ink)' }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>bps ({(((markupInput !== "" ? Number(markupInput) : (settings?.defaultMarkupBps ?? 0)))/100).toFixed(2)}%)</span>
                   <button onClick={() => saveMarkupMut.mutate(markupInput !== "" ? markupInput : String(settings?.defaultMarkupBps ?? 0))}
                     disabled={saveMarkupMut.isPending}
-                    style={{ fontSize: 12, fontWeight: 500, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>
+                    style={{ fontSize: 12, fontWeight: 500, padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>
                     {saveMarkupMut.isPending ? "Saving…" : "Save markup"}
                   </button>
-                  {saveMarkupMut.isSuccess && markupInput === "" && <span style={{ fontSize: 11, color: '#059669' }}>Saved</span>}
+                  {saveMarkupMut.isSuccess && markupInput === "" && <span style={{ fontSize: 11, color: 'var(--green)' }}>Saved</span>}
                 </div>
               </div>
 
               {/* Per-merchant breakdown */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16' }}>Markup earned by merchant</p></div>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)' }}>Markup earned by merchant</p></div>
                 <div style={{ overflowX: 'auto' }}>
                 <table className="w-full" style={{ minWidth: 720 }}>
-                  <thead><tr style={{ background: '#F8F7F2' }}>
+                  <thead><tr style={{ background: 'var(--inset)' }}>
                     {["Merchant", "Markup rate", "Payout", "Settled volume", "Fybrus fee", "Paystrax markup"].map((h, i) => (
-                      <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195', padding: '10px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
+                      <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)', padding: '10px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {(revenue?.byMerchant ?? []).map((r: any, i: number) => (
-                      <tr key={i} style={{ borderTop: '1px solid #F0EFE4' }}>
-                        <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.merchant}</td>
-                        <td style={{ padding: '13px 16px', fontSize: 12, color: '#54524A', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
+                      <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
+                        <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>{r.merchant}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, color: 'var(--text-2)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
                         <td style={{ padding: '13px 16px' }}>
-                          <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: r.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payoutMethod === 'fiat' ? 'Fiat' : 'Stablecoin'}</span>
+                          <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: r.payoutMethod === 'fiat' ? 'var(--tint-blue)' : 'var(--tint-green)', color: r.payoutMethod === 'fiat' ? 'var(--blue)' : 'var(--green)' }}>{r.payoutMethod === 'fiat' ? 'Fiat' : 'Stablecoin'}</span>
                         </td>
-                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>€{r.volume.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>€{r.fybrusFee.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", fontWeight: 600, color: '#059669' }}>€{r.markup.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)' }}>€{r.volume.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>€{r.fybrusFee.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", fontWeight: 600, color: 'var(--green)' }}>€{r.markup.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
                     {(!revenue || (revenue.byMerchant ?? []).length === 0) && (
-                      <tr><td colSpan={6} style={{ padding: '24px 16px', fontSize: 12, color: '#96948A', textAlign: 'center' }}>No settled payouts yet.</td></tr>
+                      <tr><td colSpan={6} style={{ padding: '24px 16px', fontSize: 12, color: 'var(--text-4)', textAlign: 'center' }}>No settled payouts yet.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -1422,68 +1460,68 @@ export default function Dashboard() {
               {/* Summary chips */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Payout Failures", n: alertsData?.failedPayouts?.length ?? 0, color: '#DC2626', bg: '#FEF2F2' },
-                  { label: "Flagged Wallets", n: alertsData?.flaggedMerchants?.length ?? 0, color: '#D97706', bg: '#FFFBEB' },
-                  { label: "Reconciliation Exceptions", n: alertsData?.reconExceptions?.length ?? 0, color: '#1D4ED8', bg: '#EFF6FF' },
+                  { label: "Payout Failures", n: alertsData?.failedPayouts?.length ?? 0, color: 'var(--red)', bg: 'var(--tint-red)' },
+                  { label: "Flagged Wallets", n: alertsData?.flaggedMerchants?.length ?? 0, color: 'var(--amber)', bg: 'var(--tint-amber)' },
+                  { label: "Reconciliation Exceptions", n: alertsData?.reconExceptions?.length ?? 0, color: 'var(--blue)', bg: 'var(--tint-blue)' },
                 ].map(c => (
-                  <div key={c.label} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 16 }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{c.label}</p>
-                    <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.n > 0 ? c.color : '#059669' }}>{c.n}</p>
+                  <div key={c.label} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 16 }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{c.label}</p>
+                    <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.n > 0 ? c.color : 'var(--green)' }}>{c.n}</p>
                   </div>
                 ))}
               </div>
 
-              <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', padding: '10px 14px', borderRadius: 10, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
+              <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
                 Everything that needs a human lands here, with the reason attached. Compliance blocks (flagged wallets) are the system working as intended — they need review, not retries. Technical failures can be retried directly. If anything is unclear, open a ticket with <strong>Fybrus Customer Care</strong> from any alert.
               </p>
 
               {/* Open tickets */}
               {supportTickets.length > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 20 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16', marginBottom: 10 }}>Open tickets with Fybrus Customer Care</p>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 10 }}>Open tickets with Fybrus Customer Care</p>
                   <div className="space-y-2">
                     {supportTickets.map((t: any) => (
-                      <div key={t.id} className="flex items-center gap-3" style={{ fontSize: 12, padding: '8px 12px', borderRadius: 8, background: '#F8F7F2', border: '1px solid #ECEAE0' }}>
-                        <LifeBuoy style={{ width: 14, height: 14, color: '#1D4ED8', flexShrink: 0 }} />
-                        <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1D4ED8', fontWeight: 500 }}>{t.ticketRef}</span>
-                        <span style={{ flex: 1, color: '#54524A' }}>{t.subject}</span>
-                        <span style={{ fontSize: 10, color: '#96948A' }}>{timeAgo(t.createdAt)}</span>
+                      <div key={t.id} className="flex items-center gap-3" style={{ fontSize: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--inset)', border: '1px solid var(--line)' }}>
+                        <LifeBuoy style={{ width: 14, height: 14, color: 'var(--blue)', flexShrink: 0 }} />
+                        <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--blue)', fontWeight: 500 }}>{t.ticketRef}</span>
+                        <span style={{ flex: 1, color: 'var(--text-2)' }}>{t.subject}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-4)' }}>{timeAgo(t.createdAt)}</span>
                         <Badge status={t.status === "open" ? "processing" : "completed"} />
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: 10, color: '#96948A', marginTop: 8 }}>Fybrus Customer Care typically replies within 2 business hours.</p>
+                  <p style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 8 }}>Fybrus Customer Care typically replies within 2 business hours.</p>
                 </div>
               )}
 
               {/* All clear */}
               {(alertsData?.total ?? 0) === 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
-                  <CheckCircle2 className="w-8 h-8 mx-auto" style={{ color: '#059669', marginBottom: 8 }} />
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>All clear</p>
-                  <p style={{ fontSize: 12, color: '#6E6C62', marginTop: 2 }}>No failed payouts, flagged wallets, or reconciliation exceptions.</p>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
+                  <CheckCircle2 className="w-8 h-8 mx-auto" style={{ color: 'var(--green)', marginBottom: 8 }} />
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>All clear</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>No failed payouts, flagged wallets, or reconciliation exceptions.</p>
                 </div>
               )}
 
               {/* Payout failures */}
               {(alertsData?.failedPayouts?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#DC2626' }}>Payout failures</p></div>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--red)' }}>Payout failures</p></div>
                   {alertsData.failedPayouts.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #DC2626' }}>
+                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--red)' }}>
                       <div className="flex items-start justify-between gap-4">
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
                             {a.merchant} — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
                           </p>
-                          <p style={{ fontSize: 12, color: '#DC2626', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
-                          <p style={{ fontSize: 11, color: '#96948A', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef} · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)}</p>
-                          {!a.retryable && <p style={{ fontSize: 11, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '6px 10px', marginTop: 8, lineHeight: 1.5 }}>This is a compliance block, not a technical error — retrying will not deliver it. Review the merchant's wallet, or contact Fybrus Customer Care if you believe this is a false positive.</p>}
+                          <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
+                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef} · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)}</p>
+                          {!a.retryable && <p style={{ fontSize: 11, color: 'var(--amber-strong)', background: 'var(--tint-amber)', border: '1px solid var(--amber-line)', borderRadius: 6, padding: '6px 10px', marginTop: 8, lineHeight: 1.5 }}>This is a compliance block, not a technical error — retrying will not deliver it. Review the merchant's wallet, or contact Fybrus Customer Care if you believe this is a false positive.</p>}
                         </div>
                         <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#54524A' }}>View batch</button>
-                          {a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid #FCD34D', background: '#FFFFFF', cursor: 'pointer', color: '#B45309' }}>Retry</button>}
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
+                          <button onClick={() => setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>View batch</button>
+                          {a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--amber-line)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--amber-strong)' }}>Retry</button>}
+                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
                         </div>
                       </div>
                     </div>
@@ -1493,19 +1531,19 @@ export default function Dashboard() {
 
               {/* Flagged wallets */}
               {(alertsData?.flaggedMerchants?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#D97706' }}>Flagged wallets</p></div>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--amber)' }}>Flagged wallets</p></div>
                   {alertsData.flaggedMerchants.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #D97706' }}>
+                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--amber)' }}>
                       <div className="flex items-start justify-between gap-4">
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>{a.merchant}</p>
-                          <p style={{ fontSize: 12, color: '#54524A', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
-                          <p style={{ fontSize: 11, color: '#96948A', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · screened by {a.provider}</p>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{a.merchant}</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
+                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · screened by {a.provider}</p>
                         </div>
                         <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#54524A' }}>Review merchant</button>
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
+                          <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>Review merchant</button>
+                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
                         </div>
                       </div>
                     </div>
@@ -1515,21 +1553,21 @@ export default function Dashboard() {
 
               {/* Reconciliation exceptions */}
               {(alertsData?.reconExceptions?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#1D4ED8' }}>Reconciliation exceptions</p></div>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)' }}>Reconciliation exceptions</p></div>
                   {alertsData.reconExceptions.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #1D4ED8' }}>
+                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--blue)' }}>
                       <div className="flex items-start justify-between gap-4">
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
-                          <ul style={{ fontSize: 12, color: '#54524A', marginTop: 4, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc' }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
+                          <ul style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc' }}>
                             {a.exceptions.map((x: string, j: number) => <li key={j}>{x}</li>)}
                           </ul>
-                          <p style={{ fontSize: 11, color: '#96948A', marginTop: 6, lineHeight: 1.5 }}>Exceptions usually follow from a blocked or failed payout in this batch — the money trail shows exactly where the difference is. They clear when the underlying payout is resolved.</p>
+                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 6, lineHeight: 1.5 }}>Exceptions usually follow from a blocked or failed payout in this batch — the money trail shows exactly where the difference is. They clear when the underlying payout is resolved.</p>
                         </div>
                         <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: '#54524A' }}>View batch</button>
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
+                          <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>View batch</button>
+                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
                         </div>
                       </div>
                     </div>
@@ -1543,76 +1581,76 @@ export default function Dashboard() {
           {page === "audit" && (
             <div className="space-y-5">
               {/* Audit trail */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                <div className="flex items-center justify-between" style={{ padding: '12px 20px', borderBottom: '1px solid #ECEAE0' }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>
-                    <ClipboardList className="w-4 h-4 inline mr-1.5 -mt-0.5" style={{ color: '#2E6DB4' }} />
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                <div className="flex items-center justify-between" style={{ padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>
+                    <ClipboardList className="w-4 h-4 inline mr-1.5 -mt-0.5" style={{ color: 'var(--blue)' }} />
                     Audit Trail
                   </h3>
                   <button onClick={() => window.open("/api/audit/csv", "_blank")}
-                    className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62' }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                    className="flex items-center gap-1.5 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                     <Download className="w-3.5 h-3.5" /> Export Audit Log
                   </button>
                 </div>
                 <div style={{ padding: '0 20px 12px', display: 'flex', gap: 4 }}>
                   <input value={auditSearch} onChange={e => setAuditSearch(e.target.value)} placeholder="Search action, ref, actor, detail…"
-                    className="outline-none" style={{ width: 230, padding: '6px 12px', borderRadius: 8, fontSize: 11, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16', marginRight: 8 }} />
+                    className="outline-none" style={{ width: 230, padding: '6px 12px', borderRadius: 8, fontSize: 11, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', marginRight: 8 }} />
                   {AUDIT_CATEGORIES.map(cat => (
                     <button key={cat.key} onClick={() => setAuditFilter(cat.key)}
                       className="transition-all"
                       style={{
                         padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 500,
-                        background: auditFilter === cat.key ? '#1B1A16' : 'transparent',
-                        color: auditFilter === cat.key ? '#FFFFFF' : '#6E6C62',
+                        background: auditFilter === cat.key ? 'var(--ink)' : 'transparent',
+                        color: auditFilter === cat.key ? '#FFFFFF' : 'var(--text-3)',
                         border: 'none', cursor: 'pointer',
                       }}
-                      onMouseEnter={e => { if (auditFilter !== cat.key) e.currentTarget.style.color = '#54524A'; }}
-                      onMouseLeave={e => { if (auditFilter !== cat.key) e.currentTarget.style.color = '#6E6C62'; }}>
+                      onMouseEnter={e => { if (auditFilter !== cat.key) e.currentTarget.style.color = 'var(--text-2)'; }}
+                      onMouseLeave={e => { if (auditFilter !== cat.key) e.currentTarget.style.color = 'var(--text-3)'; }}>
                       {cat.label}
                     </button>
                   ))}
                 </div>
                 <table className="w-full">
                   <thead>
-                    <tr style={{ background: '#F8F7F2' }}>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '8px 20px', textAlign: 'left' }}>Timestamp</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Action</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Entity</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Actor</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>IP</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '8px 20px', textAlign: 'left' }}>Detail</th>
+                    <tr style={{ background: 'var(--inset)' }}>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '8px 20px', textAlign: 'left' }}>Timestamp</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: 'left' }}>Action</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: 'left' }}>Entity</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: 'left' }}>Actor</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: 'left' }}>IP</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '8px 20px', textAlign: 'left' }}>Detail</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAudit.map((e: any) => {
                       const actionColors: Record<string, string> = {
-                        batch_completed: "#059669", payout_confirmed: "#059669",
-                        login: "#1D4ED8", batch_funded: "#1D4ED8",
+                        batch_completed: "var(--green)", payout_confirmed: "var(--green)",
+                        login: "var(--blue)", batch_funded: "var(--blue)",
                       };
                       const color = actionColors[e.action] || "#6B7280";
                       return (
                         <tr key={e.id} className="transition-colors"
-                          style={{ borderTop: '1px solid #EFEDE4' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                          <td style={{ padding: '10px 20px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", whiteSpace: 'nowrap', color: '#54524A' }}>
+                          style={{ borderTop: '1px solid var(--line)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--inset)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                          <td style={{ padding: '10px 20px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", whiteSpace: 'nowrap', color: 'var(--text-2)' }}>
                             {e.createdAt ? timeAgo(e.createdAt) : "—"}
                           </td>
                           <td style={{ padding: '13px 16px' }}>
                             <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: `${color}18`, color }}>{e.action.replace(/_/g, " ")}</span>
                           </td>
-                          <td style={{ padding: '13px 16px', fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>
+                          <td style={{ padding: '13px 16px', fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>
                             {e.entityRef?.startsWith("BATCH-") ? (
                               <button onClick={() => { const b = (batches as any[]).find((x: any) => x.batchRef === e.entityRef); if (b) setSelectedId(b.id); }} title="Open batch detail"
-                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: '#1D4ED8' }}
+                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--blue)' }}
                                 onMouseEnter={ev => ev.currentTarget.style.textDecoration = 'underline'} onMouseLeave={ev => ev.currentTarget.style.textDecoration = 'none'}>
                                 {e.entityRef}
                               </button>
                             ) : (e.entityRef || "—")}
                           </td>
-                          <td style={{ padding: '13px 16px', fontSize: 12, color: '#54524A' }}>{e.actor}</td>
-                          <td style={{ padding: '13px 16px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{e.ipAddress || "—"}</td>
-                          <td style={{ padding: '10px 20px', fontSize: 12, color: '#54524A' }}>{e.detail}</td>
+                          <td style={{ padding: '13px 16px', fontSize: 12, color: 'var(--text-2)' }}>{e.actor}</td>
+                          <td style={{ padding: '13px 16px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{e.ipAddress || "—"}</td>
+                          <td style={{ padding: '10px 20px', fontSize: 12, color: 'var(--text-2)' }}>{e.detail}</td>
                         </tr>
                       );
                     })}
@@ -1620,13 +1658,13 @@ export default function Dashboard() {
                 </table>
                 {auditLoading ? (
                   <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                    <Loader2 className="w-6 h-6 mx-auto animate-spin" style={{ color: '#CBC9BF', marginBottom: 8 }} />
-                    <p style={{ fontSize: 12, color: '#6E6C62' }}>Loading audit trail…</p>
+                    <Loader2 className="w-6 h-6 mx-auto animate-spin" style={{ color: 'var(--text-faint)', marginBottom: 8 }} />
+                    <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Loading audit trail…</p>
                   </div>
                 ) : filteredAudit.length === 0 && (
                   <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                    <ClipboardList className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 8 }} />
-                    <p style={{ fontSize: 12, color: '#6E6C62' }}>No audit entries match this filter.</p>
+                    <ClipboardList className="w-8 h-8 mx-auto" style={{ color: 'var(--text-faint)', marginBottom: 8 }} />
+                    <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No audit entries match this filter.</p>
                   </div>
                 )}
               </div>
@@ -1637,15 +1675,15 @@ export default function Dashboard() {
           {page === "settings" && (
             <div className="space-y-5">
               {/* User Accounts */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 20, padding: 26 }}>
                 <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
                   <div>
-                    <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 2 }}>User Accounts</h3>
-                    <p style={{ fontSize: 12, color: '#615F56' }}>{usersData.length} user{usersData.length !== 1 ? "s" : ""} registered</p>
+                    <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 2 }}>User Accounts</h3>
+                    <p style={{ fontSize: 12, color: 'var(--text-2)' }}>{usersData.length} user{usersData.length !== 1 ? "s" : ""} registered</p>
                   </div>
                   {currentUser?.role === "admin" && (
                     <button onClick={() => setShowAddUser(true)}
-                      style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+                      style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
                       <Plus className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />Add User
                     </button>
                   )}
@@ -1655,23 +1693,23 @@ export default function Dashboard() {
                     const isMe = currentUser?.email === user.email;
                     const initials = user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
                     return (
-                      <div key={user.id} className="flex items-center justify-between" style={{ padding: '12px 16px', borderRadius: 12, background: isMe ? '#EFF6FF' : '#F8F7F2', border: `1px solid ${isMe ? '#BFDBFE' : '#ECEAE0'}` }}>
+                      <div key={user.id} className="flex items-center justify-between" style={{ padding: '12px 16px', borderRadius: 12, background: isMe ? 'var(--tint-blue)' : 'var(--inset)', border: `1px solid ${isMe ? 'var(--blue-line)' : 'var(--line)'}` }}>
                         <div className="flex items-center gap-3">
-                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: isMe ? '#1D4ED8' : user.status === "disabled" ? '#CBC9BF' : '#54524A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#FFFFFF' }}>
+                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: isMe ? 'var(--blue)' : user.status === "disabled" ? 'var(--text-faint)' : 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#FFFFFF' }}>
                             {initials}
                           </div>
                           <div>
-                            <p style={{ fontSize: 13, fontWeight: 500, color: user.status === "disabled" ? '#96948A' : '#1B1A16' }}>
-                              {user.name} {isMe && <span style={{ fontSize: 10, color: '#1D4ED8', fontWeight: 600, marginLeft: 4 }}>YOU</span>}
-                              {user.status === "disabled" && <span style={{ fontSize: 10, color: '#DC2626', fontWeight: 500, marginLeft: 4 }}>DISABLED</span>}
+                            <p style={{ fontSize: 13, fontWeight: 500, color: user.status === "disabled" ? 'var(--text-4)' : 'var(--ink)' }}>
+                              {user.name} {isMe && <span style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 600, marginLeft: 4 }}>YOU</span>}
+                              {user.status === "disabled" && <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 500, marginLeft: 4 }}>DISABLED</span>}
                             </p>
-                            <p style={{ fontSize: 11, color: '#6E6C62', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{user.email}</p>
+                            <p style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{user.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {currentUser?.role === "admin" && !isMe && (
                             <select value={user.role} onChange={e => updateUserMut.mutate({ id: user.id, role: e.target.value })}
-                              style={{ fontSize: 10, padding: '3px 6px', borderRadius: 4, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16', cursor: 'pointer' }}>
+                              style={{ fontSize: 10, padding: '3px 6px', borderRadius: 4, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', cursor: 'pointer' }}>
                               <option value="admin">Admin</option>
                               <option value="approver">Approver</option>
                               <option value="viewer">Viewer</option>
@@ -1680,18 +1718,18 @@ export default function Dashboard() {
                           {currentUser?.role !== "admin" && (
                             <span style={{
                               fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                              background: user.role === "admin" ? '#FEE2E2' : user.role === "approver" ? '#DBEAFE' : '#F1F0E9',
-                              color: user.role === "admin" ? '#DC2626' : user.role === "approver" ? '#1D4ED8' : '#6B7280',
+                              background: user.role === "admin" ? 'var(--tint-red)' : user.role === "approver" ? 'var(--tint-blue)' : 'var(--inset)',
+                              color: user.role === "admin" ? 'var(--red)' : user.role === "approver" ? 'var(--blue)' : '#6B7280',
                             }}>{user.role === "admin" ? "Admin" : user.role === "approver" ? "Approver" : "Viewer"}</span>
                           )}
                           {currentUser?.role === "admin" && !isMe && (
                             <>
                               <button onClick={() => updateUserMut.mutate({ id: user.id, status: user.status === "disabled" ? "active" : "disabled" })}
-                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: user.status === "disabled" ? '#059669' : '#D97706' }}>
+                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: user.status === "disabled" ? 'var(--green)' : 'var(--amber)' }}>
                                 {user.status === "disabled" ? "Enable" : "Disable"}
                               </button>
                               <button onClick={() => { if (window.confirm(`Delete user ${user.name}? This cannot be undone.`)) deleteUserMut.mutate(user.id); }}
-                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid #FCA5A5', background: '#FFFFFF', cursor: 'pointer', color: '#DC2626' }}>
+                                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, border: '1px solid var(--red-line)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--red)' }}>
                                 Delete
                               </button>
                             </>
@@ -1701,8 +1739,8 @@ export default function Dashboard() {
                     );
                   })}
                 </div>
-                <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: '#F8F7F2', border: '1px solid #ECEAE0' }}>
-                  <p style={{ fontSize: 11, color: '#615F56' }}>
+                <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--inset)', border: '1px solid var(--line)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-2)' }}>
                     <strong>Admin</strong> — Full access: create batches, manage users, approve, advance.<br/>
                     <strong>Approver</strong> — Can approve batches created by others and advance status.<br/>
                     <strong>Viewer</strong> — Read-only. Cannot create or modify batches.
@@ -1711,64 +1749,64 @@ export default function Dashboard() {
               </div>
 
               {/* Approval Controls */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Approval Controls</h3>
-                <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Configure how batches are approved before they can be advanced through the settlement flow.</p>
-                <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: dualApproval ? '#EFF6FF' : '#F8F7F2', border: `1px solid ${dualApproval ? '#BFDBFE' : '#ECEAE0'}` }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 20, padding: 26 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Approval Controls</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Configure how batches are approved before they can be advanced through the settlement flow.</p>
+                <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: dualApproval ? 'var(--tint-blue)' : 'var(--inset)', border: `1px solid ${dualApproval ? 'var(--blue-line)' : 'var(--line)'}` }}>
                   <div>
-                    <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Dual Approval</p>
-                    <p style={{ fontSize: 11, color: '#615F56', marginTop: 2 }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Dual Approval</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2 }}>
                       When enabled, batches must be approved by a user different from the creator before they can be advanced. This prevents single-person fraud.
                     </p>
                   </div>
                   <button onClick={() => { if (currentUser?.role === "admin") setDualApproval(!dualApproval); }}
                     style={{
                       width: 44, height: 24, borderRadius: 12, border: 'none', cursor: currentUser?.role === "admin" ? 'pointer' : 'not-allowed',
-                      background: dualApproval ? '#059669' : '#CBC9BF', position: 'relative', transition: 'background 0.2s',
+                      background: dualApproval ? 'var(--green)' : 'var(--text-faint)', position: 'relative', transition: 'background 0.2s',
                       opacity: currentUser?.role === "admin" ? 1 : 0.5,
                     }}>
                     <div style={{
-                      width: 20, height: 20, borderRadius: '50%', background: '#FFFFFF', position: 'absolute', top: 2,
+                      width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 2,
                       left: dualApproval ? 22 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                     }} />
                   </button>
                 </div>
                 {currentUser?.role !== "admin" && (
-                  <p style={{ fontSize: 10, color: '#DC2626', marginTop: 8 }}>Only administrators can change approval settings.</p>
+                  <p style={{ fontSize: 10, color: 'var(--red)', marginTop: 8 }}>Only administrators can change approval settings.</p>
                 )}
-                <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                  <p style={{ fontSize: 11, color: '#92400E' }}>
+                <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: 'var(--tint-amber)', border: '1px solid var(--amber-line)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--amber-strong)' }}>
                     <strong>How it works:</strong> When a batch is created, it shows "Pending Approval" in the batch detail. A different user (Admin or Approver role) must click "Approve Batch" before the status can be advanced. The creator cannot approve their own batch.
                   </p>
                 </div>
               </div>
 
               {/* Batch processing mode */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Batch Processing</h3>
-                <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>How a batch behaves once funds land in the collection account.</p>
-                <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: autoProcess ? '#ECFDF5' : '#F8F7F2', border: `1px solid ${autoProcess ? '#A7F3D0' : '#ECEAE0'}` }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 20, padding: 26 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Batch Processing</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>How a batch behaves once funds land in the collection account.</p>
+                <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: autoProcess ? 'var(--tint-green)' : 'var(--inset)', border: `1px solid ${autoProcess ? 'var(--green-line)' : 'var(--line)'}` }}>
                   <div style={{ paddingRight: 16 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>Auto-processing</p>
-                    <p style={{ fontSize: 11, color: '#615F56', marginTop: 2, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Auto-processing</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2, lineHeight: 1.5 }}>
                       When on, a funded batch runs straight through: fee deducted → converted at the live ECB rate → wallets screened → travel-rule data transmitted → USDC dispatched → completed. This matches production behaviour. Turn off to advance each stage manually (useful for walking someone through the flow).
                     </p>
                   </div>
                   <button onClick={() => setAutoProcess(!autoProcess)} aria-label="Toggle auto-processing"
-                    style={{ width: 40, height: 22, borderRadius: 999, flexShrink: 0, border: 'none', cursor: 'pointer', background: autoProcess ? '#059669' : '#CBC9BF', position: 'relative', transition: 'background 0.2s' }}>
-                    <span style={{ position: 'absolute', top: 2, width: 18, height: 18, borderRadius: '50%', background: '#FFFFFF', left: autoProcess ? 20 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    style={{ width: 40, height: 22, borderRadius: 999, flexShrink: 0, border: 'none', cursor: 'pointer', background: autoProcess ? 'var(--green)' : 'var(--text-faint)', position: 'relative', transition: 'background 0.2s' }}>
+                    <span style={{ position: 'absolute', top: 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', left: autoProcess ? 20 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </button>
                 </div>
-                <p style={{ fontSize: 11, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 14px', marginTop: 12, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 11, color: 'var(--amber-strong)', background: 'var(--tint-amber)', border: '1px solid var(--amber-line)', borderRadius: 8, padding: '10px 14px', marginTop: 12, lineHeight: 1.5 }}>
                   <strong>Note:</strong> approval still gates everything — an unapproved batch will not process past funding, in either mode. Blocked wallets always stop that payout only; the rest of the batch continues.
                 </p>
               </div>
 
               {/* Password — demo only */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Demo Mode</h3>
-                <p style={{ fontSize: 12, color: '#615F56', marginBottom: 12 }}>This is a demo environment. All accounts share the password <code style={{ fontSize: 11, padding: '1px 6px', borderRadius: 4, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>demo123</code></p>
-                <p style={{ fontSize: 11, color: '#6E6C62' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 20, padding: 26 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Demo Mode</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>This is a demo environment. All accounts share the password <code style={{ fontSize: 11, padding: '1px 6px', borderRadius: 4, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>demo123</code></p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)' }}>
                   To test dual approval: create a batch as Julija, sign out, sign in as Vaiva, then approve the batch.
                 </p>
               </div>
@@ -1777,11 +1815,11 @@ export default function Dashboard() {
 
           {/* Footer */}
           <div className="text-center" style={{ paddingTop: 16, paddingBottom: 32 }}>
-            <p style={{ fontSize: 11, color: '#AAAAAA' }}>
+            <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>
               This dashboard is confidential. &copy; 2026 Paystrax.
             </p>
-            <p style={{ fontSize: 10, color: '#B8B6AC', marginTop: 6, letterSpacing: '0.04em' }}>
-              Powered by <span style={{ fontWeight: 600, color: '#0F766E' }}>Fybrus</span>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 6, letterSpacing: '0.04em' }}>
+              Powered by <span style={{ fontWeight: 600, color: 'var(--cta)' }}>Fybrus</span>
               <span style={{ color: '#34D399', fontWeight: 600 }}>.</span>
             </p>
           </div>
@@ -1793,22 +1831,22 @@ export default function Dashboard() {
 
         {/* ── Step 1: Upload form (idle) ── */}
         {uploadStep === "idle" && (<>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Upload Payout Batch</h3>
-          <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Upload a CSV file with your merchant payouts for this settlement cycle.</p>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Upload Payout Batch</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Upload a CSV file with your merchant payouts for this settlement cycle.</p>
 
           {/* Currency + Timing */}
-          <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 16, padding: 12, borderRadius: 12, border: '1px solid #E5E3D9', background: '#F4F3EC' }}>
+          <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 16, padding: 12, borderRadius: 12, border: '1px solid var(--line)', background: 'var(--inset-2)' }}>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: '#6E6C62' }}>Funding Currency</label>
+              <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: 'var(--text-3)' }}>Funding Currency</label>
               <div className="flex gap-1.5">
                 {(["EUR", "USD", "AUD"] as const).map(c => (
                   <button key={c} onClick={() => setBatchCurrency(c)}
                     className="flex-1 transition-all"
                     style={{
                       padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                      border: batchCurrency === c ? '1px solid #93C5FD' : '1px solid #E5E3D9',
-                      background: batchCurrency === c ? '#EFF6FF' : '#FFFFFF',
-                      color: batchCurrency === c ? '#1D4ED8' : '#6E6C62',
+                      border: batchCurrency === c ? '1px solid var(--blue-line)' : '1px solid var(--line)',
+                      background: batchCurrency === c ? 'var(--tint-blue)' : '#FFFFFF',
+                      color: batchCurrency === c ? 'var(--blue)' : 'var(--text-3)',
                     }}>
                     {{ EUR: "€", USD: "$", AUD: "A$" }[c]} {c}
                   </button>
@@ -1816,16 +1854,16 @@ export default function Dashboard() {
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: '#6E6C62' }}>Payout Timing</label>
+              <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: 'var(--text-3)' }}>Payout Timing</label>
               <div className="flex gap-1.5">
                 {[["asap", "ASAP"], ["scheduled", "Schedule"]].map(([val, label]) => (
                   <button key={val} onClick={() => setBatchTiming(val)}
                     className="flex-1 transition-all"
                     style={{
                       padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                      border: batchTiming === val ? '1px solid #93C5FD' : '1px solid #E5E3D9',
-                      background: batchTiming === val ? '#EFF6FF' : '#FFFFFF',
-                      color: batchTiming === val ? '#1D4ED8' : '#6E6C62',
+                      border: batchTiming === val ? '1px solid var(--blue-line)' : '1px solid var(--line)',
+                      background: batchTiming === val ? 'var(--tint-blue)' : '#FFFFFF',
+                      color: batchTiming === val ? 'var(--blue)' : 'var(--text-3)',
                     }}>
                     {label}
                   </button>
@@ -1834,57 +1872,57 @@ export default function Dashboard() {
               {batchTiming === "scheduled" && (
                 <input type="date" value={batchDate} onChange={e => setBatchDate(e.target.value)}
                   className="w-full outline-none"
-                  style={{ marginTop: 8, padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
+                  style={{ marginTop: 8, padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+                  onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
               )}
             </div>
           </div>
 
-          <div style={{ borderRadius: 12, padding: 12, marginBottom: 16, border: '1px solid #E5E3D9', background: '#F4F3EC' }}>
-            <p style={{ fontSize: 11, fontWeight: 500, marginBottom: 8, color: '#6E6C62' }}>Required CSV columns:</p>
-            <p style={{ fontSize: 10, color: '#96948A', marginBottom: 8 }}>A 9 bps (0.09%) platform fee is deducted from the batch total before conversion to USDC.</p>
+          <div style={{ borderRadius: 12, padding: 12, marginBottom: 16, border: '1px solid var(--line)', background: 'var(--inset-2)' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, marginBottom: 8, color: 'var(--text-3)' }}>Required CSV columns:</p>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', marginBottom: 8 }}>A 9 bps (0.09%) platform fee is deducted from the batch total before conversion to USDC.</p>
             <div className="flex gap-2">
               {["merchant_name", "amount", "wallet_address"].map(col => (
-                <code key={col} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: '#DBEAFE', color: '#1D4ED8' }}>{col}</code>
+                <code key={col} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'var(--tint-blue)', color: 'var(--blue)' }}>{col}</code>
               ))}
             </div>
-            <button onClick={downloadTemplate} className="flex items-center gap-1" style={{ fontSize: 11, marginTop: 8, color: '#1D4ED8' }}>
+            <button onClick={downloadTemplate} className="flex items-center gap-1" style={{ fontSize: 11, marginTop: 8, color: 'var(--blue)' }}>
               <FileDown className="w-3 h-3" /> Download template CSV
             </button>
           </div>
 
           <div className="text-center cursor-pointer transition-colors"
-            style={{ border: '2px dashed #DCDAD0', borderRadius: 12, padding: 24, background: '#FFFFFF' }}
+            style={{ border: '2px dashed var(--line-strong)', borderRadius: 12, padding: 24, background: 'var(--surface)' }}
             onClick={() => fileRef.current?.click()}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#CBC9BF'} onMouseLeave={e => e.currentTarget.style.borderColor = '#DCDAD0'}>
-            <Upload className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 8 }} />
-            <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Click to select CSV file</p>
-            <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 4 }}>Supports .csv files up to 10MB</p>
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--text-faint)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line-strong)'}>
+            <Upload className="w-8 h-8 mx-auto" style={{ color: 'var(--text-faint)', marginBottom: 8 }} />
+            <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Click to select CSV file</p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Supports .csv files up to 10MB</p>
             <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setUploadStep("loading"); parseCSV(f); } }} />
           </div>
 
           {/* Demo button */}
-          <div className="flex items-center justify-center" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #ECEAE0' }}>
+          <div className="flex items-center justify-center" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
             <button onClick={() => { setUploadStep("loading"); setParsedRows(demoRows); setTimeout(() => setUploadStep("preview"), 2200); }}
               className="flex items-center gap-2 transition-all"
-              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid #E5E3D9', color: '#615F56', background: '#FFFFFF' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#1B1A16'; e.currentTarget.style.color = '#1B1A16'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E3D9'; e.currentTarget.style.color = '#615F56'; }}>
+              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--line)', color: 'var(--text-2)', background: 'var(--surface)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--ink)'; e.currentTarget.style.color = 'var(--ink)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--text-2)'; }}>
               <Eye className="w-3.5 h-3.5" /> Try Demo CSV
             </button>
           </div>
 
-          {uploadErr && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginTop: 12, background: '#FEF2F2' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: '#DC2626' }}>{uploadErr}</p></div>}
+          {uploadErr && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginTop: 12, background: 'var(--tint-red)' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: 'var(--red)' }}>{uploadErr}</p></div>}
         </>)}
 
         {/* ── Step 2: Loading ── */}
         {uploadStep === "loading" && (
           <div className="flex flex-col items-center justify-center" style={{ padding: '48px 0' }}>
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1B1A16', marginBottom: 16 }} />
-            <p style={{ fontSize: 14, fontWeight: 500, color: '#1B1A16' }}>Parsing CSV file...</p>
-            <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 4 }}>Validating {parsedRows.length || '...'} merchant records</p>
-            <div style={{ width: 200, height: 4, borderRadius: 2, background: '#ECEAE0', marginTop: 16, overflow: 'hidden' }}>
-              <div style={{ width: '70%', height: '100%', borderRadius: 2, background: '#1B1A16', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--ink)', marginBottom: 16 }} />
+            <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>Parsing CSV file...</p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Validating {parsedRows.length || '...'} merchant records</p>
+            <div style={{ width: 200, height: 4, borderRadius: 2, background: 'var(--track)', marginTop: 16, overflow: 'hidden' }}>
+              <div style={{ width: '70%', height: '100%', borderRadius: 2, background: 'var(--cta)', animation: 'pulse 1.5s ease-in-out infinite' }} />
             </div>
           </div>
         )}
@@ -1898,10 +1936,10 @@ export default function Dashboard() {
             <>
               <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>Review Batch</h3>
-                  <p style={{ fontSize: 12, color: '#615F56', marginTop: 2 }}>{isDemo ? "Demo data — this will create a real batch with sample merchants." : "Review the parsed entries before creating this batch."}</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Review Batch</h3>
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{isDemo ? "Demo data — this will create a real batch with sample merchants." : "Review the parsed entries before creating this batch."}</p>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 4, background: '#FFFBEB', color: '#D97706' }}>Pending Approval</span>
+                <span style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 4, background: 'var(--tint-amber)', color: 'var(--amber)' }}>Pending Approval</span>
               </div>
 
               {/* Summary strip */}
@@ -1912,32 +1950,32 @@ export default function Dashboard() {
                   { label: "Timing", value: batchTiming === "asap" ? "ASAP" : batchDate || "Scheduled" },
                   { label: "Total", value: `${sym}${total.toLocaleString("en", { minimumFractionDigits: 2 })}` },
                 ].map(s => (
-                  <div key={s.label} style={{ padding: '10px 12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{s.label}</p>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{s.value}</p>
+                  <div key={s.label} style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{s.label}</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{s.value}</p>
                   </div>
                 ))}
               </div>
 
               {/* Per-merchant table */}
-              <div style={{ border: '1px solid #E5E3D9', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+              <div style={{ border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
                 <table className="w-full">
                   <thead>
-                    <tr style={{ background: '#F8F7F2' }}>
+                    <tr style={{ background: 'var(--inset)' }}>
                       {["#", "Merchant", "Amount", "Wallet Address", "Status"].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', textAlign: 'left' }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 12px', fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', textAlign: 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {parsedRows.map((r, i) => (
-                      <tr key={i} style={{ borderTop: '1px solid #EFEDE4' }}>
-                        <td style={{ padding: '10px 12px', fontSize: 11, color: '#6E6C62' }}>{i + 1}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.name}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{sym}{r.amount.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{r.wallet.slice(0, 8)}...{r.wallet.slice(-4)}</td>
+                      <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>{i + 1}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>{r.name}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{sym}{r.amount.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{r.wallet.slice(0, 8)}...{r.wallet.slice(-4)}</td>
                         <td style={{ padding: '10px 12px' }}>
-                          <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: '#ECFDF5', color: '#059669' }}>Valid</span>
+                          <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: 'var(--tint-green)', color: 'var(--green)' }}>Valid</span>
                         </td>
                       </tr>
                     ))}
@@ -1945,29 +1983,29 @@ export default function Dashboard() {
                 </table>
               </div>
 
-              {uploadErr && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginBottom: 16, background: '#FEF2F2' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: '#DC2626' }}>{uploadErr}</p></div>}
+              {uploadErr && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginBottom: 16, background: 'var(--tint-red)' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: 'var(--red)' }}>{uploadErr}</p></div>}
 
               {/* Actions */}
               <div className="flex items-center justify-between">
                 <button onClick={() => { setUploadStep("idle"); setParsedRows([]); setUploadErr(null); }}
                   className="transition-all"
-                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#6E6C62', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-3)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
                   ← Back to Upload
                 </button>
                 <div className="flex gap-2">
                   <button onClick={() => { setShowUpload(false); setUploadStep("idle"); setParsedRows([]); setUploadErr(null); }}
                     className="transition-all"
-                    style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid #E5E3D9', color: '#615F56', background: '#FFFFFF', cursor: 'pointer' }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = '#CBC9BF'} onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E3D9'}>
+                    style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--line)', color: 'var(--text-2)', background: 'var(--surface)', cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--text-faint)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line)'}>
                     Cancel
                   </button>
                   <button
                     disabled={uploadStep === "submitting"}
                     onClick={() => submitBatch(parsedRows)}
                     className="transition-all"
-                    style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: uploadStep === "submitting" ? '#615F56' : '#1B1A16', color: '#FFFFFF', cursor: uploadStep === "submitting" ? 'not-allowed' : 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
-                    onMouseEnter={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = '#222222'; }} onMouseLeave={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = '#1B1A16'; }}>
+                    style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: uploadStep === "submitting" ? 'var(--text-2)' : 'var(--ink)', color: '#FFFFFF', cursor: uploadStep === "submitting" ? 'not-allowed' : 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
+                    onMouseEnter={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = 'var(--cta-hover)'; }} onMouseLeave={e => { if (uploadStep !== "submitting") e.currentTarget.style.background = 'var(--ink)'; }}>
                     {uploadStep === "submitting" && <Loader2 className="w-4 h-4 animate-spin" />}
                     {uploadStep === "submitting" ? "Creating Batch..." : "Approve & Create Batch"}
                   </button>
@@ -1980,33 +2018,33 @@ export default function Dashboard() {
         {/* ── Step 4: Success ── */}
         {uploadStep === "success" && createdBatch && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <CheckCircle2 style={{ width: 24, height: 24, color: '#059669' }} />
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--tint-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--green)' }} />
             </div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Batch Created Successfully</h3>
-            <p style={{ fontSize: 12, color: '#615F56', marginBottom: 20 }}>Your payout batch has been submitted and is awaiting funding.</p>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Batch Created Successfully</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 20 }}>Your payout batch has been submitted and is awaiting funding.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24, textAlign: 'left' }}>
-              <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Batch Reference</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{createdBatch.batchRef}</p>
+              <div style={{ padding: '12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>Batch Reference</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{createdBatch.batchRef}</p>
               </div>
-              <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Total Amount</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ padding: '12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>Total Amount</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
                   {({ EUR: "€", USD: "$", AUD: "A$" } as any)[createdBatch.currency] || "€"}{parseFloat(createdBatch.totalFiat || createdBatch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}
                 </p>
               </div>
-              <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Merchants</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4 }}>{createdBatch.merchantCount} payees</p>
+              <div style={{ padding: '12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)' }}>Merchants</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>{createdBatch.merchantCount} payees</p>
               </div>
             </div>
 
-            <div style={{ padding: 16, borderRadius: 12, background: '#FFFBEB', border: '1px solid #FDE68A', marginBottom: 24, textAlign: 'left' }}>
-              <p style={{ fontSize: 12, fontWeight: 500, color: '#92400E', marginBottom: 10 }}>Next Step: Fund this batch</p>
-              <p style={{ fontSize: 11, color: '#D97706', marginBottom: 12 }}>Transfer to the account below. Use your batch reference as the payment reference.</p>
-              <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #FDE68A', padding: 12 }}>
+            <div style={{ padding: 16, borderRadius: 12, background: 'var(--tint-amber)', border: '1px solid var(--amber-line)', marginBottom: 24, textAlign: 'left' }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--amber-strong)', marginBottom: 10 }}>Next Step: Fund this batch</p>
+              <p style={{ fontSize: 11, color: 'var(--amber)', marginBottom: 12 }}>Transfer to the account below. Use your batch reference as the payment reference.</p>
+              <div style={{ background: 'var(--surface)', borderRadius: 8, border: '1px solid var(--amber-line)', padding: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
                     { label: "Account Name", value: "Paystrax Ltd" },
@@ -2017,27 +2055,27 @@ export default function Dashboard() {
                     { label: "Amount", value: `${({ EUR: "€", USD: "$", AUD: "A$" } as any)[createdBatch?.currency] || "€"}${parseFloat(createdBatch?.totalFiat || createdBatch?.totalEur || 0).toLocaleString("en", { minimumFractionDigits: 2 })} ${createdBatch?.currency || "EUR"}` },
                   ].map(r => (
                     <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 10, color: '#92400E' }}>{r.label}</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#1B1A16', fontFamily: r.label === "IBAN" || r.label === "BIC / SWIFT" || r.label === "Payment Reference" ? 'monospace' : 'inherit' }}>{r.value}</span>
+                      <span style={{ fontSize: 10, color: 'var(--amber-strong)' }}>{r.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', fontFamily: r.label === "IBAN" || r.label === "BIC / SWIFT" || r.label === "Payment Reference" ? 'monospace' : 'inherit' }}>{r.value}</span>
                     </div>
                   ))}
                 </div>
                 <button onClick={() => copyText("IE29AIBK93115212345678")}
                   className="flex items-center gap-1.5 w-full justify-center transition-colors"
-                  style={{ marginTop: 10, padding: '6px 0', borderRadius: 6, fontSize: 11, fontWeight: 500, border: '1px solid #FDE68A', color: '#92400E', background: 'transparent', cursor: 'pointer' }}>
+                  style={{ marginTop: 10, padding: '6px 0', borderRadius: 6, fontSize: 11, fontWeight: 500, border: '1px solid var(--amber-line)', color: 'var(--amber-strong)', background: 'transparent', cursor: 'pointer' }}>
                   <Copy className="w-3 h-3" /> Copy IBAN to Clipboard
                 </button>
               </div>
-              <p style={{ fontSize: 10, color: '#D97706', marginTop: 6 }}>Demo IBAN — replace with live details before production use</p>
+              <p style={{ fontSize: 10, color: 'var(--amber)', marginTop: 6 }}>Demo IBAN — replace with live details before production use</p>
             </div>
 
             <div className="flex justify-center gap-2">
               <button onClick={() => { setShowUpload(false); setUploadStep("idle"); setParsedRows([]); setCreatedBatch(null); resetBatchOpts(); setPage("batches"); }}
-                style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+                style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
                 View Batches
               </button>
               <button onClick={() => { setUploadStep("idle"); setParsedRows([]); setCreatedBatch(null); }}
-                style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: '#FFFFFF', color: '#615F56', border: '1px solid #E5E3D9', cursor: 'pointer' }}>
+                style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--surface)', color: 'var(--text-2)', border: '1px solid var(--line)', cursor: 'pointer' }}>
                 Upload Another
               </button>
             </div>
@@ -2048,22 +2086,22 @@ export default function Dashboard() {
 
       {/* ─ Manual entry dialog ─ */}
       <Overlay open={showManual} onClose={() => { setShowManual(false); resetBatchOpts(); }} wide>
-        <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Manual Payout Entry</h3>
-        <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Add individual merchant payouts. These will be grouped into a single batch.</p>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Manual Payout Entry</h3>
+        <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Add individual merchant payouts. These will be grouped into a single batch.</p>
 
         {/* Currency + Timing */}
-        <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 16, padding: 12, borderRadius: 12, border: '1px solid #E5E3D9', background: '#F4F3EC' }}>
+        <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 16, padding: 12, borderRadius: 12, border: '1px solid var(--line)', background: 'var(--inset-2)' }}>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: '#6E6C62' }}>Funding Currency</label>
+            <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: 'var(--text-3)' }}>Funding Currency</label>
             <div className="flex gap-1.5">
               {(["EUR", "USD", "AUD"] as const).map(c => (
                 <button key={c} onClick={() => setBatchCurrency(c)}
                   className="flex-1 transition-all"
                   style={{
                     padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                    border: batchCurrency === c ? '1px solid #93C5FD' : '1px solid #E5E3D9',
-                    background: batchCurrency === c ? '#EFF6FF' : '#FFFFFF',
-                    color: batchCurrency === c ? '#1D4ED8' : '#6E6C62',
+                    border: batchCurrency === c ? '1px solid var(--blue-line)' : '1px solid var(--line)',
+                    background: batchCurrency === c ? 'var(--tint-blue)' : '#FFFFFF',
+                    color: batchCurrency === c ? 'var(--blue)' : 'var(--text-3)',
                   }}>
                   {{ EUR: "€", USD: "$", AUD: "A$" }[c]} {c}
                 </button>
@@ -2071,16 +2109,16 @@ export default function Dashboard() {
             </div>
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: '#6E6C62' }}>Payout Timing</label>
+            <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 6, color: 'var(--text-3)' }}>Payout Timing</label>
             <div className="flex gap-1.5">
               {[["asap", "ASAP"], ["scheduled", "Schedule"]].map(([val, label]) => (
                 <button key={val} onClick={() => setBatchTiming(val)}
                   className="flex-1 transition-all"
                   style={{
                     padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                    border: batchTiming === val ? '1px solid #93C5FD' : '1px solid #E5E3D9',
-                    background: batchTiming === val ? '#EFF6FF' : '#FFFFFF',
-                    color: batchTiming === val ? '#1D4ED8' : '#6E6C62',
+                    border: batchTiming === val ? '1px solid var(--blue-line)' : '1px solid var(--line)',
+                    background: batchTiming === val ? 'var(--tint-blue)' : '#FFFFFF',
+                    color: batchTiming === val ? 'var(--blue)' : 'var(--text-3)',
                   }}>
                   {label}
                 </button>
@@ -2089,8 +2127,8 @@ export default function Dashboard() {
             {batchTiming === "scheduled" && (
               <input type="date" value={batchDate} onChange={e => setBatchDate(e.target.value)}
                 className="w-full outline-none"
-                style={{ marginTop: 8, padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
+                style={{ marginTop: 8, padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+                onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
             )}
           </div>
         </div>
@@ -2106,8 +2144,8 @@ export default function Dashboard() {
             <div key={i} className="flex gap-2 items-center">
               <input placeholder="Merchant name" value={e.merchantName} list="registered-merchants"
                 className="flex-1 outline-none"
-                style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-                onFocus={ev => ev.currentTarget.style.borderColor = '#1B1A16'} onBlur={ev => ev.currentTarget.style.borderColor = '#DCDAD0'}
+                style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+                onFocus={ev => ev.currentTarget.style.borderColor = 'var(--ink)'} onBlur={ev => ev.currentTarget.style.borderColor = 'var(--line-strong)'}
                 onChange={ev => {
                   const u = [...entries]; u[i].merchantName = ev.target.value;
                   // Auto-fill the registered wallet when the name matches a registered merchant
@@ -2117,96 +2155,96 @@ export default function Dashboard() {
                 }} />
               <input placeholder={`${({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]} Amount`} type="number" value={e.amount}
                 className="w-28 outline-none"
-                style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-                onFocus={ev => ev.currentTarget.style.borderColor = '#1B1A16'} onBlur={ev => ev.currentTarget.style.borderColor = '#DCDAD0'}
+                style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+                onFocus={ev => ev.currentTarget.style.borderColor = 'var(--ink)'} onBlur={ev => ev.currentTarget.style.borderColor = 'var(--line-strong)'}
                 onChange={ev => { const u = [...entries]; u[i].amount = ev.target.value; setEntries(u); }} />
               <div className="flex-[1.5] flex flex-col">
                 <input placeholder="0x... wallet address" value={e.walletAddress}
                   className="w-full outline-none"
-                  style={{ padding: '10px 12px', borderRadius: 8, fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", border: `1px solid ${e.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress) ? '#DC2626' : '#DCDAD0'}`, background: '#FFFFFF', color: '#1B1A16' }}
-                  onFocus={ev => ev.currentTarget.style.borderColor = '#1B1A16'} onBlur={ev => ev.currentTarget.style.borderColor = e.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress) ? '#DC2626' : '#DCDAD0'}
+                  style={{ padding: '10px 12px', borderRadius: 8, fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", border: `1px solid ${e.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress) ? 'var(--red)' : 'var(--line-strong)'}`, background: 'var(--surface)', color: 'var(--ink)' }}
+                  onFocus={ev => ev.currentTarget.style.borderColor = 'var(--ink)'} onBlur={ev => ev.currentTarget.style.borderColor = e.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress) ? 'var(--red)' : 'var(--line-strong)'}
                   onChange={ev => { const u = [...entries]; u[i].walletAddress = ev.target.value; setEntries(u); }} />
                 {e.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress) && (
-                  <span style={{ fontSize: 10, color: '#DC2626', marginTop: 2 }}>Invalid wallet address format (expected 0x + 40 hex chars)</span>
+                  <span style={{ fontSize: 10, color: 'var(--red)', marginTop: 2 }}>Invalid wallet address format (expected 0x + 40 hex chars)</span>
                 )}
               </div>
               {entries.length > 1 && (
-                <button style={{ color: '#CBC9BF' }} className="transition-colors"
-                  onMouseEnter={e => e.currentTarget.style.color = '#DC2626'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}
+                <button style={{ color: 'var(--text-faint)' }} className="transition-colors"
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}
                   onClick={() => setEntries(entries.filter((_, j) => j !== i))}
                   aria-label="Remove entry"><X className="w-4 h-4" /></button>
               )}
             </div>
           ))}
         </div>
-        <button className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, marginTop: 8, color: '#6E6C62' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#54524A'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}
+        <button className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, marginTop: 8, color: 'var(--text-3)' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
           onClick={() => setEntries([...entries, { merchantName: "", amount: "", walletAddress: "" }])}>
           <Plus className="w-3 h-3" /> Add another merchant
         </button>
         {entries.filter(e => e.amount).length > 0 && (
-          <p style={{ fontSize: 12, marginTop: 8, color: '#54524A' }}>
-            Batch total: <span style={{ fontWeight: 500, color: '#1B1A16' }}>{({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span>
-            {" "}<span style={{ color: '#96948A' }}>· Platform fee (9 bps): {({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{(entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) * 0.0009).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} — deducted before conversion</span>
-            {" "}<span style={{ color: '#6E6C62' }}>{batchCurrency}</span>
-            {batchTiming === "scheduled" && batchDate && <span style={{ color: '#6E6C62' }}> &middot; Scheduled: {new Date(batchDate).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}</span>}
+          <p style={{ fontSize: 12, marginTop: 8, color: 'var(--text-2)' }}>
+            Batch total: <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span>
+            {" "}<span style={{ color: 'var(--text-4)' }}>· Platform fee (9 bps): {({ EUR: "€", USD: "$", AUD: "A$" } as any)[batchCurrency]}{(entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) * 0.0009).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} — deducted before conversion</span>
+            {" "}<span style={{ color: 'var(--text-3)' }}>{batchCurrency}</span>
+            {batchTiming === "scheduled" && batchDate && <span style={{ color: 'var(--text-3)' }}> &middot; Scheduled: {new Date(batchDate).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}</span>}
           </p>
         )}
         <div className="flex justify-end gap-2" style={{ marginTop: 16 }}>
           <button onClick={() => { setShowManual(false); resetBatchOpts(); }}
-            style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, color: '#6E6C62', background: 'transparent' }}>Cancel</button>
+            style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, color: 'var(--text-3)', background: 'transparent' }}>Cancel</button>
           <button className="disabled:opacity-40"
-            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}
+            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}
             disabled={entries.some(e => !e.merchantName || !e.amount || !e.walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(e.walletAddress)) || manualMut.isPending}
             onClick={() => manualMut.mutate(entries)}>
             {manualMut.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />}Create Batch
           </button>
         </div>
-        {manualMut.isError && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginTop: 12, background: '#FEF2F2' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: '#DC2626' }}>{(manualMut.error as Error)?.message || "Failed to create batch"}</p></div>}
+        {manualMut.isError && <div className="flex items-center gap-2" style={{ padding: 12, borderRadius: 8, marginTop: 12, background: 'var(--tint-red)' }}><AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#EF4444' }} /><p style={{ fontSize: 12, color: 'var(--red)' }}>{(manualMut.error as Error)?.message || "Failed to create batch"}</p></div>}
       </Overlay>
 
       {/* ─ Add user dialog ─ */}
       <Overlay open={showAddUser} onClose={() => setShowAddUser(false)}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Add New User</h3>
-        <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Create a new user account for the Paystrax dashboard.</p>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Add New User</h3>
+        <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Create a new user account for the Paystrax dashboard.</p>
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Full Name</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Full Name</label>
             <input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="e.g. Jane Smith"
-              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
+              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Email</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Email</label>
             <input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="e.g. jane@paystraxdemo.com"
-              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
+              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Role</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Role</label>
             <div className="flex gap-2">
               {(["admin", "approver", "viewer"] as const).map(r => (
                 <button key={r} onClick={() => setNewUser({ ...newUser, role: r })}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 500, textTransform: 'capitalize' as const, cursor: 'pointer',
-                    background: newUser.role === r ? '#1B1A16' : '#FFFFFF', color: newUser.role === r ? '#FFFFFF' : '#54524A',
-                    border: `1px solid ${newUser.role === r ? '#1B1A16' : '#DCDAD0'}`,
+                    background: newUser.role === r ? 'var(--ink)' : '#FFFFFF', color: newUser.role === r ? '#FFFFFF' : 'var(--text-2)',
+                    border: `1px solid ${newUser.role === r ? 'var(--ink)' : 'var(--line-strong)'}`,
                   }}>{r}</button>
               ))}
             </div>
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Password</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Password</label>
             <input value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })}
-              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
-            <p style={{ fontSize: 10, color: '#AAAAAA', marginTop: 4 }}>Default: demo123</p>
+              className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
+            <p style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 4 }}>Default: demo123</p>
           </div>
         </div>
-        {addUserMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 8 }}>{(addUserMut.error as Error).message}</p>}
+        {addUserMut.isError && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>{(addUserMut.error as Error).message}</p>}
         <div className="flex justify-end gap-2" style={{ marginTop: 16 }}>
-          <button onClick={() => setShowAddUser(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => setShowAddUser(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-2)', background: 'transparent', border: '1px solid var(--line)', cursor: 'pointer' }}>Cancel</button>
           <button onClick={() => addUserMut.mutate(newUser)}
             disabled={!newUser.name || !newUser.email || addUserMut.isPending}
             className="disabled:opacity-40"
-            style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+            style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
             {addUserMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}Create User
           </button>
         </div>
@@ -2215,59 +2253,59 @@ export default function Dashboard() {
       {/* ─ Edit merchant dialog ─ */}
       <Overlay open={!!editingMerchant} onClose={() => setEditingMerchant(null)}>
         {editingMerchant && (<>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Edit Merchant</h3>
-          <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Update merchant details.</p>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Edit Merchant</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Update merchant details.</p>
           <div style={{ display: 'grid', gap: 12 }}>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Merchant Name</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Merchant Name</label>
               <input value={editingMerchant.name} onChange={e => setEditingMerchant({ ...editingMerchant, name: e.target.value })}
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
             </div>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Wallet Address</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Wallet Address</label>
               <input value={editingMerchant.walletAddress} onChange={e => setEditingMerchant({ ...editingMerchant, walletAddress: e.target.value })}
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 12, color: '#1B1A16', fontFamily: "'Geist Mono', ui-monospace, monospace" }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 12, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }} />
             </div>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Email (optional)</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Email (optional)</label>
               <input value={editingMerchant.email || ""} onChange={e => setEditingMerchant({ ...editingMerchant, email: e.target.value })}
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
             </div>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>KYC Reference (relying party case #)</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>KYC Reference (relying party case #)</label>
               <input value={editingMerchant.kycRef || ""} onChange={e => setEditingMerchant({ ...editingMerchant, kycRef: e.target.value })}
                 placeholder="e.g. PSX-KYC-4F2A91"
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 12, color: '#1B1A16', fontFamily: "'Geist Mono', ui-monospace, monospace" }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 12, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Markup (bps)</label>
+                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Markup (bps)</label>
                 <input type="number" min={0} max={1000} value={editingMerchant.markupBps ?? ""} onChange={e => setEditingMerchant({ ...editingMerchant, markupBps: e.target.value })}
                   placeholder={`default (${settings?.defaultMarkupBps ?? 25})`}
-                  className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }} />
-                <span style={{ fontSize: 9, color: '#96948A' }}>blank = use platform default</span>
+                  className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)' }} />
+                <span style={{ fontSize: 9, color: 'var(--text-4)' }}>blank = use platform default</span>
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Payout method</label>
+                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Payout method</label>
                 <div className="flex gap-1.5">
                   {[["stablecoin", "Stablecoin"], ["fiat", "Fiat"]].map(([v, l]) => (
                     <button key={v} onClick={() => setEditingMerchant({ ...editingMerchant, payoutMethod: v })}
                       style={{ flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                        border: '1px solid ' + ((editingMerchant.payoutMethod || 'stablecoin') === v ? '#1B1A16' : '#DCDAD0'),
-                        background: (editingMerchant.payoutMethod || 'stablecoin') === v ? '#1B1A16' : '#FFFFFF',
-                        color: (editingMerchant.payoutMethod || 'stablecoin') === v ? '#FFFFFF' : '#54524A' }}>{l}</button>
+                        border: '1px solid ' + ((editingMerchant.payoutMethod || 'stablecoin') === v ? 'var(--ink)' : 'var(--line-strong)'),
+                        background: (editingMerchant.payoutMethod || 'stablecoin') === v ? 'var(--ink)' : '#FFFFFF',
+                        color: (editingMerchant.payoutMethod || 'stablecoin') === v ? '#FFFFFF' : 'var(--text-2)' }}>{l}</button>
                   ))}
                 </div>
               </div>
             </div>
           </div>
-          {updateMerchantMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 8 }}>{(updateMerchantMut.error as Error).message}</p>}
+          {updateMerchantMut.isError && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>{(updateMerchantMut.error as Error).message}</p>}
           <div className="flex justify-end gap-2" style={{ marginTop: 16 }}>
-            <button onClick={() => setEditingMerchant(null)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setEditingMerchant(null)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-2)', background: 'transparent', border: '1px solid var(--line)', cursor: 'pointer' }}>Cancel</button>
             <button onClick={() => updateMerchantMut.mutate({ id: editingMerchant.id, name: editingMerchant.name, walletAddress: editingMerchant.walletAddress, email: editingMerchant.email, kycRef: editingMerchant.kycRef, markupBps: editingMerchant.markupBps === "" ? null : editingMerchant.markupBps, payoutMethod: editingMerchant.payoutMethod })}
               disabled={!editingMerchant.name || !editingMerchant.walletAddress || updateMerchantMut.isPending}
               className="disabled:opacity-40"
-              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
               {updateMerchantMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}Save Changes
             </button>
           </div>
@@ -2276,61 +2314,61 @@ export default function Dashboard() {
 
       {/* ─ Add merchant dialog ─ */}
       <Overlay open={showAddMerchant} onClose={() => setShowAddMerchant(false)}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Register Merchant</h3>
-        <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Register a merchant's stablecoin wallet address. This only needs to be done once per merchant.</p>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Register Merchant</h3>
+        <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Register a merchant's stablecoin wallet address. This only needs to be done once per merchant.</p>
         <div className="space-y-3">
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Merchant Name</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Merchant Name</label>
             <input value={newMerchant.name} onChange={e => setNewMerchant({ ...newMerchant, name: e.target.value })}
               placeholder="e.g. TechFlow Solutions"
               className="w-full outline-none"
-              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
+              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Wallet Address</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Wallet Address</label>
             <input value={newMerchant.walletAddress} onChange={e => setNewMerchant({ ...newMerchant, walletAddress: e.target.value })}
               placeholder="0x..."
               className="w-full outline-none"
-              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: `1px solid ${newMerchant.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) ? '#DC2626' : '#DCDAD0'}`, background: '#FFFFFF', color: '#1B1A16' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = newMerchant.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) ? '#DC2626' : '#DCDAD0'} />
+              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: `1px solid ${newMerchant.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) ? 'var(--red)' : 'var(--line-strong)'}`, background: 'var(--surface)', color: 'var(--ink)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = newMerchant.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) ? 'var(--red)' : 'var(--line-strong)'} />
             {newMerchant.walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) && (
-              <span style={{ fontSize: 10, color: '#DC2626', marginTop: 4, display: 'block' }}>Invalid wallet address format (expected 0x + 40 hex chars)</span>
+              <span style={{ fontSize: 10, color: 'var(--red)', marginTop: 4, display: 'block' }}>Invalid wallet address format (expected 0x + 40 hex chars)</span>
             )}
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Email (optional)</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Email (optional)</label>
             <input value={newMerchant.email} onChange={e => setNewMerchant({ ...newMerchant, email: e.target.value })}
               placeholder="finance@merchant.com"
               className="w-full outline-none"
-              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
+              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>KYC Reference (relying party case #)</label>
+            <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>KYC Reference (relying party case #)</label>
             <input value={newMerchant.kycRef} onChange={e => setNewMerchant({ ...newMerchant, kycRef: e.target.value })}
               placeholder="e.g. PSX-KYC-4F2A91"
               className="w-full outline-none"
-              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
-              onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
-            <span style={{ fontSize: 10, color: '#96948A', marginTop: 4, display: 'block' }}>KYC is performed by the relying party (Paystrax as acquirer) — record their case reference here.</span>
+              style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
+            <span style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 4, display: 'block' }}>KYC is performed by the relying party (Paystrax as acquirer) — record their case reference here.</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Markup (bps)</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Markup (bps)</label>
               <input type="number" min={0} max={1000} value={newMerchant.markupBps} onChange={e => setNewMerchant({ ...newMerchant, markupBps: e.target.value })}
                 placeholder={`default (${settings?.defaultMarkupBps ?? 25})`}
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', color: '#1B1A16' }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid var(--line-strong)', color: 'var(--ink)' }} />
             </div>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Payout method</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: 'var(--text-3)', textTransform: 'uppercase' as const }}>Payout method</label>
               <div className="flex gap-1.5">
                 {[["stablecoin", "Stablecoin"], ["fiat", "Fiat"]].map(([v, l]) => (
                   <button key={v} type="button" onClick={() => setNewMerchant({ ...newMerchant, payoutMethod: v })}
                     style={{ flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      border: '1px solid ' + (newMerchant.payoutMethod === v ? '#1B1A16' : '#DCDAD0'),
-                      background: newMerchant.payoutMethod === v ? '#1B1A16' : '#FFFFFF',
-                      color: newMerchant.payoutMethod === v ? '#FFFFFF' : '#54524A' }}>{l}</button>
+                      border: '1px solid ' + (newMerchant.payoutMethod === v ? 'var(--ink)' : 'var(--line-strong)'),
+                      background: newMerchant.payoutMethod === v ? 'var(--ink)' : '#FFFFFF',
+                      color: newMerchant.payoutMethod === v ? '#FFFFFF' : 'var(--text-2)' }}>{l}</button>
                 ))}
               </div>
             </div>
@@ -2338,9 +2376,9 @@ export default function Dashboard() {
         </div>
         <div className="flex justify-end gap-2" style={{ marginTop: 20 }}>
           <button onClick={() => setShowAddMerchant(false)}
-            style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, color: '#6E6C62', background: 'transparent' }}>Cancel</button>
+            style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, color: 'var(--text-3)', background: 'transparent' }}>Cancel</button>
           <button className="disabled:opacity-40"
-            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF' }}
+            style={{ padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF' }}
             disabled={!newMerchant.name || !newMerchant.walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(newMerchant.walletAddress) || addMerchantMut.isPending}
             onClick={() => addMerchantMut.mutate(newMerchant)}>
             {addMerchantMut.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />}Register Merchant
@@ -2351,42 +2389,42 @@ export default function Dashboard() {
       {/* ─ Open collection account dialog ─ */}
       <Overlay open={showOpenAccount} onClose={() => setShowOpenAccount(false)}>
         {!openedAccount && (<>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Open a collection account</h3>
-          <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Choose the currency — the account details are issued instantly. Funds sent to this account fund your payout batches in that currency.</p>
-          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 6 }}>Currency</label>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Open a collection account</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Choose the currency — the account details are issued instantly. Funds sent to this account fund your payout batches in that currency.</p>
+          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 6 }}>Currency</label>
           <div className="grid grid-cols-3 gap-2" style={{ marginBottom: 16 }}>
             {["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", "AUD", "AED"].map(c => (
               <button key={c} onClick={() => setNewAccountCcy(c)}
                 style={{ padding: '10px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  border: '1px solid ' + (newAccountCcy === c ? '#1B1A16' : '#DCDAD0'),
-                  background: newAccountCcy === c ? '#1B1A16' : '#FFFFFF',
-                  color: newAccountCcy === c ? '#FFFFFF' : '#54524A' }}>{c}</button>
+                  border: '1px solid ' + (newAccountCcy === c ? 'var(--ink)' : 'var(--line-strong)'),
+                  background: newAccountCcy === c ? 'var(--ink)' : '#FFFFFF',
+                  color: newAccountCcy === c ? '#FFFFFF' : 'var(--text-2)' }}>{c}</button>
             ))}
           </div>
-          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Label (optional)</label>
+          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Label (optional)</label>
           <input value={newAccountLabel} onChange={e => setNewAccountLabel(e.target.value)} placeholder="e.g. Main EUR collections"
-            className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16', marginBottom: 8 }} />
-          {openAccountMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>{(openAccountMut.error as Error).message}</p>}
+            className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)', marginBottom: 8 }} />
+          {openAccountMut.isError && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{(openAccountMut.error as Error).message}</p>}
           <div className="flex justify-end gap-2" style={{ marginTop: 14 }}>
-            <button onClick={() => setShowOpenAccount(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setShowOpenAccount(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-2)', background: 'transparent', border: '1px solid var(--line)', cursor: 'pointer' }}>Cancel</button>
             <button onClick={() => openAccountMut.mutate()} disabled={openAccountMut.isPending}
               className="disabled:opacity-40"
-              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
               {openAccountMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}Open {newAccountCcy} account
             </button>
           </div>
         </>)}
         {openedAccount && (<>
           <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
-            <CheckCircle2 className="w-10 h-10 mx-auto" style={{ color: '#059669', marginBottom: 10 }} />
-            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>{openedAccount.currency} account opened</h3>
-            <p style={{ fontSize: 15, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', marginTop: 12, fontWeight: 500 }}>{openedAccount.iban}</p>
-            <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 6 }}>BIC {openedAccount.bic} · {openedAccount.bankName}</p>
+            <CheckCircle2 className="w-10 h-10 mx-auto" style={{ color: 'var(--green)', marginBottom: 10 }} />
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>{openedAccount.currency} account opened</h3>
+            <p style={{ fontSize: 15, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--ink)', marginTop: 12, fontWeight: 500 }}>{openedAccount.iban}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>BIC {openedAccount.bic} · {openedAccount.bankName}</p>
             <div className="flex justify-center gap-2" style={{ marginTop: 16 }}>
               <button onClick={() => copyText(openedAccount.iban.replace(/ /g, ""))}
-                style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#54524A', background: '#FFFFFF', border: '1px solid #DCDAD0', cursor: 'pointer' }}>Copy IBAN</button>
+                style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-2)', background: 'var(--surface)', border: '1px solid var(--line-strong)', cursor: 'pointer' }}>Copy IBAN</button>
               <button onClick={() => { setShowOpenAccount(false); setOpenedAccount(null); }}
-                style={{ padding: '8px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>Done</button>
+                style={{ padding: '8px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>Done</button>
             </div>
           </div>
         </>)}
@@ -2396,59 +2434,59 @@ export default function Dashboard() {
       <Overlay open={!!careTarget} onClose={() => { setCareTarget(null); setCareTicket(null); }}>
         {careTarget && !careTicket && (<>
           <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
-            <LifeBuoy style={{ width: 16, height: 16, color: '#1D4ED8' }} />
-            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>Fybrus Customer Care</h3>
+            <LifeBuoy style={{ width: 16, height: 16, color: 'var(--blue)' }} />
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Fybrus Customer Care</h3>
           </div>
-          <p style={{ fontSize: 12, color: '#615F56', marginBottom: 14 }}>Describe what you need — the alert context is attached automatically. Typical first reply: within 2 business hours.</p>
-          <div style={{ fontSize: 11, lineHeight: 1.5, color: '#54524A', background: '#F8F7F2', border: '1px solid #ECEAE0', borderRadius: 8, padding: '10px 12px', marginBottom: 14 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 14 }}>Describe what you need — the alert context is attached automatically. Typical first reply: within 2 business hours.</p>
+          <div style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--text-2)', background: 'var(--inset)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 12px', marginBottom: 14 }}>
             <strong>Attached context:</strong> {careTarget.reason}{careTarget.batchRef ? ` (${careTarget.batchRef})` : ""}
           </div>
           <div style={{ display: 'grid', gap: 12 }}>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Subject</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Subject</label>
               <input value={careSubject} onChange={e => setCareSubject(e.target.value)}
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16' }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
             </div>
             <div>
-              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Message</label>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Message</label>
               <textarea value={careMessage} onChange={e => setCareMessage(e.target.value)} rows={4}
                 placeholder="e.g. We believe this wallet was flagged in error — the merchant has been settled to this address since March."
-                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16', resize: 'vertical', fontFamily: 'inherit' }} />
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)', resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
           </div>
-          {careMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 8 }}>{(careMut.error as Error).message}</p>}
+          {careMut.isError && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>{(careMut.error as Error).message}</p>}
           <div className="flex justify-end gap-2" style={{ marginTop: 16 }}>
-            <button onClick={() => setCareTarget(null)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setCareTarget(null)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: 'var(--text-2)', background: 'transparent', border: '1px solid var(--line)', cursor: 'pointer' }}>Cancel</button>
             <button onClick={() => careMut.mutate()} disabled={!careSubject || careMut.isPending}
               className="disabled:opacity-40"
-              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1D4ED8', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--blue)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
               {careMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}Open ticket
             </button>
           </div>
         </>)}
         {careTicket && (<>
           <div style={{ textAlign: 'center', padding: '12px 0' }}>
-            <CheckCircle2 className="w-10 h-10 mx-auto" style={{ color: '#059669', marginBottom: 10 }} />
-            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>Ticket opened</h3>
-            <p style={{ fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1D4ED8', marginTop: 6, fontWeight: 500 }}>{careTicket.ticketRef}</p>
-            <p style={{ fontSize: 12, color: '#615F56', marginTop: 10, lineHeight: 1.6 }}>
+            <CheckCircle2 className="w-10 h-10 mx-auto" style={{ color: 'var(--green)', marginBottom: 10 }} />
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Ticket opened</h3>
+            <p style={{ fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--blue)', marginTop: 6, fontWeight: 500 }}>{careTicket.ticketRef}</p>
+            <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 10, lineHeight: 1.6 }}>
               Fybrus Customer Care has your alert context and typically replies within 2 business hours.<br />You can track this under “Open tickets” on the Alerts page.
             </p>
             <button onClick={() => { setCareTarget(null); setCareTicket(null); }}
-              style={{ marginTop: 16, padding: '8px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>Done</button>
+              style={{ marginTop: 16, padding: '8px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>Done</button>
           </div>
         </>)}
       </Overlay>
 
       {/* ─ Batch detail dialog ─ */}
       <Overlay open={!!selectedId} onClose={() => setSelectedId(null)} wide>
-        {!detail?.batch && <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#CBC9BF' }} /></div>}
+        {!detail?.batch && <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--text-faint)' }} /></div>}
         {detail?.batch && (
           <>
             <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>Batch {detail.batch.batchRef}</h3>
-                <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 2 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Batch {detail.batch.batchRef}</h3>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
                   {detail.batch.merchantCount} merchants &middot; {detail.batch.currency || "EUR"} &middot;{" "}
                   {detail.batch.payoutTiming === "scheduled" && detail.batch.scheduledDate
                     ? `Scheduled ${new Date(detail.batch.scheduledDate).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}`
@@ -2460,35 +2498,35 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 16 }}>
-              <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{detail.batch.currency || "EUR"} Total</p>
-                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: '#1B1A16', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}{parseFloat(detail.batch.totalFiat || detail.batch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
+              <div style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{detail.batch.currency || "EUR"} Total</p>
+                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: 'var(--ink)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}{parseFloat(detail.batch.totalFiat || detail.batch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
               </div>
-              <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>USDC Total</p>
-                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, fontVariantNumeric: 'tabular-nums', color: detail.batch.totalUsdc ? '#1B1A16' : '#CBC9BF' }}>
+              <div style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>USDC Total</p>
+                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, fontVariantNumeric: 'tabular-nums', color: detail.batch.totalUsdc ? 'var(--ink)' : 'var(--text-faint)' }}>
                   {detail.batch.totalUsdc ? `$${parseFloat(detail.batch.totalUsdc).toLocaleString("en", { minimumFractionDigits: 2 })}` : "Pending conversion"}
                 </p>
               </div>
-              <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>FX Rate</p>
-                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.exchangeRate ? '#54524A' : '#CBC9BF' }}>
+              <div style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>FX Rate</p>
+                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.exchangeRate ? 'var(--text-2)' : 'var(--text-faint)' }}>
                   {detail.batch.exchangeRate ? parseFloat(detail.batch.exchangeRate).toFixed(4) : "—"}
                 </p>
               </div>
-              <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>Fees</p>
-                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? '#1B1A16' : '#CBC9BF' }}>
+              <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>Fees</p>
+                <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? 'var(--ink)' : 'var(--text-faint)' }}>
                   {detail.batch.feeBps ? `${{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                 </p>
                 {detail.batch.feeBps
-                  ? <p style={{ fontSize: 9, color: '#96948A', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Paystrax markup <span style={{ color: '#059669' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>
-                  : <p style={{ fontSize: 9, color: '#96948A', marginTop: 2 }}>no fee on this batch</p>}
+                  ? <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Paystrax markup <span style={{ color: 'var(--green)' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>
+                  : <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2 }}>no fee on this batch</p>}
               </div>
             </div>
 
             {/* Stage explainer — what is happening / what happens next */}
-            <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', margin: '0 0 14px', padding: '8px 12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
+            <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', margin: '0 0 14px', padding: '8px 12px', borderRadius: 8, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
               {({
                 pending: "Awaiting funding — processing starts when the fiat lands in the collection IBAN. In production Banking Circle notifies the platform automatically; in this demo, click “Simulate incoming settlement”.",
                 funded: "Fiat received. Next: the platform fee is deducted and the balance converts to USDC at the live ECB rate. " + (autoProcess ? "Auto-processing is on — this normally continues automatically." : "Auto-processing is off — advance each stage manually, or run to completion."),
@@ -2501,11 +2539,11 @@ export default function Dashboard() {
 
             {/* Dual Approval Banner */}
             {dualApproval && detail.batch.status !== "completed" && detail.batch.status !== "failed" && !detail.batch.approvedBy && (
-              <div style={{ padding: 12, borderRadius: 8, background: '#EFF6FF', border: '1px solid #BFDBFE', marginBottom: 12 }}>
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--tint-blue)', border: '1px solid var(--blue-line)', marginBottom: 12 }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: '#1D4ED8' }}>Dual Approval Required</p>
-                    <p style={{ fontSize: 11, color: '#3B82F6', marginTop: 2 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--blue)' }}>Dual Approval Required</p>
+                    <p style={{ fontSize: 11, color: 'var(--blue)', marginTop: 2 }}>
                       Created by <strong>{detail.batch.createdBy || "unknown"}</strong> — needs approval from a different user before advancing.
                     </p>
                   </div>
@@ -2513,7 +2551,7 @@ export default function Dashboard() {
                     <button onClick={() => approveMut.mutate(detail.batch.id)}
                       className="flex items-center gap-1.5 disabled:opacity-40"
                       disabled={approveMut.isPending}
-                      style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: '#1D4ED8', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+                      style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--blue)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
                       {approveMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                       Approve Batch
                     </button>
@@ -2523,13 +2561,13 @@ export default function Dashboard() {
                     <span style={{ fontSize: 10, color: '#6B7280', fontStyle: 'italic' }}>Only admin/approver roles can approve</span>
                   )}
                 </div>
-                {approveMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 6 }}>{(approveMut.error as Error).message}</p>}
+                {approveMut.isError && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 6 }}>{(approveMut.error as Error).message}</p>}
               </div>
             )}
             {detail.batch.approvedBy && (
-              <div style={{ padding: 8, borderRadius: 8, background: '#ECFDF5', border: '1px solid #A7F3D0', marginBottom: 12 }} className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#059669' }} />
-                <span style={{ fontSize: 11, color: '#059669', fontWeight: 500 }}>
+              <div style={{ padding: 8, borderRadius: 8, background: 'var(--tint-green)', border: '1px solid var(--green-line)', marginBottom: 12 }} className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--green)' }} />
+                <span style={{ fontSize: 11, color: 'var(--green)', fontWeight: 500 }}>
                   Approved by {detail.batch.approvedBy} {detail.batch.approvedAt ? `on ${new Date(detail.batch.approvedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
                 </span>
               </div>
@@ -2541,7 +2579,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <button
                     className="flex items-center gap-1.5 transition-colors disabled:opacity-40"
-                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'transparent', color: '#DC2626', border: '1px solid #FCA5A5', cursor: 'pointer' }}
+                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'transparent', color: 'var(--red)', border: '1px solid var(--red-line)', cursor: 'pointer' }}
                     disabled={advanceStatusMut.isPending}
                     onClick={() => { if (window.confirm(`Mark batch ${detail.batch.batchRef} as FAILED? This cannot be undone.`)) advanceStatusMut.mutate({ id: detail.batch.id, status: "failed" }); }}>
                     <AlertCircle className="w-3 h-3" /> Mark Failed
@@ -2558,7 +2596,7 @@ export default function Dashboard() {
                       return (
                         <button
                           className="flex items-center gap-1.5 disabled:opacity-40"
-                          style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: needsApproval ? '#9CA3AF' : '#1D4ED8', color: '#FFFFFF', border: 'none', cursor: needsApproval ? 'not-allowed' : 'pointer' }}
+                          style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: needsApproval ? '#9CA3AF' : 'var(--blue)', color: '#FFFFFF', border: 'none', cursor: needsApproval ? 'not-allowed' : 'pointer' }}
                           disabled={simulateSettlementMut.isPending || needsApproval || currentUser?.role === "viewer"}
                           title={needsApproval ? "Batch must be approved before funding" : currentUser?.role === "viewer" ? "Viewers cannot trigger settlement" : "Posts the same webhook Banking Circle sends when fiat lands"}
                           onClick={() => { if (window.confirm(`Simulate incoming fiat settlement for ${detail.batch.batchRef}? (In production, Banking Circle sends this webhook when funds land.)`)) simulateSettlementMut.mutate(detail.batch.batchRef); }}>
@@ -2570,7 +2608,7 @@ export default function Dashboard() {
                     return (
                       <button
                         className="flex items-center gap-1.5 disabled:opacity-40"
-                        style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: needsApproval ? '#9CA3AF' : '#059669', color: '#FFFFFF', border: 'none', cursor: needsApproval ? 'not-allowed' : 'pointer' }}
+                        style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: needsApproval ? '#9CA3AF' : 'var(--green)', color: '#FFFFFF', border: 'none', cursor: needsApproval ? 'not-allowed' : 'pointer' }}
                         disabled={advanceStatusMut.isPending || needsApproval || currentUser?.role === "viewer"}
                         title={needsApproval ? "Batch must be approved before advancing" : currentUser?.role === "viewer" ? "Viewers cannot advance batches" : ""}
                         onClick={() => { if (window.confirm(`Advance batch ${detail.batch.batchRef} to "${nextLabel}"? This cannot be undone.`)) advanceStatusMut.mutate({ id: detail.batch.id, status: next }); }}>
@@ -2582,12 +2620,12 @@ export default function Dashboard() {
                 </div>
               )}
               {detail.batch.status === "failed" && (
-                <span style={{ fontSize: 11, fontWeight: 500, color: '#DC2626', padding: '4px 10px', borderRadius: 6, background: '#FEE2E2' }}>Batch Failed</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--red)', padding: '4px 10px', borderRadius: 6, background: 'var(--tint-red)' }}>Batch Failed</span>
               )}
               {(detail.batch.status === "funded" || detail.batch.status === "converting") && currentUser?.role !== "viewer" && (
                 <button
                   className="flex items-center gap-1.5 disabled:opacity-40"
-                  style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer', marginLeft: 8 }}
+                  style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer', marginLeft: 8 }}
                   disabled={processBatchMut.isPending}
                   title="Runs the remaining stages in order: conversion → compliance checks → dispatch → completion"
                   onClick={() => processBatchMut.mutate({ id: detail.batch.id, from: detail.batch.status })}>
@@ -2599,7 +2637,7 @@ export default function Dashboard() {
                 detail.payouts?.some((r: any) => r.payout.status === "failed") && currentUser?.role !== "viewer" && (
                 <button
                   className="flex items-center gap-1.5 disabled:opacity-40"
-                  style={{ padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: '#FFFFFF', color: '#B45309', border: '1px solid #FCD34D', cursor: 'pointer', marginLeft: 8 }}
+                  style={{ padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--surface)', color: 'var(--amber-strong)', border: '1px solid var(--amber-line)', cursor: 'pointer', marginLeft: 8 }}
                   disabled={retryFailedMut.isPending}
                   title="Re-runs wallet screening + travel rule + settlement for failed payouts only"
                   onClick={() => retryFailedMut.mutate(detail.batch.id)}>
@@ -2609,77 +2647,77 @@ export default function Dashboard() {
               )}
             </div>
 
-            <h4 style={{ fontSize: 12, fontWeight: 500, color: '#54524A', marginBottom: 8 }}>Per-Merchant Breakdown</h4>
-            <div style={{ borderRadius: 12, overflowX: 'auto', border: '1px solid #E5E3D9', background: '#FFFFFF' }}>
+            <h4 style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-2)', marginBottom: 8 }}>Per-Merchant Breakdown</h4>
+            <div style={{ borderRadius: 12, overflowX: 'auto', border: '1px solid var(--line)', background: 'var(--surface)' }}>
               <table className="w-full" style={{ minWidth: 760 }}>
                 <thead>
-                  <tr style={{ background: '#F8F7F2', borderBottom: '1px solid #ECEAE0' }}>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Merchant</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'right' }}>{detail.batch.currency || "EUR"}</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'right' }}>USDC</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Wallet</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'center' }}>Status</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Confirmed</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>TX Hash</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Travel Rule</th>
+                  <tr style={{ background: 'var(--inset)', borderBottom: '1px solid var(--line)' }}>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 16px', textAlign: 'left' }}>Merchant</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'right' }}>{detail.batch.currency || "EUR"}</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'right' }}>USDC</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'left' }}>Wallet</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'center' }}>Status</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'left' }}>Confirmed</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'left' }}>TX Hash</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)', padding: '10px 12px', textAlign: 'left' }}>Travel Rule</th>
                   </tr>
                 </thead>
                 <tbody>
                   {detail.payouts?.map((r: any) => (
-                    <tr key={r.payout.id} style={{ borderTop: '1px solid #EFEDE4' }}>
-                      <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>
+                    <tr key={r.payout.id} style={{ borderTop: '1px solid var(--line)' }}>
+                      <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>
                         {r.merchant?.name}
-                        <span title={(r.payout.payoutMethod === 'fiat') ? 'Paid in fiat (USDC off-ramped)' : 'Paid in USDC'} style={{ marginLeft: 6, fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: r.payout.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payout.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payout.payoutMethod === 'fiat' ? 'FIAT' : 'USDC'}</span>
+                        <span title={(r.payout.payoutMethod === 'fiat') ? 'Paid in fiat (USDC off-ramped)' : 'Paid in USDC'} style={{ marginLeft: 6, fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: r.payout.payoutMethod === 'fiat' ? 'var(--tint-blue)' : 'var(--tint-green)', color: r.payout.payoutMethod === 'fiat' ? 'var(--blue)' : 'var(--green)' }}>{r.payout.payoutMethod === 'fiat' ? 'FIAT' : 'USDC'}</span>
                       </td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.fiatAmount || r.payout.eurAmount).toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                      <td title={r.payout.payoutMethod === 'fiat' && r.payout.payoutFiatAmount ? `Off-ramped to ${CSYM[detail.batch.currency] || '€'}${parseFloat(r.payout.payoutFiatAmount).toLocaleString('en',{minimumFractionDigits:2})} at ${r.payout.offRampRate}` : ''} style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.payout.usdcAmount ? '#1B1A16' : '#CBC9BF' }}>
+                      <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.fiatAmount || r.payout.eurAmount).toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                      <td title={r.payout.payoutMethod === 'fiat' && r.payout.payoutFiatAmount ? `Off-ramped to ${CSYM[detail.batch.currency] || '€'}${parseFloat(r.payout.payoutFiatAmount).toLocaleString('en',{minimumFractionDigits:2})} at ${r.payout.offRampRate}` : ''} style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.payout.usdcAmount ? 'var(--ink)' : 'var(--text-faint)' }}>
                         {r.payout.payoutMethod === 'fiat' && r.payout.payoutFiatAmount
-                          ? <span>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.payoutFiatAmount).toLocaleString("en", { minimumFractionDigits: 2 })}<span style={{ fontSize: 9, color: '#96948A', fontWeight: 400, display: 'block' }}>via ${parseFloat(r.payout.usdcAmount || "0").toLocaleString("en", { maximumFractionDigits: 0 })} USDC</span></span>
+                          ? <span>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.payoutFiatAmount).toLocaleString("en", { minimumFractionDigits: 2 })}<span style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 400, display: 'block' }}>via ${parseFloat(r.payout.usdcAmount || "0").toLocaleString("en", { maximumFractionDigits: 0 })} USDC</span></span>
                           : (r.payout.usdcAmount ? `$${parseFloat(r.payout.usdcAmount).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—")}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         <div className="flex items-center gap-1">
-                          <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{r.payout.walletAddress.slice(0, 8)}...{r.payout.walletAddress.slice(-4)}</span>
-                          <button style={{ color: '#CBC9BF' }} onClick={() => copyText(r.payout.walletAddress)}
-                            onMouseEnter={e => e.currentTarget.style.color = '#615F56'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}
+                          <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{r.payout.walletAddress.slice(0, 8)}...{r.payout.walletAddress.slice(-4)}</span>
+                          <button style={{ color: 'var(--text-faint)' }} onClick={() => copyText(r.payout.walletAddress)}
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}
                             aria-label="Copy wallet address"><Copy className="w-2.5 h-2.5" /></button>
                         </div>
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                         <Badge status={r.payout.status} />
                         {r.payout.status === "failed" && (
-                          <p style={{ fontSize: 10, lineHeight: 1.4, color: '#DC2626', marginTop: 4, maxWidth: 220, textAlign: 'left' }}>
+                          <p style={{ fontSize: 10, lineHeight: 1.4, color: 'var(--red)', marginTop: 4, maxWidth: 220, textAlign: 'left' }}>
                             {r.payout.failureReason || "Failed before reasons were recorded on this ledger."}
                           </p>
                         )}
                       </td>
-                      <td style={{ padding: '10px 12px', fontSize: 11, color: '#54524A', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
                         {r.payout.confirmedAt ? new Date(r.payout.confirmedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {r.payout.txHash ? (
                           <div className="flex items-center gap-1">
-                            <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{r.payout.txHash.slice(0, 10)}...</span>
-                            <button style={{ color: '#CBC9BF' }} onClick={() => copyText(r.payout.txHash)}
-                              onMouseEnter={e => e.currentTarget.style.color = '#615F56'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}
+                            <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--text-2)' }}>{r.payout.txHash.slice(0, 10)}...</span>
+                            <button style={{ color: 'var(--text-faint)' }} onClick={() => copyText(r.payout.txHash)}
+                              onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}
                               aria-label="Copy transaction hash"><Copy className="w-2.5 h-2.5" /></button>
                           </div>
                         ) : (
-                          <span style={{ fontSize: 11, color: '#CBC9BF' }}>—</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>—</span>
                         )}
                       </td>
                       <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
                         {r.payout.travelRuleStatus === "transmitted" ? (
                           <span title={r.payout.travelRuleData ? `Transmitted ${r.payout.travelRuleAt ? new Date(r.payout.travelRuleAt).toLocaleString() : ""}\n${(() => { try { const d = JSON.parse(r.payout.travelRuleData); return `Originator: ${d.originator?.name} (${d.originator?.country})\nBeneficiary: ${d.beneficiary?.name}`; } catch { return ""; } })()}` : "Transmitted"}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#ECFDF5', color: '#059669', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-green)', color: 'var(--green)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
                             <ShieldCheck style={{ width: 11, height: 11 }} /> {r.payout.travelRuleRef}
                           </span>
                         ) : r.payout.travelRuleStatus === "failed" ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#FEF2F2', color: '#DC2626' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-red)', color: 'var(--red)' }}>
                             <AlertCircle style={{ width: 11, height: 11 }} /> Failed
                           </span>
                         ) : (
-                          <span style={{ fontSize: 11, color: '#CBC9BF' }}>—</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>—</span>
                         )}
                       </td>
                     </tr>
