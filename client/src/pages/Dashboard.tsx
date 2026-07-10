@@ -327,6 +327,11 @@ export default function Dashboard() {
   });
   const [markupInput, setMarkupInput] = useState<string>("");
   const [rowBps, setRowBps] = useState<Record<string, string>>({}); // per-merchant inline edits on Revenue
+  const [alertFilter, setAlertFilter] = useState("all");   // all | payout_failed | merchant_flagged | recon_exception
+  const [alertSearch, setAlertSearch] = useState("");
+  const [revSearch, setRevSearch] = useState("");
+  const [revMethod, setRevMethod] = useState("all");        // all | stablecoin | fiat
+  const [accountSearch, setAccountSearch] = useState("");
   const saveMarkupMut = useMutation({
     mutationFn: async (bps: string) => {
       const r = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ defaultMarkupBps: Number(bps), actor: currentUser?.email }) });
@@ -1341,6 +1346,8 @@ export default function Dashboard() {
                 <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)', flex: 1 }}>
                   Collection accounts are the IBANs your payout fiat arrives into — one per currency. Open an account below and share its details with the paying entity. In production these are <strong>virtual IBANs issued by Banking Circle</strong>; in the demo they are generated instantly with the same shape.
                 </p>
+                <input value={accountSearch} onChange={e => setAccountSearch(e.target.value)} placeholder="Search currency, IBAN, label…"
+                  className="outline-none" style={{ width: 220, padding: '9px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', flexShrink: 0 }} />
                 <button onClick={() => { setShowOpenAccount(true); setOpenedAccount(null); setNewAccountLabel(""); }}
                   className="flex items-center gap-1.5"
                   style={{ padding: '13px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: 'var(--cta)', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
@@ -1356,7 +1363,10 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {accounts.map((a: any) => (
+                  {accounts.filter((a: any) => {
+                    const q = accountSearch.toLowerCase();
+                    return !q || [a.currency, a.iban, a.label, a.bankName].some((f: any) => (f || "").toLowerCase().includes(q));
+                  }).map((a: any) => (
                     <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
                       <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
                         <div className="flex items-center gap-2.5">
@@ -1437,7 +1447,20 @@ export default function Dashboard() {
 
               {/* Per-merchant breakdown */}
               <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)' }}>Markup earned by merchant</p></div>
+                <div className="flex items-center justify-between gap-3 flex-wrap" style={{ padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)' }}>Markup earned by merchant</p>
+                  <div className="flex items-center gap-2">
+                    <input value={revSearch} onChange={e => setRevSearch(e.target.value)} placeholder="Search merchants…"
+                      className="outline-none" style={{ width: 190, padding: '6px 11px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--ink)' }} />
+                    {[["all", "All"], ["stablecoin", "Stablecoin"], ["fiat", "Fiat"]].map(([k, l]) => (
+                      <button key={k} onClick={() => setRevMethod(k)}
+                        style={{ fontSize: 11, fontWeight: 500, padding: '5px 11px', borderRadius: 999, cursor: 'pointer',
+                          border: '1px solid ' + (revMethod === k ? 'var(--cta-soft)' : 'var(--line-strong)'),
+                          background: revMethod === k ? 'var(--tint-green)' : 'transparent',
+                          color: revMethod === k ? 'var(--green)' : 'var(--text-3)' }}>{l}</button>
+                    ))}
+                  </div>
+                </div>
                 <div style={{ overflowX: 'auto' }}>
                 <table className="w-full" style={{ minWidth: 720 }}>
                   <thead><tr style={{ background: 'var(--inset)' }}>
@@ -1446,7 +1469,11 @@ export default function Dashboard() {
                     ))}
                   </tr></thead>
                   <tbody>
-                    {(revenue?.byMerchant ?? []).map((r: any, i: number) => (
+                    {(revenue?.byMerchant ?? []).filter((r: any) => {
+                      if (revMethod !== "all" && (r.payoutMethod || "stablecoin") !== revMethod) return false;
+                      if (revSearch && !r.merchant.toLowerCase().includes(revSearch.toLowerCase())) return false;
+                      return true;
+                    }).map((r: any, i: number) => (
                       <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
                         <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>{r.merchant}</td>
                         <td style={{ padding: '8px 16px' }}>
@@ -1481,30 +1508,102 @@ export default function Dashboard() {
           )}
 
           {/* ─ Alerts & Resolution tab ─ */}
-          {page === "alerts" && (
+          {page === "alerts" && (() => {
+            const allAlerts = [
+              ...((alertsData?.failedPayouts ?? []).map((a: any) => ({ ...a, kind: "payout_failed" }))),
+              ...((alertsData?.flaggedMerchants ?? []).map((a: any) => ({ ...a, kind: "merchant_flagged" }))),
+              ...((alertsData?.reconExceptions ?? []).map((a: any) => ({ ...a, kind: "recon_exception" }))),
+            ];
+            const q = alertSearch.toLowerCase();
+            const list = allAlerts.filter((a: any) => {
+              if (alertFilter !== "all" && a.kind !== alertFilter) return false;
+              if (q && ![a.merchant, a.batchRef, a.reason, a.walletAddress, (a.exceptions || []).join(" ")].some(f => (f || "").toLowerCase().includes(q))) return false;
+              return true;
+            });
+            const KIND: Record<string, { label: string; dot: string; n: number }> = {
+              payout_failed: { label: "Payout Failures", dot: "var(--red)", n: alertsData?.failedPayouts?.length ?? 0 },
+              merchant_flagged: { label: "Flagged Wallets", dot: "var(--amber)", n: alertsData?.flaggedMerchants?.length ?? 0 },
+              recon_exception: { label: "Recon Exceptions", dot: "var(--blue)", n: alertsData?.reconExceptions?.length ?? 0 },
+            };
+            return (
             <div className="space-y-5">
-              {/* Summary chips */}
+              {/* Summary tiles = the filters */}
               <div className="grid grid-cols-3 gap-4">
-                {[
-                  { label: "Payout Failures", n: alertsData?.failedPayouts?.length ?? 0, color: 'var(--red)', bg: 'var(--tint-red)' },
-                  { label: "Flagged Wallets", n: alertsData?.flaggedMerchants?.length ?? 0, color: 'var(--amber)', bg: 'var(--tint-amber)' },
-                  { label: "Reconciliation Exceptions", n: alertsData?.reconExceptions?.length ?? 0, color: 'var(--blue)', bg: 'var(--tint-blue)' },
-                ].map(c => (
-                  <div key={c.label} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 16 }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>{c.label}</p>
-                    <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.n > 0 ? c.color : 'var(--green)' }}>{c.n}</p>
+                {Object.entries(KIND).map(([k, c]) => {
+                  const active = alertFilter === k;
+                  return (
+                    <button key={k} onClick={() => setAlertFilter(active ? "all" : k)}
+                      style={{ textAlign: 'left', cursor: 'pointer', background: 'var(--surface)', borderRadius: 18, padding: 16,
+                        border: active ? '1px solid var(--cta-soft)' : '1px solid var(--line)',
+                        boxShadow: active ? 'var(--shadow-card), 0 0 0 3px rgba(20,188,144,0.12)' : 'var(--shadow-card)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.dot }} />
+                        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-4)' }}>{c.label}</p>
+                      </div>
+                      <p style={{ fontSize: 24, fontWeight: 650, letterSpacing: '-0.02em', marginTop: 6, color: c.n > 0 ? 'var(--ink)' : 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>{c.n}</p>
+                      <p style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 2 }}>{active ? "filtering — click to show all" : "click to filter"}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* One unified, filterable list */}
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                <div className="flex items-center justify-between gap-3" style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--ink)' }}>
+                    {alertFilter === "all" ? "All alerts" : KIND[alertFilter].label} <span style={{ color: 'var(--text-4)', fontWeight: 400, fontSize: 12 }}>({list.length})</span>
+                  </p>
+                  <input value={alertSearch} onChange={e => setAlertSearch(e.target.value)} placeholder="Search merchant, batch, reason…"
+                    className="outline-none" style={{ width: 240, padding: '7px 12px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--ink)' }} />
+                </div>
+                {list.length === 0 && (
+                  <div className="flex items-center gap-2.5" style={{ padding: '18px 16px' }}>
+                    <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--green)' }} />
+                    <p style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{allAlerts.length === 0 ? "All clear — no failed payouts, flagged wallets or reconciliation exceptions." : "Nothing matches. "}
+                      {allAlerts.length > 0 && <button onClick={() => { setAlertSearch(""); setAlertFilter("all"); }} style={{ color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Clear filters</button>}
+                    </p>
+                  </div>
+                )}
+                {list.map((a: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: i > 0 || true ? '1px solid var(--line)' : 'none' }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: KIND[a.kind].dot, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {a.kind === "payout_failed" && (<>
+                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
+                          <span style={{ fontWeight: 600 }}>{a.merchant}</span> — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
+                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.batchRef}</span>
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>
+                          {a.reason}{!a.retryable && <span style={{ color: 'var(--amber-strong)' }}>  — compliance block; retrying won't deliver it</span>}
+                        </p>
+                      </>)}
+                      {a.kind === "merchant_flagged" && (<>
+                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
+                          <span style={{ fontWeight: 600 }}>{a.merchant}</span>
+                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · {a.provider}</span>
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>{a.reason}</p>
+                      </>)}
+                      {a.kind === "recon_exception" && (<>
+                        <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={(a.exceptions || []).join(' · ')}>{(a.exceptions || []).join(' · ')} — clears when the underlying payout is resolved</p>
+                      </>)}
+                    </div>
+                    <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+                      {a.kind === "merchant_flagged"
+                        ? <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>Review merchant</button>
+                        : <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>View batch</button>}
+                      {a.kind === "payout_failed" && a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--amber-strong)' }}>Retry</button>}
+                      <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
-                Everything that needs a human lands here, with the reason attached. Compliance blocks (flagged wallets) are the system working as intended — they need review, not retries. Technical failures can be retried directly. If anything is unclear, open a ticket with <strong>Fybrus Customer Care</strong> from any alert.
-              </p>
-
               {/* Open tickets */}
               {supportTickets.length > 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 10 }}>Open tickets with Fybrus Customer Care</p>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: '14px 16px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>Open tickets with Fybrus Customer Care <span style={{ color: 'var(--text-4)', fontWeight: 400 }}>· typically replies within 2 business hours</span></p>
                   <div>
                     {supportTickets.map((t: any, i: number) => (
                       <div key={t.id} className="flex items-center gap-3" style={{ fontSize: 12, padding: '9px 2px', borderTop: i > 0 ? '1px solid var(--line)' : 'none' }}>
@@ -1516,90 +1615,11 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 8 }}>Fybrus Customer Care typically replies within 2 business hours.</p>
-                </div>
-              )}
-
-              {/* All clear */}
-              {(alertsData?.total ?? 0) === 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
-                  <CheckCircle2 className="w-8 h-8 mx-auto" style={{ color: 'var(--green)', marginBottom: 8 }} />
-                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>All clear</p>
-                  <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>No failed payouts, flagged wallets, or reconciliation exceptions.</p>
-                </div>
-              )}
-
-              {/* Payout failures */}
-              {(alertsData?.failedPayouts?.length ?? 0) > 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--red)' }}>Payout failures</p></div>
-                  {alertsData.failedPayouts.map((a: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--red)', flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
-                          <span style={{ fontWeight: 600 }}>{a.merchant}</span> — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
-                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.batchRef}</span>
-                        </p>
-                        <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 2, lineHeight: 1.45, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>
-                          {a.reason}{!a.retryable && <span style={{ color: 'var(--amber-strong)' }}>  — compliance block; retrying won't deliver it</span>}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-                        <button onClick={() => setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>View batch</button>
-                        {a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--amber-strong)' }}>Retry</button>}
-                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Flagged wallets */}
-              {(alertsData?.flaggedMerchants?.length ?? 0) > 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--amber)' }}>Flagged wallets</p></div>
-                  {alertsData.flaggedMerchants.map((a: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--amber)', flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
-                          <span style={{ fontWeight: 600 }}>{a.merchant}</span>
-                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · {a.provider}</span>
-                        </p>
-                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>{a.reason}</p>
-                      </div>
-                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-                        <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>Review merchant</button>
-                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Reconciliation exceptions */}
-              {(alertsData?.reconExceptions?.length ?? 0) > 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)' }}>Reconciliation exceptions</p></div>
-                  {alertsData.reconExceptions.map((a: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--blue)', flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
-                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.exceptions.join(' · ')}>{a.exceptions.join(' · ')} — clears when the underlying payout is resolved</p>
-                      </div>
-                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-                        <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>View batch</button>
-                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
-          )}
-
+            );
+          })()}
           {/* ─ Audit & Compliance tab ─ */}
           {page === "audit" && (
             <div className="space-y-5">
