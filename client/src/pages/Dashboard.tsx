@@ -644,6 +644,25 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Powered by Fybrus */}
+        <div style={{ padding: '2px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="15" height="18" viewBox="0 0 24 28" aria-hidden="true" style={{ flexShrink: 0 }}>
+            <defs>
+              <linearGradient id="fybMark" x1="0" y1="0" x2="0.35" y2="1">
+                <stop offset="0" stopColor="#3BE8B4" />
+                <stop offset="1" stopColor="#0E8E72" />
+              </linearGradient>
+            </defs>
+            <path d="M7.5 3 L12 3 L8.2 27 L3.7 27 Z" fill="url(#fybMark)" opacity="0.55" />
+            <path d="M9.5 3 L23 3 L20.6 9 L7.1 9 Z" fill="url(#fybMark)" />
+            <path d="M8 12 L19 12 L16.6 18 L5.6 18 Z" fill="url(#fybMark)" />
+          </svg>
+          <div style={{ lineHeight: 1.1 }}>
+            <span style={{ display: 'block', fontSize: 8, letterSpacing: '0.09em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.32)' }}>Powered by</span>
+            <span style={{ display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '0.07em', color: '#FFFFFF' }}>FYBRUS<span style={{ color: '#34E3B0' }}>.</span></span>
+          </div>
+        </div>
       </aside>
 
       {/* ─ Right content ─ */}

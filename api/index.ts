@@ -788,100 +788,141 @@ app.post("/api/seed", async (_r, res) => {
   const existing = await db.select().from(batches);
   if (existing.length) return res.json({ message: "Already seeded" });
 
-  const merchantData = [
-    { name: "TechFlow Solutions",   walletAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18", email: "accounts@techflow.io" },
-    { name: "Nordic Supplies AB",   walletAddress: "0x8Ba1f109551bD432803012645Ac136ddd64DBA72", email: "finance@nordicsupplies.se" },
-    { name: "GreenLeaf Organics",   walletAddress: "0x2946259E0334f33A064106302415aD3391BeD384", email: "payments@greenleaf.ie" },
-    { name: "DataBridge Analytics", walletAddress: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", email: "billing@databridge.eu" },
-    { name: "CloudScale Hosting",   walletAddress: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", email: "ops@cloudscale.net" },
-    { name: "EuroLogistics GmbH",   walletAddress: "0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", email: "invoice@eurolog.de" },
-    { name: "Pixel & Code Studio",  walletAddress: "0x617F2E2fD72FD9D5503197092aC168c91465E7f2", email: "hello@pixelcode.io" },
-    { name: "SafeGuard Insurance",  walletAddress: "0x17F6AD8Ef982297579C203069C1DbfFE4348c372", email: "claims@safeguard.eu" },
-    { name: "Meridian Consulting",  walletAddress: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", email: "finance@meridian.com" },
-    { name: "Volta Energy Ltd",     walletAddress: "0xAB8483F64d9C6d1EcF9b849Ae677dD3315835Cb2", email: "ap@voltaenergy.eu" },
-  ];
-  const ms: any[] = [];
-  for (const m of merchantData) {
-    const [r] = await db.insert(merchants).values(m).returning();
-    ms.push(r);
-    await db.insert(auditLog).values({ action: "merchant_registered", entityType: "merchant", entityId: r.id, entityRef: r.name, actor: "julijavi@paystrax.com", detail: `Wallet ${m.walletAddress.slice(0, 10)}...`, createdAt: new Date(Date.now() - 30 * 86400000) });
-  }
-
-  // Helper to insert a full lifecycle audit trail for a completed batch
-  async function auditBatchLifecycle(b: any, baseTs: number, creator: string, approver: string) {
-    const rate = b.exchangeRate ? parseFloat(b.exchangeRate) : 1.08;
-    await db.insert(auditLog).values([
-      { action: "batch_created",    entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: creator,  detail: `${b.merchantCount} merchants · ${b.currency} ${parseFloat(b.totalFiat).toLocaleString()}`, createdAt: new Date(baseTs) },
-      { action: "batch_approved",   entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: approver, detail: `Approved by ${approver}`, createdAt: new Date(baseTs + 1.5 * 3600000) },
-      { action: "batch_funded",     entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: "system", detail: `FIAT received · ${b.currency} ${parseFloat(b.totalFiat).toLocaleString()}`, createdAt: new Date(baseTs + 4 * 3600000) },
-      { action: "batch_converting", entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: "system", detail: `Exchange rate ${rate.toFixed(4)} · USDC ${(parseFloat(b.totalFiat) * rate).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, createdAt: new Date(baseTs + 5 * 3600000) },
-      { action: "batch_sending",    entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: "system", detail: `Dispatching to ${b.merchantCount} wallets`, createdAt: new Date(baseTs + 6 * 3600000) },
-      { action: "batch_completed",  entityType: "batch", entityId: b.id, entityRef: b.batchRef, actor: "system", detail: `All payouts confirmed on-chain`, createdAt: new Date(baseTs + 7 * 3600000) },
-    ]);
-  }
-
+  const rnd = (min: number, max: number) => Math.random() * (max - min) + min;
+  const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
+  const addr = () => "0x" + crypto.randomBytes(20).toString("hex");
   const day = 86400000;
   const now = Date.now();
+  const CREATOR = "julijavi@paystrax.com", APPROVER = "vaivani@paystrax.com";
 
-  // ── Batch 1: EUR, 30 days ago ──────────────────────────────────────────
-  const [b1] = await db.insert(batches).values({ batchRef: "BATCH-PS001", currency: "EUR", totalFiat: "45250.00", totalEur: "45250.00", totalUsdc: "48870.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 5, fiatReceivedAt: new Date(now - 30 * day + 4 * 3600000), completedAt: new Date(now - 30 * day + 7 * 3600000), createdBy: "julijavi@paystrax.com", approvedBy: "vaivani@paystrax.com", approvedAt: new Date(now - 30 * day + 1.5 * 3600000), createdAt: new Date(now - 30 * day) }).returning();
-  for (let i = 0; i < 5; i++) { const amt = [12500, 8750, 6200, 9800, 8000][i]; await db.insert(payouts).values({ batchId: b1.id, merchantId: ms[i].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 30 * day + 7 * 3600000), createdAt: new Date(now - 30 * day) }); }
-  await auditBatchLifecycle(b1, now - 30 * day, "julijavi@paystrax.com", "vaivani@paystrax.com");
+  // ── Merchants (28) ─────────────────────────────────────────────────────
+  const names = [
+    "TechFlow Solutions", "Nordic Supplies AB", "GreenLeaf Organics", "DataBridge Analytics",
+    "CloudScale Hosting", "EuroLogistics GmbH", "Pixel & Code Studio", "SafeGuard Insurance",
+    "Meridian Consulting", "Volta Energy Ltd", "Harbour Freight Co", "Lumen Digital",
+    "Atlas Manufacturing", "Brightwave Media", "Corvus Security", "Delta Pharma Ltd",
+    "Everest Travel", "Fjord Seafoods", "Granite Construction", "Helios Solar",
+    "Indigo Textiles", "Juniper Software", "Kestrel Aviation", "Larkspur Foods",
+    "Monarch Publishing", "Northstar Robotics", "Orion Biotech", "Praxis Legal",
+  ];
+  const mIds: string[] = [];
+  const mObjs: any[] = [];
+  for (let i = 0; i < names.length; i++) {
+    const isFiat = [2, 4, 10, 15, 19, 24].includes(i);              // ~6 fiat merchants
+    const override = ({ 0: 40, 3: 30, 6: 50, 12: 35, 20: 20 } as any)[i]; // a few markup overrides
+    const [m] = await db.insert(merchants).values({
+      name: names[i], walletAddress: addr(), email: `ap@${names[i].toLowerCase().replace(/[^a-z]/g, "").slice(0, 10)}.com`,
+      kycReliedOn: "Paystrax (acquirer)", kycRef: "PSX-KYC-" + crypto.randomBytes(3).toString("hex").toUpperCase(), kycAttestedAt: new Date(now - rnd(40, 120) * day),
+      walletScreenStatus: "clear", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - rnd(1, 100) * day),
+      markupBps: override ?? null, payoutMethod: isFiat ? "fiat" : "stablecoin",
+      createdAt: new Date(now - rnd(60, 180) * day),
+    }).returning();
+    mIds.push(m.id); mObjs.push(m);
+  }
+  // Flagged showcase merchant — wallet ends 0bad
+  const [shady] = await db.insert(merchants).values({
+    name: "Shady Imports Ltd", walletAddress: "0x" + crypto.randomBytes(18).toString("hex") + "0bad",
+    email: "ap@shady.example", kycReliedOn: "Paystrax (acquirer)", kycRef: "PSX-KYC-TEST01", kycAttestedAt: new Date(now - 3 * day),
+    walletScreenStatus: "flagged", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - 3 * day),
+    markupBps: null, payoutMethod: "stablecoin", createdAt: new Date(now - 3 * day),
+  }).returning();
 
-  // ── Batch 2: USD, 24 days ago ──────────────────────────────────────────
-  const [b2] = await db.insert(batches).values({ batchRef: "BATCH-PS002", currency: "USD", totalFiat: "32100.00", totalEur: "32100.00", totalUsdc: "34668.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 4, fiatReceivedAt: new Date(now - 24 * day + 4 * 3600000), completedAt: new Date(now - 24 * day + 7 * 3600000), createdBy: "vaivani@paystrax.com", approvedBy: "julijavi@paystrax.com", approvedAt: new Date(now - 24 * day + 1.5 * 3600000), createdAt: new Date(now - 24 * day) }).returning();
-  for (let i = 0; i < 4; i++) { const amt = [9500, 7800, 8300, 6500][i]; await db.insert(payouts).values({ batchId: b2.id, merchantId: ms[i + 2].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i + 2].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 24 * day + 7 * 3600000), createdAt: new Date(now - 24 * day) }); }
-  await auditBatchLifecycle(b2, now - 24 * day, "vaivani@paystrax.com", "julijavi@paystrax.com");
+  const DEFAULT_MARKUP = 25, FEE_BPS = 9, OFFRAMP_SPREAD = 0.002;
+  const rateFor = (ccy: string) => ccy === "USD" ? 1.0 : ccy === "AUD" ? +(0.66 + rnd(-0.01, 0.01)).toFixed(6) : +(1.08 + rnd(0, 0.07)).toFixed(6);
+  const ccys = ["EUR", "USD", "AUD", "EUR", "EUR", "USD"];
+  let batchNum = 0;
 
-  // ── Batch 3: EUR, 18 days ago ──────────────────────────────────────────
-  const [b3] = await db.insert(batches).values({ batchRef: "BATCH-PS003", currency: "EUR", totalFiat: "28600.00", totalEur: "28600.00", totalUsdc: "30888.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 3, fiatReceivedAt: new Date(now - 18 * day + 4 * 3600000), completedAt: new Date(now - 18 * day + 7 * 3600000), createdBy: "julijavi@paystrax.com", approvedBy: "vaivani@paystrax.com", approvedAt: new Date(now - 18 * day + 1.5 * 3600000), createdAt: new Date(now - 18 * day) }).returning();
-  for (let i = 0; i < 3; i++) { const amt = [11200, 9400, 8000][i]; await db.insert(payouts).values({ batchId: b3.id, merchantId: ms[i + 5].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i + 5].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 18 * day + 7 * 3600000), createdAt: new Date(now - 18 * day) }); }
-  await auditBatchLifecycle(b3, now - 18 * day, "julijavi@paystrax.com", "vaivani@paystrax.com");
+  async function seedBatch(daysAgo: number, opts: { pending?: boolean; withShady?: boolean } = {}) {
+    batchNum++;
+    const ref = `BATCH-PS${String(batchNum).padStart(3, "0")}`;
+    const ccy = pick(ccys);
+    const sym = ({ EUR: "€", USD: "$", AUD: "A$" } as any)[ccy];
+    const count = Math.floor(rnd(6, 15));                 // 6–14 merchants per batch
+    const idxs = [...Array(names.length).keys()].sort(() => Math.random() - 0.5).slice(0, count);
+    const roster = idxs.map(i => mObjs[i]);
+    if (opts.withShady) roster[0] = shady;
+    const created = now - daysAgo * day;
+    const funded = created + rnd(2, 6) * 3600000;
+    const completed = funded + rnd(300, 660) * 1000;      // 5–11 min settlement
+    const rate = rateFor(ccy);
 
-  // ── Batch 4: AUD, 14 days ago ──────────────────────────────────────────
-  const [b4] = await db.insert(batches).values({ batchRef: "BATCH-PS004", currency: "AUD", totalFiat: "22400.00", totalEur: "22400.00", totalUsdc: "24192.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 4, fiatReceivedAt: new Date(now - 14 * day + 4 * 3600000), completedAt: new Date(now - 14 * day + 7 * 3600000), createdBy: "vaivani@paystrax.com", approvedBy: "julijavi@paystrax.com", approvedAt: new Date(now - 14 * day + 1.5 * 3600000), createdAt: new Date(now - 14 * day) }).returning();
-  for (let i = 0; i < 4; i++) { const amt = [6800, 5200, 5900, 4500][i]; await db.insert(payouts).values({ batchId: b4.id, merchantId: ms[i].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 14 * day + 7 * 3600000), createdAt: new Date(now - 14 * day) }); }
-  await auditBatchLifecycle(b4, now - 14 * day, "vaivani@paystrax.com", "julijavi@paystrax.com");
+    let totalFiat = 0, feeTotal = 0, markupTotal = 0, usdcTotal = 0;
+    const rows: any[] = [];
+    for (const m of roster) {
+      const amt = +rnd(3000, 15000).toFixed(2);
+      const fee = +(amt * FEE_BPS / 10000).toFixed(2);
+      const markup = +(amt * (m.markupBps ?? DEFAULT_MARKUP) / 10000).toFixed(2);
+      const usdc = +((amt - fee - markup) * rate).toFixed(6);
+      totalFiat += amt; feeTotal += fee; markupTotal += markup; usdcTotal += usdc;
+      rows.push({ m, amt, fee, markup, usdc });
+    }
 
-  // ── Batch 5: EUR, 9 days ago ───────────────────────────────────────────
-  const [b5] = await db.insert(batches).values({ batchRef: "BATCH-PS005", currency: "EUR", totalFiat: "51800.00", totalEur: "51800.00", totalUsdc: "55944.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 5, fiatReceivedAt: new Date(now - 9 * day + 4 * 3600000), completedAt: new Date(now - 9 * day + 7 * 3600000), createdBy: "julijavi@paystrax.com", approvedBy: "vaivani@paystrax.com", approvedAt: new Date(now - 9 * day + 1.5 * 3600000), createdAt: new Date(now - 9 * day) }).returning();
-  for (let i = 0; i < 5; i++) { const amt = [13500, 10200, 9800, 11300, 7000][i]; await db.insert(payouts).values({ batchId: b5.id, merchantId: ms[i + 3].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i + 3].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 9 * day + 7 * 3600000), createdAt: new Date(now - 9 * day) }); }
-  await auditBatchLifecycle(b5, now - 9 * day, "julijavi@paystrax.com", "vaivani@paystrax.com");
+    const pending = !!opts.pending;
+    const [b] = await db.insert(batches).values({
+      batchRef: ref, currency: ccy, totalFiat: totalFiat.toFixed(2), totalEur: totalFiat.toFixed(2),
+      totalUsdc: pending ? null : usdcTotal.toFixed(6), exchangeRate: pending ? null : rate.toFixed(6),
+      feeBps: FEE_BPS, feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2),
+      payoutTiming: "asap", status: pending ? "pending" : "completed", createdBy: CREATOR,
+      approvedBy: APPROVER, approvedAt: new Date(created + 1.5 * 3600000), merchantCount: roster.length,
+      fiatReceivedAt: pending ? null : new Date(funded), completedAt: pending ? null : new Date(completed),
+      createdAt: new Date(created),
+    }).returning();
 
-  // ── Batch 6: USD, 4 days ago ───────────────────────────────────────────
-  const [b6] = await db.insert(batches).values({ batchRef: "BATCH-PS006", currency: "USD", totalFiat: "38500.00", totalEur: "38500.00", totalUsdc: "41580.00", exchangeRate: "1.080000", payoutTiming: "asap", status: "completed", merchantCount: 4, fiatReceivedAt: new Date(now - 4 * day + 4 * 3600000), completedAt: new Date(now - 4 * day + 7 * 3600000), createdBy: "vaivani@paystrax.com", approvedBy: "julijavi@paystrax.com", approvedAt: new Date(now - 4 * day + 1.5 * 3600000), createdAt: new Date(now - 4 * day) }).returning();
-  for (let i = 0; i < 4; i++) { const amt = [11000, 9500, 8800, 9200][i]; await db.insert(payouts).values({ batchId: b6.id, merchantId: ms[i + 1].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), usdcAmount: (amt * 1.08).toFixed(6), walletAddress: ms[i + 1].walletAddress, txHash: "0x" + crypto.randomBytes(32).toString("hex"), status: "confirmed", confirmedAt: new Date(now - 4 * day + 7 * 3600000), createdAt: new Date(now - 4 * day) }); }
-  await auditBatchLifecycle(b6, now - 4 * day, "vaivani@paystrax.com", "julijavi@paystrax.com");
+    for (const { m, amt, fee, markup, usdc } of rows) {
+      const isShady = opts.withShady && m.id === shady.id;
+      const method = m.payoutMethod || "stablecoin";
+      const base: any = {
+        batchId: b.id, merchantId: m.id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2),
+        walletAddress: m.walletAddress, fybrusFeeAmount: fee.toFixed(2), markupAmount: markup.toFixed(2),
+        payoutMethod: method, createdAt: new Date(created),
+      };
+      if (pending) { await db.insert(payouts).values({ ...base, status: "pending" }); continue; }
+      base.usdcAmount = usdc.toFixed(6);
+      if (isShady) {
+        await db.insert(payouts).values({ ...base, status: "failed", failureReason: "Blocked by wallet screening — sanctions-list match (demo rule: *0bad). USDC is never dispatched to a flagged wallet." });
+        continue;
+      }
+      if (method === "fiat") {
+        const offRamp = (1 / rate) * (1 - OFFRAMP_SPREAD);
+        await db.insert(payouts).values({ ...base, status: "confirmed", confirmedAt: new Date(completed), txHash: "SEPA-" + crypto.randomBytes(6).toString("hex").toUpperCase(), offRampRate: offRamp.toFixed(6), payoutFiatAmount: (usdc * offRamp).toFixed(2) });
+      } else {
+        await db.insert(payouts).values({ ...base, status: "confirmed", confirmedAt: new Date(completed), txHash: "0x" + crypto.randomBytes(32).toString("hex"), travelRuleStatus: "transmitted", travelRuleRef: "TR-" + crypto.randomBytes(6).toString("hex").toUpperCase(), travelRuleAt: new Date(completed), travelRuleData: JSON.stringify({ originator: { name: "Paystrax (originating PSP)", accountRef: "PSX-MASTER-EUR", country: "LT" }, beneficiary: { name: m.name, walletAddress: m.walletAddress }, transfer: { asset: "USDC", amount: usdc.toFixed(6), reference: ref } }) });
+      }
+    }
+    // audit trail
+    const auditRows: any[] = [
+      { action: "batch_created", entityType: "batch", entityId: b.id, entityRef: ref, actor: CREATOR, detail: `${roster.length} merchants · ${sym}${totalFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })} · fee ${sym}${feeTotal.toFixed(2)} · markup ${sym}${markupTotal.toFixed(2)}`, createdAt: new Date(created) },
+      { action: "batch_approved", entityType: "batch", entityId: b.id, entityRef: ref, actor: APPROVER, detail: `Approved by ${APPROVER}`, createdAt: new Date(created + 1.5 * 3600000) },
+    ];
+    if (!pending) {
+      auditRows.push(
+        { action: "batch_funded", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `FIAT received via mock-fiat-rail · ${sym}${totalFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, createdAt: new Date(funded) },
+        { action: "batch_converting", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `Rate ${rate.toFixed(4)} (ecb-frankfurter) · USDC ${usdcTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, createdAt: new Date(funded + 60000) },
+        { action: "batch_sending", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `Dispatching ${roster.length} payouts`, createdAt: new Date(completed - 30000) },
+        { action: "batch_completed", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: opts.withShady ? `Completed · 1 payout blocked by screening` : `All payouts confirmed on-chain`, createdAt: new Date(completed) },
+      );
+      if (opts.withShady) auditRows.push({ action: "payout_blocked", entityType: "payout", entityId: b.id, entityRef: ref, actor: "system", detail: `Dispatch blocked — wallet ${shady.walletAddress.slice(0, 10)}... flagged by mock-screening (Sanctions-list match (demo rule: *0bad))`, createdAt: new Date(completed - 20000) });
+    }
+    await db.insert(auditLog).values(auditRows);
+  }
 
-  // ── Batch 7: EUR, today — AWAITING FUNDING (newest, pending) ──────────
-  const [b7] = await db.insert(batches).values({ batchRef: "BATCH-PS007", currency: "EUR", totalFiat: "43550.00", totalEur: "43550.00", payoutTiming: "asap", status: "pending", merchantCount: 5, createdBy: "julijavi@paystrax.com", approvedBy: "vaivani@paystrax.com", approvedAt: new Date(now - 2 * 3600000), createdAt: new Date(now - 3 * 3600000) }).returning();
-  for (let i = 0; i < 5; i++) { const amt = [10200, 9800, 8750, 7600, 7200][i]; await db.insert(payouts).values({ batchId: b7.id, merchantId: ms[i].id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), walletAddress: ms[i].walletAddress, status: "pending", createdAt: new Date(now - 3 * 3600000) }); }
+  // 18 completed batches over ~60 days, one with the Shady block; 2 pending today
+  const spread = [58, 55, 51, 47, 43, 39, 35, 31, 28, 24, 20, 17, 14, 11, 8, 6, 4, 2];
+  for (let i = 0; i < spread.length; i++) await seedBatch(spread[i], { withShady: i === 9 });
+  await seedBatch(0.12, { pending: true });
+  await seedBatch(0.05, { pending: true });
+
+  // login + export events
   await db.insert(auditLog).values([
-    { action: "batch_created",  entityType: "batch", entityId: b7.id, entityRef: b7.batchRef, actor: "julijavi@paystrax.com", detail: `5 merchants · EUR 43,550 — awaiting FIAT transfer`, createdAt: new Date(now - 3 * 3600000) },
-    { action: "batch_approved", entityType: "batch", entityId: b7.id, entityRef: b7.batchRef, actor: "vaivani@paystrax.com",  detail: `Approved by vaivani@paystrax.com`, createdAt: new Date(now - 2 * 3600000) },
+    { action: "login", entityType: "user", entityRef: CREATOR, actor: CREATOR, detail: "Signed in", createdAt: new Date(now - 2 * 3600000) },
+    { action: "login", entityType: "user", entityRef: APPROVER, actor: APPROVER, detail: "Signed in", createdAt: new Date(now - 5 * 3600000) },
+    { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: CREATOR, detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
   ]);
 
-  // ── Login events ───────────────────────────────────────────────────────
-  await db.insert(auditLog).values([
-    { action: "login", entityType: "user", entityRef: "julijavi@paystrax.com", actor: "julijavi@paystrax.com", detail: "Signed in", createdAt: new Date(now - 30 * day) },
-    { action: "login", entityType: "user", entityRef: "vaivani@paystrax.com",  actor: "vaivani@paystrax.com",  detail: "Signed in", createdAt: new Date(now - 24 * day) },
-    { action: "login", entityType: "user", entityRef: "julijavi@paystrax.com", actor: "julijavi@paystrax.com", detail: "Signed in", createdAt: new Date(now - 14 * day) },
-    { action: "login", entityType: "user", entityRef: "vaivani@paystrax.com",  actor: "vaivani@paystrax.com",  detail: "Signed in", createdAt: new Date(now - 9 * day) },
-    { action: "login", entityType: "user", entityRef: "julijavi@paystrax.com", actor: "julijavi@paystrax.com", detail: "Signed in", createdAt: new Date(now - 4 * day) },
-    { action: "login", entityType: "user", entityRef: "julijavi@paystrax.com", actor: "julijavi@paystrax.com", detail: "Signed in", createdAt: new Date(now - 3 * 3600000) },
-    { action: "login", entityType: "user", entityRef: "vaivani@paystrax.com",  actor: "vaivani@paystrax.com",  detail: "Signed in", createdAt: new Date(now - 2 * 3600000) },
-    { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: "julijavi@paystrax.com", detail: "Full payout report exported", createdAt: new Date(now - 5 * day) },
-    { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: "vaivani@paystrax.com",  detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
-  ]);
+  // ensure platform settings exist
+  await db.insert(platformSettings).values({ id: 1, defaultMarkupBps: 25, updatedAt: new Date() }).onConflictDoNothing();
 
-  // Normalize seeded data so metrics are coherent: apply the 9 bps fee,
-  // recompute USDC net-of-fee, and set realistic minute-level settlement times
-  // (funds received → on-chain confirmation).
-  await db.execute(sql`UPDATE batches SET fee_bps = 9, fee_amount = ROUND(total_fiat * 0.0009, 2), total_usdc = ROUND(total_fiat * (1 - 0.0009) * COALESCE(exchange_rate, 1.08), 6) WHERE status = 'completed' AND total_usdc IS NOT NULL`);
-  await db.execute(sql`UPDATE batches SET completed_at = fiat_received_at + make_interval(secs => (300 + floor(random()*360))::int) WHERE status = 'completed' AND fiat_received_at IS NOT NULL`);
-  await db.execute(sql`UPDATE payouts p SET usdc_amount = ROUND(p.fiat_amount * (1 - 0.0009) * COALESCE(b.exchange_rate, 1.08), 6), confirmed_at = b.completed_at FROM batches b WHERE p.batch_id = b.id AND b.status = 'completed' AND p.status = 'confirmed'`);
-
-  res.json({ message: "Seeded", batches: 7, merchants: merchantData.length });
+  res.json({ message: "Seeded", batches: batchNum, merchants: names.length + 1 });
 });
 
 app.post("/api/seed/reset", async (_r, res) => {
