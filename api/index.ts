@@ -634,6 +634,7 @@ app.get("/api/analytics", async (_r, res) => {
     totalBatches: allB.length, completedBatches: completed.length, totalMerchants: allM.length, totalPayouts: allP.length,
     confirmedPayouts: confirmed.length, failedPayouts: allP.filter(p => p.status === "failed").length,
     totalFiatProcessed: allB.reduce((s, b) => s + parseFloat(b.totalFiat || b.totalEur), 0),
+    volume30d: allB.filter(b => b.createdAt && (Date.now() - new Date(b.createdAt).getTime()) < 30 * 86400000).reduce((s, b) => s + parseFloat(b.totalFiat || b.totalEur), 0),
     totalUsdcDispatched: allB.reduce((s, b) => s + (b.totalUsdc ? parseFloat(b.totalUsdc) : 0), 0),
     totalFees: allB.reduce((s, b) => s + (b.feeAmount ? parseFloat(b.feeAmount) : 0), 0),
     avgExchangeRate: avgRate, avgSettlementMinutes: times.length ? times.reduce((s, t) => s + t, 0) / times.length : 0,
@@ -789,37 +790,47 @@ app.post("/api/seed", async (_r, res) => {
   if (existing.length) return res.json({ message: "Already seeded" });
 
   const rnd = (min: number, max: number) => Math.random() * (max - min) + min;
-  const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
   const addr = () => "0x" + crypto.randomBytes(20).toString("hex");
   const day = 86400000;
   const now = Date.now();
   const CREATOR = "julijavi@paystrax.com", APPROVER = "vaivani@paystrax.com";
+  const DEFAULT_MARKUP = 25, FEE_BPS = 9, OFFRAMP_SPREAD = 0.002;
 
-  // ── Merchants (28) ─────────────────────────────────────────────────────
-  const names = [
-    "TechFlow Solutions", "Nordic Supplies AB", "GreenLeaf Organics", "DataBridge Analytics",
-    "CloudScale Hosting", "EuroLogistics GmbH", "Pixel & Code Studio", "SafeGuard Insurance",
-    "Meridian Consulting", "Volta Energy Ltd", "Harbour Freight Co", "Lumen Digital",
-    "Atlas Manufacturing", "Brightwave Media", "Corvus Security", "Delta Pharma Ltd",
-    "Everest Travel", "Fjord Seafoods", "Granite Construction", "Helios Solar",
-    "Indigo Textiles", "Juniper Software", "Kestrel Aviation", "Larkspur Foods",
-    "Monarch Publishing", "Northstar Robotics", "Orion Biotech", "Praxis Legal",
+  // ── Merchant book: ~70 merchants, tiered like a real acquirer portfolio ──
+  // 5 whales (~€1.5–3M/mo each) + 20 mid (~€400–700k/mo) + 45 tail
+  const WHALES = ["Nexora Marketplace", "TravelHub Europe", "GameSphere Digital", "StreamLine Media Group", "AeroTicket International"];
+  const MIDS = [
+    "TechFlow Solutions", "Nordic Supplies AB", "GreenLeaf Organics", "DataBridge Analytics", "CloudScale Hosting",
+    "EuroLogistics GmbH", "Pixel & Code Studio", "SafeGuard Insurance", "Meridian Consulting", "Volta Energy Ltd",
+    "Harbour Freight Co", "Lumen Digital", "Atlas Manufacturing", "Brightwave Media", "Corvus Security",
+    "Delta Pharma Ltd", "Everest Travel", "Fjord Seafoods", "Granite Construction", "Helios Solar",
   ];
-  const mIds: string[] = [];
-  const mObjs: any[] = [];
-  for (let i = 0; i < names.length; i++) {
-    const isFiat = [2, 4, 10, 15, 19, 24].includes(i);              // ~6 fiat merchants
-    const override = ({ 0: 40, 3: 30, 6: 50, 12: 35, 20: 20 } as any)[i]; // a few markup overrides
-    const [m] = await db.insert(merchants).values({
-      name: names[i], walletAddress: addr(), email: `ap@${names[i].toLowerCase().replace(/[^a-z]/g, "").slice(0, 10)}.com`,
-      kycReliedOn: "Paystrax (acquirer)", kycRef: "PSX-KYC-" + crypto.randomBytes(3).toString("hex").toUpperCase(), kycAttestedAt: new Date(now - rnd(40, 120) * day),
-      walletScreenStatus: "clear", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - rnd(1, 100) * day),
-      markupBps: override ?? null, payoutMethod: isFiat ? "fiat" : "stablecoin",
-      createdAt: new Date(now - rnd(60, 180) * day),
-    }).returning();
-    mIds.push(m.id); mObjs.push(m);
-  }
-  // Flagged showcase merchant — wallet ends 0bad
+  const TAIL_A = ["Indigo", "Juniper", "Kestrel", "Larkspur", "Monarch", "Northstar", "Orion", "Praxis", "Quill", "Rowan", "Sable", "Tundra", "Umber", "Vertex", "Willow", "Zephyr", "Alder", "Basalt", "Cedar", "Dune", "Ember", "Falcon", "Garnet", "Hazel", "Iris", "Jasper", "Koa", "Linden", "Maple", "Onyx", "Pearl", "Quartz", "Reef", "Slate", "Topaz", "Ash", "Birch", "Coral", "Delta", "Echo", "Flint", "Grove", "Harbor", "Isle", "Juno"];
+  const TAIL_B = ["Textiles", "Software", "Aviation", "Foods", "Publishing", "Robotics", "Biotech", "Legal", "Cosmetics", "Interiors", "Optics", "Outdoor", "Audio", "Garden", "Kitchen", "Sports", "Books", "Music", "Games", "Jewelry", "Watches", "Cycles", "Marine", "Dental", "Vet", "Labs", "Studios", "Prints", "Crafts", "Tools", "Parts", "Lighting", "Flooring", "Roofing", "Fitness", "Coffee", "Bakery", "Wines", "Spirits", "Petcare", "Toys", "Shoes", "Bags", "Eyewear", "Skincare"];
+
+  type Tier = { name: string; tier: "whale" | "mid" | "tail" };
+  const book: Tier[] = [
+    ...WHALES.map(n => ({ name: n, tier: "whale" as const })),
+    ...MIDS.map(n => ({ name: n, tier: "mid" as const })),
+    ...TAIL_A.map((a, i) => ({ name: `${a} ${TAIL_B[i]}`, tier: "tail" as const })),
+  ]; // 5 + 20 + 45 = 70
+
+  const merchantRows = book.map((b, i) => ({
+    name: b.name, walletAddress: addr(),
+    email: `ap@${b.name.toLowerCase().replace(/[^a-z]/g, "").slice(0, 12)}.com`,
+    kycReliedOn: "Paystrax (acquirer)",
+    kycRef: "PSX-KYC-" + crypto.randomBytes(3).toString("hex").toUpperCase(),
+    kycAttestedAt: new Date(now - rnd(40, 200) * day),
+    walletScreenStatus: "clear", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - rnd(1, 90) * day),
+    // a few negotiated rates: whales pay less, some smalls pay more
+    markupBps: b.tier === "whale" ? [12, 15, 15, 18, 20][i] ?? 15 : (i % 11 === 3 ? 40 : i % 13 === 5 ? 35 : null),
+    payoutMethod: i % 6 === 2 ? "fiat" : "stablecoin", // ~1 in 6 fiat
+    createdAt: new Date(now - rnd(90, 300) * day),
+  }));
+  const inserted: any[] = [];
+  for (let i = 0; i < merchantRows.length; i += 35) inserted.push(...await db.insert(merchants).values(merchantRows.slice(i, i + 35)).returning());
+  const mObjs = inserted.map((m, i) => ({ ...m, tier: book[i].tier }));
+
   const [shady] = await db.insert(merchants).values({
     name: "Shady Imports Ltd", walletAddress: "0x" + crypto.randomBytes(18).toString("hex") + "0bad",
     email: "ap@shady.example", kycReliedOn: "Paystrax (acquirer)", kycRef: "PSX-KYC-TEST01", kycAttestedAt: new Date(now - 3 * day),
@@ -827,102 +838,100 @@ app.post("/api/seed", async (_r, res) => {
     markupBps: null, payoutMethod: "stablecoin", createdAt: new Date(now - 3 * day),
   }).returning();
 
-  const DEFAULT_MARKUP = 25, FEE_BPS = 9, OFFRAMP_SPREAD = 0.002;
+  // Settlement amount per appearance, by tier (calibrated → ~€25M/month)
+  const amountFor = (tier: string) => tier === "whale" ? rnd(66000, 250000) : tier === "mid" ? rnd(16000, 58000) : rnd(3300, 20000);
+  const inBatchProb = (tier: string) => tier === "whale" ? 0.8 : tier === "mid" ? 0.6 : 0.35;
   const rateFor = (ccy: string) => ccy === "USD" ? 1.0 : ccy === "AUD" ? +(0.66 + rnd(-0.01, 0.01)).toFixed(6) : +(1.08 + rnd(0, 0.07)).toFixed(6);
-  const ccys = ["EUR", "USD", "AUD", "EUR", "EUR", "USD"];
+  const ccyFor = () => { const r = Math.random(); return r < 0.65 ? "EUR" : r < 0.85 ? "USD" : "AUD"; };
+
   let batchNum = 0;
+  const auditRows: any[] = [];
 
   async function seedBatch(daysAgo: number, opts: { pending?: boolean; withShady?: boolean } = {}) {
     batchNum++;
     const ref = `BATCH-PS${String(batchNum).padStart(3, "0")}`;
-    const ccy = pick(ccys);
+    const ccy = ccyFor();
     const sym = ({ EUR: "€", USD: "$", AUD: "A$" } as any)[ccy];
-    const count = Math.floor(rnd(6, 15));                 // 6–14 merchants per batch
-    const idxs = [...Array(names.length).keys()].sort(() => Math.random() - 0.5).slice(0, count);
-    const roster = idxs.map(i => mObjs[i]);
-    if (opts.withShady) roster[0] = shady;
+    const roster = mObjs.filter(m => Math.random() < inBatchProb(m.tier));
+    if (opts.withShady) roster.push({ ...shady, tier: "tail" });
     const created = now - daysAgo * day;
     const funded = created + rnd(2, 6) * 3600000;
-    const completed = funded + rnd(300, 660) * 1000;      // 5–11 min settlement
+    const completed = funded + rnd(300, 660) * 1000;
     const rate = rateFor(ccy);
+    const pending = !!opts.pending;
 
     let totalFiat = 0, feeTotal = 0, markupTotal = 0, usdcTotal = 0;
-    const rows: any[] = [];
+    const pRows: any[] = [];
     for (const m of roster) {
-      const amt = +rnd(3000, 15000).toFixed(2);
+      const isShady = m.id === shady.id;
+      const amt = +amountFor(m.tier).toFixed(2);
       const fee = +(amt * FEE_BPS / 10000).toFixed(2);
       const markup = +(amt * (m.markupBps ?? DEFAULT_MARKUP) / 10000).toFixed(2);
       const usdc = +((amt - fee - markup) * rate).toFixed(6);
-      totalFiat += amt; feeTotal += fee; markupTotal += markup; usdcTotal += usdc;
-      rows.push({ m, amt, fee, markup, usdc });
+      totalFiat += amt; feeTotal += fee; markupTotal += markup;
+      const method = m.payoutMethod || "stablecoin";
+      const base: any = {
+        merchantId: m.id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), walletAddress: m.walletAddress,
+        fybrusFeeAmount: fee.toFixed(2), markupAmount: markup.toFixed(2), payoutMethod: method, createdAt: new Date(created),
+      };
+      if (pending) { pRows.push({ ...base, status: "pending" }); continue; }
+      if (isShady) {
+        pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "failed", failureReason: "Blocked by wallet screening — sanctions-list match (demo rule: *0bad). USDC is never dispatched to a flagged wallet." });
+        continue;
+      }
+      usdcTotal += usdc;
+      if (method === "fiat") {
+        const offRamp = (1 / rate) * (1 - OFFRAMP_SPREAD);
+        pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "confirmed", confirmedAt: new Date(completed), txHash: "SEPA-" + crypto.randomBytes(6).toString("hex").toUpperCase(), offRampRate: offRamp.toFixed(6), payoutFiatAmount: (usdc * offRamp).toFixed(2) });
+      } else {
+        pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "confirmed", confirmedAt: new Date(completed), txHash: "0x" + crypto.randomBytes(32).toString("hex"), travelRuleStatus: "transmitted", travelRuleRef: "TR-" + crypto.randomBytes(6).toString("hex").toUpperCase(), travelRuleAt: new Date(completed), travelRuleData: JSON.stringify({ originator: { name: "Paystrax (originating PSP)", accountRef: "PSX-MASTER-EUR", country: "LT" }, beneficiary: { name: m.name, walletAddress: m.walletAddress }, transfer: { asset: "USDC", amount: usdc.toFixed(6), reference: ref } }) });
+      }
     }
+    // usdcTotal must equal the sum of ALL payout USDC (incl. blocked) for recon
+    const usdcAll = pRows.reduce((s, p) => s + (p.usdcAmount ? parseFloat(p.usdcAmount) : 0), 0);
 
-    const pending = !!opts.pending;
     const [b] = await db.insert(batches).values({
       batchRef: ref, currency: ccy, totalFiat: totalFiat.toFixed(2), totalEur: totalFiat.toFixed(2),
-      totalUsdc: pending ? null : usdcTotal.toFixed(6), exchangeRate: pending ? null : rate.toFixed(6),
+      totalUsdc: pending ? null : usdcAll.toFixed(6), exchangeRate: pending ? null : rate.toFixed(6),
       feeBps: FEE_BPS, feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2),
       payoutTiming: "asap", status: pending ? "pending" : "completed", createdBy: CREATOR,
-      approvedBy: APPROVER, approvedAt: new Date(created + 1.5 * 3600000), merchantCount: roster.length,
+      approvedBy: APPROVER, approvedAt: new Date(created + 1.2 * 3600000), merchantCount: roster.length,
       fiatReceivedAt: pending ? null : new Date(funded), completedAt: pending ? null : new Date(completed),
       createdAt: new Date(created),
     }).returning();
 
-    for (const { m, amt, fee, markup, usdc } of rows) {
-      const isShady = opts.withShady && m.id === shady.id;
-      const method = m.payoutMethod || "stablecoin";
-      const base: any = {
-        batchId: b.id, merchantId: m.id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2),
-        walletAddress: m.walletAddress, fybrusFeeAmount: fee.toFixed(2), markupAmount: markup.toFixed(2),
-        payoutMethod: method, createdAt: new Date(created),
-      };
-      if (pending) { await db.insert(payouts).values({ ...base, status: "pending" }); continue; }
-      base.usdcAmount = usdc.toFixed(6);
-      if (isShady) {
-        await db.insert(payouts).values({ ...base, status: "failed", failureReason: "Blocked by wallet screening — sanctions-list match (demo rule: *0bad). USDC is never dispatched to a flagged wallet." });
-        continue;
-      }
-      if (method === "fiat") {
-        const offRamp = (1 / rate) * (1 - OFFRAMP_SPREAD);
-        await db.insert(payouts).values({ ...base, status: "confirmed", confirmedAt: new Date(completed), txHash: "SEPA-" + crypto.randomBytes(6).toString("hex").toUpperCase(), offRampRate: offRamp.toFixed(6), payoutFiatAmount: (usdc * offRamp).toFixed(2) });
-      } else {
-        await db.insert(payouts).values({ ...base, status: "confirmed", confirmedAt: new Date(completed), txHash: "0x" + crypto.randomBytes(32).toString("hex"), travelRuleStatus: "transmitted", travelRuleRef: "TR-" + crypto.randomBytes(6).toString("hex").toUpperCase(), travelRuleAt: new Date(completed), travelRuleData: JSON.stringify({ originator: { name: "Paystrax (originating PSP)", accountRef: "PSX-MASTER-EUR", country: "LT" }, beneficiary: { name: m.name, walletAddress: m.walletAddress }, transfer: { asset: "USDC", amount: usdc.toFixed(6), reference: ref } }) });
-      }
-    }
-    // audit trail
-    const auditRows: any[] = [
+    // bulk insert payouts (chunk to keep payloads sane)
+    const withBatch = pRows.map(p => ({ ...p, batchId: b.id }));
+    for (let i = 0; i < withBatch.length; i += 40) await db.insert(payouts).values(withBatch.slice(i, i + 40));
+
+    auditRows.push(
       { action: "batch_created", entityType: "batch", entityId: b.id, entityRef: ref, actor: CREATOR, detail: `${roster.length} merchants · ${sym}${totalFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })} · fee ${sym}${feeTotal.toFixed(2)} · markup ${sym}${markupTotal.toFixed(2)}`, createdAt: new Date(created) },
-      { action: "batch_approved", entityType: "batch", entityId: b.id, entityRef: ref, actor: APPROVER, detail: `Approved by ${APPROVER}`, createdAt: new Date(created + 1.5 * 3600000) },
-    ];
-    if (!pending) {
-      auditRows.push(
-        { action: "batch_funded", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `FIAT received via mock-fiat-rail · ${sym}${totalFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, createdAt: new Date(funded) },
-        { action: "batch_converting", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `Rate ${rate.toFixed(4)} (ecb-frankfurter) · USDC ${usdcTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, createdAt: new Date(funded + 60000) },
-        { action: "batch_sending", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `Dispatching ${roster.length} payouts`, createdAt: new Date(completed - 30000) },
-        { action: "batch_completed", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: opts.withShady ? `Completed · 1 payout blocked by screening` : `All payouts confirmed on-chain`, createdAt: new Date(completed) },
-      );
-      if (opts.withShady) auditRows.push({ action: "payout_blocked", entityType: "payout", entityId: b.id, entityRef: ref, actor: "system", detail: `Dispatch blocked — wallet ${shady.walletAddress.slice(0, 10)}... flagged by mock-screening (Sanctions-list match (demo rule: *0bad))`, createdAt: new Date(completed - 20000) });
-    }
-    await db.insert(auditLog).values(auditRows);
+      { action: "batch_approved", entityType: "batch", entityId: b.id, entityRef: ref, actor: APPROVER, detail: `Approved by ${APPROVER}`, createdAt: new Date(created + 1.2 * 3600000) },
+    );
+    if (!pending) auditRows.push(
+      { action: "batch_funded", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: `FIAT received via mock-fiat-rail · ${sym}${totalFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, createdAt: new Date(funded) },
+      { action: "batch_completed", entityType: "batch", entityId: b.id, entityRef: ref, actor: "system", detail: opts.withShady ? `Completed · 1 payout blocked by screening` : `All ${roster.length} payouts confirmed`, createdAt: new Date(completed) },
+    );
+    if (opts.withShady && !pending) auditRows.push({ action: "payout_blocked", entityType: "payout", entityId: b.id, entityRef: ref, actor: "system", detail: `Dispatch blocked — wallet ${shady.walletAddress.slice(0, 10)}... flagged by mock-screening (Sanctions-list match (demo rule: *0bad))`, createdAt: new Date(completed - 20000) });
   }
 
-  // 18 completed batches over ~60 days, one with the Shady block; 2 pending today
-  const spread = [58, 55, 51, 47, 43, 39, 35, 31, 28, 24, 20, 17, 14, 11, 8, 6, 4, 2];
-  for (let i = 0; i < spread.length; i++) await seedBatch(spread[i], { withShady: i === 9 });
+  // ~40 completed batches over 60 days (near-daily on weekdays) + 2 pending
+  const days: number[] = [];
+  for (let d = 59; d > 0.5; d -= rnd(1.2, 1.8)) days.push(+d.toFixed(2));
+  for (let i = 0; i < days.length; i++) await seedBatch(days[i], { withShady: i === Math.floor(days.length / 2) });
   await seedBatch(0.12, { pending: true });
   await seedBatch(0.05, { pending: true });
 
-  // login + export events
-  await db.insert(auditLog).values([
+  auditRows.push(
     { action: "login", entityType: "user", entityRef: CREATOR, actor: CREATOR, detail: "Signed in", createdAt: new Date(now - 2 * 3600000) },
     { action: "login", entityType: "user", entityRef: APPROVER, actor: APPROVER, detail: "Signed in", createdAt: new Date(now - 5 * 3600000) },
     { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: CREATOR, detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
-  ]);
+  );
+  for (let i = 0; i < auditRows.length; i += 60) await db.insert(auditLog).values(auditRows.slice(i, i + 60));
 
-  // ensure platform settings exist
   await db.insert(platformSettings).values({ id: 1, defaultMarkupBps: 25, updatedAt: new Date() }).onConflictDoNothing();
 
-  res.json({ message: "Seeded", batches: batchNum, merchants: names.length + 1 });
+  res.json({ message: "Seeded", batches: batchNum, merchants: book.length + 1 });
 });
 
 app.post("/api/seed/reset", async (_r, res) => {
