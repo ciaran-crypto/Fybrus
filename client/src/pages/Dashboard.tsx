@@ -321,7 +321,7 @@ export default function Dashboard() {
   const { data: revenue } = useQuery({
     queryKey: ["revenue"],
     queryFn: async () => { const r = await fetch("/api/revenue"); return r.json(); },
-    enabled: loggedIn && page === "revenue",
+    enabled: loggedIn && (page === "revenue" || page === "dashboard"),
   });
   const [markupInput, setMarkupInput] = useState<string>("");
   const saveMarkupMut = useMutation({
@@ -713,172 +713,219 @@ export default function Dashboard() {
           {/* ─ Dashboard overview ─ */}
           {page === "dashboard" && (
             <>
-              {/* ─ Section 1: Two-column hero metrics ─ */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Left: Volume overview */}
-                <div style={{ background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 16, padding: 20 }}>
-                  <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>Volume by Currency</p>
-                  <div className="flex gap-3" style={{ marginTop: 8 }}>
-                    {Object.entries(volByCurrency).length > 0 ? Object.entries(volByCurrency).map(([c, v]) => (
-                      <div key={c} style={{ flex: 1, padding: '10px 12px', borderRadius: 12, background: '#F8F7F2', border: '1px solid #ECEAE0' }}>
-                        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>{c}</p>
-                        <p style={{ fontSize: 20, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: '#1B1A16', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{CSYM[c] || ""}{(v as number).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
-                      </div>
-                    )) : (
-                      <p style={{ fontSize: 24, fontWeight: 600, color: '#1B1A16' }}>€0.00</p>
-                    )}
-                  </div>
-                  <div className="flex gap-4" style={{ marginTop: 12 }}>
-                    <div>
-                      <span style={{ fontSize: 11, color: '#6E6C62' }}>Batches </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#1B1A16' }}>{batches.length}</span>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: 11, color: '#6E6C62' }}>Merchants </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#1B1A16' }}>{merchants.length}</span>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: 11, color: '#6E6C62' }}>Completed </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>{done.length}</span>
-                    </div>
-                  </div>
-                </div>
+              {(() => {
+                const num = (v: any) => (v ? parseFloat(v) : 0);
+                const abbr = (sym: string, n: number) =>
+                  n >= 1e6 ? `${sym}${(n / 1e6).toFixed(n >= 2e7 ? 1 : 2)}M`
+                  : n >= 1e3 ? `${sym}${(n / 1e3).toFixed(0)}k`
+                  : `${sym}${n.toFixed(0)}`;
+                const heroNum = { fontSize: 26, fontWeight: 650, letterSpacing: '-0.02em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' as const, lineHeight: 1.1 };
+                const card = { background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 16, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)' };
+                const label = { fontSize: 10, fontWeight: 500 as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#96948A' };
 
-                {/* Right: What needs attention */}
-                <div style={{ background: pendingBatches.length > 0 ? '#FFFBEB' : '#ECFDF5', border: `1px solid ${pendingBatches.length > 0 ? '#FDE68A' : '#A7F3D0'}`, borderRadius: 16, padding: 20 }}>
-                  <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: pendingBatches.length > 0 ? '#D97706' : '#059669' }}>
-                    {pendingBatches.length > 0 ? 'Action Required' : 'All Clear'}
-                  </p>
-                  <p style={{ fontSize: 20, fontWeight: 600, color: pendingBatches.length > 0 ? '#92400E' : '#065F46', marginTop: 4 }}>
-                    {pendingBatches.length > 0 ? `${pendingBatches.length} batch${pendingBatches.length > 1 ? 'es' : ''} awaiting funding` : 'No pending actions'}
-                  </p>
-                  {pendingBatches.length > 0 && (
-                    <div className="flex gap-2 flex-wrap" style={{ marginTop: 8 }}>
-                      {Object.entries(pendingByCurrency).map(([c, v]) => (
-                        <span key={c} style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: '#FFFFFF', border: '1px solid #FDE68A', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>
-                          {CSYM[c] || ""}{(v as number).toLocaleString("en", { minimumFractionDigits: 2 })} {c}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {active.length > 0 && (
-                    <p style={{ fontSize: 11, color: pendingBatches.length > 0 ? '#D97706' : '#059669', marginTop: 8 }}>
-                      {active.length} batch{active.length > 1 ? 'es' : ''} currently processing
-                    </p>
-                  )}
-                </div>
-              </div>
+                const inFlight = active.reduce((s: number, b: any) => s + num(b.totalFiat || b.totalEur), 0);
+                const s = analytics?.summary;
 
-              {/* ─ Section 2: Bank details (only if pending) ─ */}
-              {pendingBatches.length > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>
-                      <Banknote className="w-4 h-4 inline mr-1.5 -mt-0.5" style={{ color: '#D97706' }} />
-                      Transfer Details
-                    </p>
-                    <button onClick={() => copyText("IE29AIBK93115212345678")} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
-                      <Copy className="w-3 h-3" /> Copy IBAN
-                    </button>
-                  </div>
-                  <div className="flex gap-6 flex-wrap" style={{ fontSize: 12 }}>
-                    <div><span style={{ color: '#6E6C62' }}>IBAN </span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>IE29 AIBK 9311 5212 3456 78</span></div>
-                    <div><span style={{ color: '#6E6C62' }}>BIC </span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>AIBKIE2D</span></div>
-                    <div><span style={{ color: '#6E6C62' }}>Bank </span><span style={{ fontWeight: 600, color: '#1B1A16' }}>AIB, Dublin</span></div>
-                  </div>
-                  <p style={{ fontSize: 10, color: '#AAAAAA', marginTop: 8 }}>Demo IBAN — replace with live bank details before production</p>
-                </div>
-              )}
+                // Daily volume bars for the last 30 days (from batches, all currencies summed)
+                const daysArr: number[] = Array(30).fill(0);
+                batches.forEach((b: any) => {
+                  if (!b.createdAt) return;
+                  const d = Math.floor((Date.now() - new Date(b.createdAt).getTime()) / 86400000);
+                  if (d >= 0 && d < 30) daysArr[29 - d] += num(b.totalFiat || b.totalEur);
+                });
+                const maxDay = Math.max(...daysArr, 1);
 
-              {/* ─ Section 3: Recent Batches + Quick Stats ─ */}
-              <div className="grid grid-cols-3 gap-4">
-                {/* Left 2/3: Recent batches */}
-                <div style={{ gridColumn: 'span 2', background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
-                  <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Recent Batches</p>
-                    <button onClick={() => setPage("batches")} style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
-                      View all →
-                    </button>
-                  </div>
-                  {batches.slice(0, 5).map((b: any) => {
-                    const sym = (CSYM as any)[b.currency] || "€";
-                    return (
-                      <div key={b.id} className="flex items-center justify-between cursor-pointer transition-colors"
-                        style={{ padding: '10px 16px', borderTop: '1px solid #EFEDE4' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        onClick={() => { setPage("batches"); setSelectedId(b.id); }}>
-                        <div className="flex items-center gap-3">
-                          <span style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>{b.batchRef}</span>
-                          <span style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.07em', padding: '2px 5px', borderRadius: 4,
-                            background: '#EFEDE4', color: '#54524A',
-                          }}>{b.currency}</span>
+                const CCY_ORDER = ["EUR", "USD", "AUD"];
+                const bookTotal = Object.values(volByCurrency).reduce((a: number, v: any) => a + v, 0) || 1;
+
+                return (
+                  <>
+                    {/* ─ Hero: the four numbers that matter ─ */}
+                    <div className="grid grid-cols-4 gap-4">
+                      <div style={{ ...card, padding: '18px 20px 14px' }} title="Total fiat received for payout batches created in the last 30 days">
+                        <p style={label}>30-Day Volume</p>
+                        <p style={{ ...heroNum, marginTop: 6 }}>{s ? abbr("€", s.volume30d || 0) : "—"}</p>
+                        <div className="flex items-end" style={{ gap: 2, height: 26, marginTop: 10 }} aria-hidden="true">
+                          {daysArr.map((v, i) => (
+                            <div key={i} style={{ flex: 1, height: Math.max(2, (v / maxDay) * 26), borderRadius: 1.5, background: v > 0 ? (i === 29 ? '#059669' : '#A7D9C4') : '#EFEDE4' }} />
+                          ))}
                         </div>
-                        <div className="flex items-center gap-4">
-                          <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{sym}{parseFloat(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</span>
-                          <Badge status={b.status} />
-                        </div>
+                        <p style={{ fontSize: 9, color: '#B5B3A8', marginTop: 5 }}>daily volume · last 30 days</p>
                       </div>
-                    );
-                  })}
-                  {batches.length === 0 && <p style={{ padding: '20px 16px', fontSize: 12, color: '#6E6C62' }}>No batches yet. Upload a CSV to get started.</p>}
-                </div>
-
-                {/* Right 1/3: Quick Stats */}
-                <div className="space-y-4">
-                  {!analytics && (
-                    <div className="flex items-center justify-center" style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 32 }}>
-                      <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#CBC9BF' }} />
+                      <div style={{ ...card, padding: '18px 20px 14px' }} title="Fiat in batches currently awaiting funding or processing">
+                        <p style={label}>In Flight</p>
+                        <p style={{ ...heroNum, marginTop: 6 }}>{abbr("€", inFlight)}</p>
+                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>
+                          {pendingBatches.length > 0
+                            ? <><span style={{ color: '#D97706', fontWeight: 600 }}>{pendingBatches.length} awaiting funding</span>{active.length > pendingBatches.length ? ` · ${active.length - pendingBatches.length} processing` : ""}</>
+                            : active.length > 0 ? `${active.length} processing` : "nothing pending"}
+                        </p>
+                      </div>
+                      <div style={{ ...card, padding: '18px 20px 14px' }} title="Fybrus platform fee — 9 bps on every settled batch, deducted before conversion">
+                        <p style={label}>Fees Collected · 9 bps</p>
+                        <p style={{ ...heroNum, marginTop: 6, color: '#059669' }}>{s ? abbr("€", s.totalFees || 0) : "—"}</p>
+                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>across {s?.completedBatches ?? "—"} settled batches</p>
+                      </div>
+                      <div style={{ ...card, padding: '18px 20px 14px' }} title="Average time from funds received to USDC confirmed on-chain — a stablecoin rail settles in minutes, not banking days">
+                        <p style={label}>Avg Settlement</p>
+                        <p style={{ ...heroNum, marginTop: 6 }}>{s && s.avgSettlementMinutes > 0 ? `${Math.round(s.avgSettlementMinutes)} min` : "—"}</p>
+                        <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 10 }}>funds received → confirmed</p>
+                      </div>
                     </div>
-                  )}
-                  {analytics && (
-                    <>
-                      <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
-                        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62', marginBottom: 8 }}>Settlement Metrics</p>
-                        <div className="space-y-3">
-                          <div title="Total fiat volume across all batches created in the last 30 days" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>30-Day Volume</span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>€{((analytics.summary.volume30d || 0) / 1e6).toFixed(1)}M</span></div>
-                          <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? '#059669' : '#D97706' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: '#96948A', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
-                          <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: '#1B1A16' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: '#D97706', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
-                          <div title="Median time from funds received to USDC confirmed on-chain. Settlement runs on a stablecoin rail — minutes, not banking-days." className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg Settlement</span><span style={{ fontWeight: 600, color: '#059669' }}>{analytics.summary.avgSettlementMinutes > 0 ? `~${Math.round(analytics.summary.avgSettlementMinutes)} min` : "—"}</span></div>
-                          <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg FX Rate</span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
-                          <div title="Platform fee: 9 basis points (0.09%) of each batch, deducted before conversion" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Fees Collected (9 bps)</span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#059669' }}>€{(analytics.summary.totalFees || 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span></div>
-                        </div>
-                      </div>
 
-                      {/* Payout status mini bars */}
-                      <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
-                        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62', marginBottom: 8 }}>Payout Status</p>
-                        {(() => {
-                          const counts = analytics.payoutStatusCounts || {};
-                          const total = Object.values(counts).reduce((s: number, v: any) => s + v, 0) as number;
-                          if (total === 0) return <p style={{ fontSize: 12, color: '#6E6C62' }}>No payouts</p>;
+                    {/* ─ Needs attention + currency mix ─ */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
+                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #EFEDE4' }}>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Needs attention</p>
+                          {pendingBatches.length > 0 && (
+                            <button onClick={() => copyText("IE29AIBK93115212345678")} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
+                              onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                              <Copy className="w-3 h-3" /> IBAN · IE29 AIBK 9311 5212 3456 78 · AIB Dublin
+                            </button>
+                          )}
+                        </div>
+                        {pendingBatches.length === 0 && (
+                          <div className="flex items-center gap-2.5" style={{ padding: '18px 16px' }}>
+                            <CheckCircle2 className="w-4 h-4" style={{ color: '#059669' }} />
+                            <p style={{ fontSize: 12.5, color: '#1B1A16' }}>All clear — nothing awaiting funding.{active.length > 0 ? ` ${active.length} batch${active.length > 1 ? "es" : ""} processing.` : ""}</p>
+                          </div>
+                        )}
+                        {pendingBatches.slice(0, 4).map((b: any) => {
+                          const sym = (CSYM as any)[b.currency] || "€";
                           return (
-                            <div className="space-y-2">
-                              {Object.entries(counts).map(([status, val]) => {
-                                const pct = ((val as number) / total) * 100;
-                                const color = SC[status]?.dot || '#CBC9BF';
-                                const label = status === 'pending' ? 'Pending' : SC[status]?.label || status;
-                                return (
-                                  <div key={status}>
-                                    <div className="flex justify-between" style={{ fontSize: 11, marginBottom: 2 }}>
-                                      <span style={{ color: '#54524A' }}>{label}</span>
-                                      <span style={{ fontWeight: 500, color: '#1B1A16' }}>{val as number} <span style={{ color: '#6E6C62' }}>({pct.toFixed(0)}%)</span></span>
-                                    </div>
-                                    <div style={{ height: 4, borderRadius: 2, background: '#ECEAE0', overflow: 'hidden' }}>
-                                      <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color }} />
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                            <div key={b.id} className="flex items-center justify-between" style={{ padding: '10px 16px', borderTop: '1px solid #F4F3EC' }}>
+                              <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#F59E0B', flexShrink: 0 }} />
+                                <button onClick={() => setSelectedId(b.id)} style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{b.batchRef}</button>
+                                <span style={{ fontSize: 11, color: '#96948A' }}>{b.merchantCount} merchants · created {timeAgo(b.createdAt)}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} {b.currency}</span>
+                                <button onClick={() => simulateSettlementMut.mutate(b.batchRef)} disabled={simulateSettlementMut.isPending}
+                                  title="Posts the same webhook Banking Circle sends when the fiat lands"
+                                  className="disabled:opacity-40"
+                                  style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>
+                                  {simulateSettlementMut.isPending ? "Funding…" : "Fund now"}
+                                </button>
+                              </div>
                             </div>
                           );
-                        })()}
+                        })}
+                        {pendingBatches.length > 0 && <p style={{ fontSize: 10, color: '#B5B3A8', padding: '8px 16px 10px' }}>Demo IBAN — “Fund now” simulates the bank’s settlement webhook. In production Banking Circle triggers this automatically.</p>}
                       </div>
-                    </>
-                  )}
-                </div>
-              </div>
+
+                      <div style={{ ...card, padding: 16 }}>
+                        <p style={{ ...label, marginBottom: 12 }}>Volume by Currency</p>
+                        <div className="space-y-3.5">
+                          {CCY_ORDER.filter(c => volByCurrency[c]).map(c => {
+                            const v = volByCurrency[c] as number;
+                            const share = (v / bookTotal) * 100;
+                            return (
+                              <div key={c} title={`${(CSYM as any)[c] || ""}${v.toLocaleString("en", { minimumFractionDigits: 2 })}`}>
+                                <div className="flex items-baseline justify-between">
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: '#54524A' }}>{c}</span>
+                                  <span style={{ fontSize: 15, fontWeight: 650, letterSpacing: '-0.01em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{abbr((CSYM as any)[c] || "", v)}</span>
+                                </div>
+                                <div style={{ height: 4, borderRadius: 2, background: '#EFEDE4', overflow: 'hidden', marginTop: 5 }}>
+                                  <div style={{ width: `${share}%`, height: '100%', borderRadius: 2, background: c === 'EUR' ? '#1B1A16' : c === 'USD' ? '#059669' : '#D97706' }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between" style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid #F0EFE4', fontSize: 11, color: '#6E6C62' }}>
+                          <span>{batches.length} batches · {merchants.length} merchants</span>
+                          <span style={{ color: '#059669', fontWeight: 600 }}>{done.length} settled</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ─ Recent batches + right rail ─ */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
+                        <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Recent Batches</p>
+                          <button onClick={() => setPage("batches")} style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                            View all →
+                          </button>
+                        </div>
+                        {batches.slice(0, 6).map((b: any) => {
+                          const sym = (CSYM as any)[b.currency] || "€";
+                          return (
+                            <div key={b.id} className="flex items-center justify-between cursor-pointer transition-colors"
+                              style={{ padding: '10px 16px', borderTop: '1px solid #F4F3EC' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                              onClick={() => setSelectedId(b.id)}>
+                              <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+                                <span style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>{b.batchRef}</span>
+                                <span style={{ fontSize: 11, color: '#96948A' }}>{b.merchantCount} merchants · {timeAgo(b.createdAt)}</span>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} <span style={{ fontSize: 10, color: '#96948A', fontWeight: 500 }}>{b.currency}</span></span>
+                                <Badge status={b.status} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {batches.length === 0 && <p style={{ padding: '20px 16px', fontSize: 12, color: '#6E6C62' }}>No batches yet. Upload a CSV to get started.</p>}
+                      </div>
+
+                      <div className="space-y-4">
+                        {!analytics && (
+                          <div className="flex items-center justify-center" style={{ ...card, padding: 32 }}>
+                            <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#CBC9BF' }} />
+                          </div>
+                        )}
+                        {analytics && (
+                          <>
+                            <div style={{ ...card, padding: 16 }}>
+                              <p style={{ ...label, marginBottom: 10 }}>Settlement Metrics</p>
+                              <div className="space-y-3">
+                                <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? '#059669' : '#D97706' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: '#96948A', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
+                                <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: '#1B1A16' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: '#D97706', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
+                                <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg FX Rate</span><span style={{ fontWeight: 600, color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
+                                <div title="Paystrax markup earned on settled payouts — see the Revenue page" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Markup Owed (Paystrax)</span><button onClick={() => setPage("revenue")} style={{ fontWeight: 600, color: '#1D4ED8', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{revenue ? abbr("€", revenue.markupOwed || 0) : "View →"}</button></div>
+                              </div>
+                            </div>
+
+                            <div style={{ ...card, padding: 16 }}>
+                              <p style={{ ...label, marginBottom: 10 }}>Payout Status</p>
+                              {(() => {
+                                const counts = analytics.payoutStatusCounts || {};
+                                const total = Object.values(counts).reduce((s: number, v: any) => s + v, 0) as number;
+                                if (total === 0) return <p style={{ fontSize: 12, color: '#6E6C62' }}>No payouts</p>;
+                                return (
+                                  <div className="space-y-2">
+                                    {Object.entries(counts).map(([status, val]) => {
+                                      const pct = ((val as number) / total) * 100;
+                                      const color = SC[status]?.dot || '#CBC9BF';
+                                      const lbl = status === 'pending' ? 'Pending' : SC[status]?.label || status;
+                                      return (
+                                        <div key={status}>
+                                          <div className="flex justify-between" style={{ fontSize: 11, marginBottom: 2 }}>
+                                            <span style={{ color: '#54524A' }}>{lbl}</span>
+                                            <span style={{ fontWeight: 500, color: '#1B1A16' }}>{val as number} <span style={{ color: '#6E6C62' }}>({pct.toFixed(0)}%)</span></span>
+                                          </div>
+                                          <div style={{ height: 4, borderRadius: 2, background: '#ECEAE0', overflow: 'hidden' }}>
+                                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color }} />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
 
