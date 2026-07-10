@@ -5,7 +5,7 @@ import {
   Plus, RefreshCw, Users, DollarSign, ArrowUpRight, Loader2, X,
   LogOut, Search, Copy, ExternalLink, Banknote, ArrowDown, Shield,
   UserPlus, FileDown, ClipboardList, BarChart3, Activity, TrendingUp,
-  ShieldCheck, Timer, Hash, Eye, LayoutDashboard, Settings, Scale, Zap, Bell, LifeBuoy,
+  ShieldCheck, Timer, Hash, Eye, LayoutDashboard, Settings, Scale, Zap, Bell, LifeBuoy, Landmark,
 } from "lucide-react";
 
 const AUDIT_CATEGORIES = [
@@ -199,7 +199,7 @@ export default function Dashboard() {
     { name: "CloudScale Hosting", amount: 8300, wallet: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db" },
     { name: "DataBridge Analytics", amount: 7800, wallet: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2" },
   ]);
-  const [page, setPage] = useState<"dashboard" | "batches" | "merchants" | "audit" | "settings" | "reconciliation" | "alerts" | "revenue">("dashboard");
+  const [page, setPage] = useState<"dashboard" | "batches" | "merchants" | "audit" | "settings" | "reconciliation" | "alerts" | "revenue" | "accounts">("dashboard");
   const [auditFilter, setAuditFilter] = useState("all");
   const [auditSearch, setAuditSearch] = useState("");
   const [merchantSearch, setMerchantSearch] = useState("");
@@ -330,6 +330,31 @@ export default function Dashboard() {
       if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["settings"] }); qc.invalidateQueries({ queryKey: ["revenue"] }); },
+  });
+
+  // ── Collection accounts (virtual IBANs) ──
+  const { data: accounts = [] } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => { const r = await fetch("/api/accounts"); return r.json(); },
+    enabled: loggedIn,
+  });
+  const [showOpenAccount, setShowOpenAccount] = useState(false);
+  const [newAccountCcy, setNewAccountCcy] = useState("EUR");
+  const [newAccountLabel, setNewAccountLabel] = useState("");
+  const [openedAccount, setOpenedAccount] = useState<any>(null);
+  const openAccountMut = useMutation({
+    mutationFn: async () => {
+      const r = await fetch("/api/accounts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currency: newAccountCcy, label: newAccountLabel, createdBy: currentUser?.email }) });
+      if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
+    },
+    onSuccess: (a) => { setOpenedAccount(a); qc.invalidateQueries({ queryKey: ["accounts"] }); qc.invalidateQueries({ queryKey: ["audit"] }); },
+  });
+  const closeAccountMut = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const r = await fetch(`/api/accounts/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, actor: currentUser?.email }) });
+      if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["accounts"] }); },
   });
   const { data: supportTickets = [] } = useQuery({
     queryKey: ["support"],
@@ -592,6 +617,7 @@ export default function Dashboard() {
             { key: "batches", label: "Payout Batches", icon: FileText },
             { key: "reconciliation", label: "Reconciliation", icon: Scale },
             { key: "merchants", label: "Merchants", icon: Users },
+            { key: "accounts", label: "Accounts", icon: Landmark },
             { key: "revenue", label: "Revenue", icon: TrendingUp },
             { key: "alerts", label: "Alerts", icon: Bell },
             { key: "audit", label: "Audit & Compliance", icon: ClipboardList },
@@ -670,7 +696,7 @@ export default function Dashboard() {
         {/* ─ Header ─ */}
         <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid #E7E5DB', padding: '12px 32px' }}>
           <h1 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', letterSpacing: '-0.01em' }}>
-            {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : "Audit & Compliance"}
+            {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : page === "accounts" ? "Collection Accounts" : "Audit & Compliance"}
           </h1>
           <div className="flex items-center gap-2">
             {/* Integration mode badge — reflects /api/providers */}
@@ -778,12 +804,19 @@ export default function Dashboard() {
                       <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
                         <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #EFEDE4' }}>
                           <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Needs attention</p>
-                          {pendingBatches.length > 0 && (
-                            <button onClick={() => copyText("IE29AIBK93115212345678")} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
-                              onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
-                              <Copy className="w-3 h-3" /> IBAN · IE29 AIBK 9311 5212 3456 78 · AIB Dublin
-                            </button>
-                          )}
+                          {pendingBatches.length > 0 && (() => {
+                            const acct = (accounts as any[]).find((a: any) => a.status !== 'closed' && a.currency === pendingBatches[0]?.currency) || (accounts as any[]).find((a: any) => a.status !== 'closed');
+                            if (!acct) return (
+                              <button onClick={() => setPage("accounts")} style={{ fontSize: 11, fontWeight: 500, color: '#1D4ED8', background: 'none', border: 'none', cursor: 'pointer' }}>Open a collection account →</button>
+                            );
+                            return (
+                              <button onClick={() => copyText(acct.iban.replace(/ /g, ""))} className="flex items-center gap-1 transition-colors" style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
+                                title={`${acct.currency} collection account · ${acct.bankName}`}
+                                onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
+                                <Copy className="w-3 h-3" /> {acct.currency} · {acct.iban} · {acct.bic}
+                              </button>
+                            );
+                          })()}
                         </div>
                         {pendingBatches.length === 0 && (
                           <div className="flex items-center gap-2.5" style={{ padding: '18px 16px' }}>
@@ -1246,6 +1279,66 @@ export default function Dashboard() {
                 {deleteMerchantMut.isError && <p style={{ padding: '8px 16px', fontSize: 11, color: '#DC2626' }}>{(deleteMerchantMut.error as Error).message}</p>}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ─ Collection Accounts tab ─ */}
+          {page === "accounts" && (
+            <div className="space-y-5">
+              <div className="flex items-start justify-between gap-4">
+                <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', padding: '10px 14px', borderRadius: 10, background: '#F4F3EC', border: '1px solid #ECEAE0', flex: 1 }}>
+                  Collection accounts are the IBANs your payout fiat arrives into — one per currency. Open an account below and share its details with the paying entity. In production these are <strong>virtual IBANs issued by Banking Circle</strong>; in the demo they are generated instantly with the same shape.
+                </p>
+                <button onClick={() => { setShowOpenAccount(true); setOpenedAccount(null); setNewAccountLabel(""); }}
+                  className="flex items-center gap-1.5"
+                  style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                  <Landmark className="w-3.5 h-3.5" /> Open account
+                </button>
+              </div>
+
+              {accounts.length === 0 ? (
+                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, padding: '48px 0', textAlign: 'center' }}>
+                  <Landmark className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 10 }} />
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>No collection accounts yet</p>
+                  <p style={{ fontSize: 12, color: '#6E6C62', marginTop: 2 }}>Open your first account to receive payout funding. 9 currencies available.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {accounts.map((a: any) => (
+                    <div key={a.id} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
+                      <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+                        <div className="flex items-center gap-2.5">
+                          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', padding: '4px 10px', borderRadius: 8, background: '#1B1A16', color: '#FFFFFF' }}>{a.currency}</span>
+                          {a.label && <span style={{ fontSize: 12, color: '#54524A' }}>{a.label}</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge status={a.status === 'closed' ? 'disabled' : 'active'} />
+                          {currentUser?.role !== "viewer" && (
+                            <button onClick={() => closeAccountMut.mutate({ id: a.id, status: a.status === 'closed' ? 'active' : 'closed' })}
+                              style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 5, border: '1px solid #DCDAD0', background: '#FFFFFF', cursor: 'pointer', color: a.status === 'closed' ? '#059669' : '#B45309' }}>
+                              {a.status === 'closed' ? 'Reopen' : 'Close'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <p style={{ fontSize: 15, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '0.01em', color: '#1B1A16' }}>{a.iban}</p>
+                        <button onClick={() => copyText(a.iban.replace(/ /g, ""))} aria-label="Copy IBAN"
+                          style={{ color: '#CBC9BF', background: 'none', border: 'none', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#54524A'} onMouseLeave={e => e.currentTarget.style.color = '#CBC9BF'}>
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex gap-5" style={{ marginTop: 8, fontSize: 11, color: '#6E6C62' }}>
+                        <span>BIC <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A', fontWeight: 500 }}>{a.bic}</span></span>
+                        <span>{a.bankName}</span>
+                        <span style={{ marginLeft: 'auto', color: '#96948A' }}>opened {timeAgo(a.createdAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p style={{ fontSize: 10, color: '#B5B3A8' }}>Demo accounts — IBANs are generated locally. In production, opening an account provisions a virtual IBAN at Banking Circle and appears here within seconds.</p>
             </div>
           )}
 
@@ -2253,6 +2346,50 @@ export default function Dashboard() {
             {addMerchantMut.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />}Register Merchant
           </button>
         </div>
+      </Overlay>
+
+      {/* ─ Open collection account dialog ─ */}
+      <Overlay open={showOpenAccount} onClose={() => setShowOpenAccount(false)}>
+        {!openedAccount && (<>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Open a collection account</h3>
+          <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Choose the currency — the account details are issued instantly. Funds sent to this account fund your payout batches in that currency.</p>
+          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 6 }}>Currency</label>
+          <div className="grid grid-cols-3 gap-2" style={{ marginBottom: 16 }}>
+            {["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", "AUD", "AED"].map(c => (
+              <button key={c} onClick={() => setNewAccountCcy(c)}
+                style={{ padding: '10px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid ' + (newAccountCcy === c ? '#1B1A16' : '#DCDAD0'),
+                  background: newAccountCcy === c ? '#1B1A16' : '#FFFFFF',
+                  color: newAccountCcy === c ? '#FFFFFF' : '#54524A' }}>{c}</button>
+            ))}
+          </div>
+          <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Label (optional)</label>
+          <input value={newAccountLabel} onChange={e => setNewAccountLabel(e.target.value)} placeholder="e.g. Main EUR collections"
+            className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, color: '#1B1A16', marginBottom: 8 }} />
+          {openAccountMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>{(openAccountMut.error as Error).message}</p>}
+          <div className="flex justify-end gap-2" style={{ marginTop: 14 }}>
+            <button onClick={() => setShowOpenAccount(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => openAccountMut.mutate()} disabled={openAccountMut.isPending}
+              className="disabled:opacity-40"
+              style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
+              {openAccountMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}Open {newAccountCcy} account
+            </button>
+          </div>
+        </>)}
+        {openedAccount && (<>
+          <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
+            <CheckCircle2 className="w-10 h-10 mx-auto" style={{ color: '#059669', marginBottom: 10 }} />
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16' }}>{openedAccount.currency} account opened</h3>
+            <p style={{ fontSize: 15, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', marginTop: 12, fontWeight: 500 }}>{openedAccount.iban}</p>
+            <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 6 }}>BIC {openedAccount.bic} · {openedAccount.bankName}</p>
+            <div className="flex justify-center gap-2" style={{ marginTop: 16 }}>
+              <button onClick={() => copyText(openedAccount.iban.replace(/ /g, ""))}
+                style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#54524A', background: '#FFFFFF', border: '1px solid #DCDAD0', cursor: 'pointer' }}>Copy IBAN</button>
+              <button onClick={() => { setShowOpenAccount(false); setOpenedAccount(null); }}
+                style={{ padding: '8px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>Done</button>
+            </div>
+          </div>
+        </>)}
       </Overlay>
 
       {/* ─ Fybrus Customer Care dialog ─ */}

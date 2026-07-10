@@ -178,6 +178,17 @@ const merchants = pgTable("merchants", {
   payoutMethod: text("payout_method").default("stablecoin"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
+const accounts = pgTable("accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  currency: text("currency").notNull(),
+  iban: text("iban").notNull().unique(),
+  bic: text("bic").notNull(),
+  bankName: text("bank_name").notNull(),
+  label: text("label"),
+  status: text("status").default("active"),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
 const platformSettings = pgTable("platform_settings", {
   id: integer("id").primaryKey().default(1),
   defaultMarkupBps: integer("default_markup_bps").notNull().default(25),
@@ -722,6 +733,46 @@ app.put("/api/settings", async (req, res) => {
     .onConflictDoUpdate({ target: platformSettings.id, set: { defaultMarkupBps: Math.round(bps), updatedAt: new Date() } });
   await logAudit("settings_updated", "settings", undefined, "markup", `Default Paystrax markup set to ${Math.round(bps)} bps`, req.body.actor || "admin");
   res.json({ fybrusFeeBps: FYBRUS_FEE_BPS, defaultMarkupBps: Math.round(bps) });
+});
+
+// ── Collection accounts (virtual IBANs — issued by the fiat rail in production) ──
+const ACCOUNT_CCYS: Record<string, { country: string; digits: number; bic: string; bank: string }> = {
+  EUR: { country: "IE", digits: 18, bic: "BCIRIE2D", bank: "Banking Circle S.A. — Dublin branch" },
+  GBP: { country: "GB", digits: 14, bic: "BCIRGB2L", bank: "Banking Circle S.A. — London branch" },
+  CHF: { country: "CH", digits: 17, bic: "BCIRCHZZ", bank: "Banking Circle partner network" },
+  SEK: { country: "SE", digits: 20, bic: "BCIRSESS", bank: "Banking Circle S.A." },
+  NOK: { country: "NO", digits: 11, bic: "BCIRNOKK", bank: "Banking Circle partner network" },
+  DKK: { country: "DK", digits: 14, bic: "BCIRDKKK", bank: "Banking Circle S.A. — Copenhagen" },
+  PLN: { country: "PL", digits: 24, bic: "BCIRPLPW", bank: "Banking Circle partner network" },
+  USD: { country: "GB", digits: 14, bic: "BCIRGB2L", bank: "Banking Circle S.A. — London branch (USD)" },
+  AUD: { country: "GB", digits: 14, bic: "BCIRGB2L", bank: "Banking Circle S.A. — London branch (AUD)" },
+  AED: { country: "AE", digits: 19, bic: "BCIRAEAD", bank: "Banking Circle partner network — UAE" },
+};
+function mockIban(ccy: string): { iban: string; bic: string; bank: string } {
+  const c = ACCOUNT_CCYS[ccy];
+  let digits = "";
+  while (digits.length < c.digits + 2) digits += Math.floor(Math.random() * 10);
+  const raw = c.country + digits.slice(0, 2) + (ccy === "GB" || c.country === "GB" ? "BCIR" : "") + digits.slice(2, c.digits + 2);
+  const iban = raw.replace(/(.{4})/g, "$1 ").trim();
+  return { iban, bic: c.bic, bank: c.bank };
+}
+app.get("/api/accounts", async (_r, res) => {
+  res.json(await db.select().from(accounts).orderBy(desc(accounts.createdAt)));
+});
+app.post("/api/accounts", async (req, res) => {
+  const { currency, label, createdBy } = req.body;
+  if (!ACCOUNT_CCYS[currency]) return res.status(400).json({ message: `Currency must be one of: ${Object.keys(ACCOUNT_CCYS).join(", ")}` });
+  const gen = mockIban(currency);
+  const [a] = await db.insert(accounts).values({ currency, iban: gen.iban, bic: gen.bic, bankName: gen.bank, label: label || null, createdBy: createdBy || "demo" }).returning();
+  await logAudit("account_opened", "account", a.id, a.iban.replace(/ /g, "").slice(0, 8) + "…", `${currency} collection account opened${label ? ` · ${label}` : ""} · ${gen.bank}`, createdBy || "demo");
+  res.json(a);
+});
+app.patch("/api/accounts/:id", async (req, res) => {
+  const status = req.body.status === "closed" ? "closed" : "active";
+  const [a] = await db.update(accounts).set({ status }).where(eq(accounts.id, req.params.id)).returning();
+  if (!a) return res.status(404).json({ message: "Not found" });
+  await logAudit(status === "closed" ? "account_closed" : "account_reopened", "account", a.id, a.iban.slice(0, 9) + "…", `${a.currency} account ${status}`, req.body.actor || "demo");
+  res.json(a);
 });
 
 // ── Revenue: what Paystrax is owed (markup) and what they pay Fybrus (fee) ──
