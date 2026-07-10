@@ -79,7 +79,7 @@ function Overlay({ open, onClose, children, wide }: { open: boolean; onClose: ()
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 60 }} role="dialog" aria-modal="true"
       onKeyDown={e => { if (e.key === "Escape") onClose(); }}>
-      <div className="absolute inset-0" style={{ background: 'rgba(18,34,28,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
+      <div className="absolute inset-0" style={{ background: 'rgba(18,34,28,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 60 }} onClick={onClose} />
       <div className={"relative max-h-[85vh] overflow-y-auto max-w-[95vw] " + (wide ? "w-[920px]" : "w-[500px]")}
         style={{ background: 'var(--surface)', borderRadius: 24, padding: 30, border: '1px solid var(--line)', boxShadow: 'var(--shadow-modal)', zIndex: 61 }}>
         <button onClick={onClose} className="absolute top-5 right-5 transition-colors" style={{ color: 'var(--text-3)' }}
