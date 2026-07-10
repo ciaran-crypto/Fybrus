@@ -81,7 +81,7 @@ function Overlay({ open, onClose, children, wide }: { open: boolean; onClose: ()
       onKeyDown={e => { if (e.key === "Escape") onClose(); }}>
       <div className="absolute inset-0" style={{ background: 'rgba(20,19,15,0.4)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
       <div className={"relative max-h-[85vh] overflow-y-auto max-w-[95vw] " + (wide ? "w-[920px]" : "w-[500px]")}
-        style={{ background: '#FFFFFF', borderRadius: 20, padding: 28, border: '1px solid #EFEDE4', boxShadow: '0 1px 2px rgba(27,26,22,0.05), 0 32px 64px -24px rgba(27,26,22,0.28)', zIndex: 61 }}>
+        style={{ background: '#FFFFFF', borderRadius: 24, padding: 30, border: '1px solid rgba(27,26,22,0.05)', boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 24px 48px -20px rgba(27,26,22,0.18), 0 48px 96px -32px rgba(27,26,22,0.22)', zIndex: 61 }}>
         <button onClick={onClose} className="absolute top-5 right-5 transition-colors" style={{ color: '#6E6C62' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#1B1A16')} onMouseLeave={e => (e.currentTarget.style.color = '#6E6C62')}
           aria-label="Close dialog"><X className="w-4 h-4" /></button>
@@ -126,7 +126,7 @@ function LoginScreen({ onLogin, error: externalError }: { onLogin: (email: strin
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F6F1' }}>
-      <div className="w-[400px]" style={{ background: '#FFFFFF', padding: 36, borderRadius: 20, border: '1px solid #ECEAE0', boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 32px 64px -32px rgba(27,26,22,0.25)' }}>
+      <div className="w-[400px]" style={{ background: '#FFFFFF', padding: 40, borderRadius: 26, border: '1px solid rgba(27,26,22,0.05)', boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 32px 64px -32px rgba(27,26,22,0.25)' }}>
         <div className="mb-6">
           <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.01em', color: '#1B1A16' }}>PAYSTRAX<span style={{ color: '#059669' }}>.</span></span>
           <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.06em', color: '#6E6C62', textTransform: 'uppercase' as const, marginTop: 4 }}>Payments Portal</p>
@@ -596,14 +596,14 @@ export default function Dashboard() {
     <div style={{ fontFamily: "'Geist', -apple-system, system-ui, sans-serif", background: '#F7F6F1', minHeight: '100vh', display: 'flex' }}>
       <style>{`
         .sidebar-nav-item:not(.sidebar-nav-active):hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.85) !important; }
-        input:focus, select:focus, textarea:focus { border-color: #1B1A16 !important; outline: none !important; box-shadow: 0 0 0 3px rgba(27,26,22,0.08) !important; }
+        input:focus, select:focus, textarea:focus { border-color: rgba(16,148,118,0.55) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(16,148,118,0.15) !important; }
         .tabular-nums { font-variant-numeric: tabular-nums; }
         h1, h2, h3 { letter-spacing: -0.02em; }
         table th { font-family: 'Geist', sans-serif; }
         td, .tabular-nums { font-variant-numeric: tabular-nums; }
       `}</style>
       {/* ─ Sidebar ─ */}
-      <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 220, background: 'linear-gradient(180deg, #131311, #1C1B17)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
+      <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 234, background: 'linear-gradient(178deg, #161613 0%, #201E19 70%, #232019 100%)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
         {/* Logo */}
         <div style={{ padding: '0 8px', marginBottom: 32 }}>
           <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.01em', color: '#FFFFFF' }}>PAYSTRAX<span style={{ color: '#34D399' }}>.</span></span>
@@ -629,10 +629,10 @@ export default function Dashboard() {
               <button key={item.key} onClick={() => { setPage(item.key as any); setSelectedId(null); }}
                 className={"sidebar-nav-item transition-all" + (isActive ? " sidebar-nav-active" : "")}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                  padding: '10px 12px', borderRadius: 8, marginBottom: 2,
+                  display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+                  padding: '11px 13px', borderRadius: 10, marginBottom: 3,
                   background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
-                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(255,255,255,0.08)' : 'none',
+                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(255,255,255,0.09), 0 0 18px -6px rgba(52,227,176,0.35)' : 'none',
                   color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.48)',
                   fontSize: 13, fontWeight: 500,
                   border: 'none', cursor: 'pointer', textAlign: 'left',
@@ -692,10 +692,10 @@ export default function Dashboard() {
       </aside>
 
       {/* ─ Right content ─ */}
-      <div style={{ flex: 1, marginLeft: 220, minHeight: '100vh' }}>
+      <div style={{ flex: 1, marginLeft: 234, minHeight: '100vh' }}>
         {/* ─ Header ─ */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid #E7E5DB', padding: '12px 32px' }}>
-          <h1 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', letterSpacing: '-0.01em' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid rgba(27,26,22,0.06)', padding: '15px 32px' }}>
+          <h1 style={{ fontSize: 17, fontWeight: 600, color: '#1B1A16', letterSpacing: '-0.02em' }}>
             {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : page === "accounts" ? "Collection Accounts" : "Audit & Compliance"}
           </h1>
           <div className="flex items-center gap-2">
@@ -745,8 +745,8 @@ export default function Dashboard() {
                   n >= 1e6 ? `${sym}${(n / 1e6).toFixed(n >= 2e7 ? 1 : 2)}M`
                   : n >= 1e3 ? `${sym}${(n / 1e3).toFixed(0)}k`
                   : `${sym}${n.toFixed(0)}`;
-                const heroNum = { fontSize: 26, fontWeight: 650, letterSpacing: '-0.02em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' as const, lineHeight: 1.1 };
-                const card = { background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 16, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)' };
+                const heroNum = { fontSize: 30, fontWeight: 650, letterSpacing: '-0.02em', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' as const, lineHeight: 1.1 };
+                const card = { background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)' };
                 const label = { fontSize: 10, fontWeight: 500 as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#96948A' };
 
                 const inFlight = active.reduce((s: number, b: any) => s + num(b.totalFiat || b.totalEur), 0);
@@ -803,7 +803,7 @@ export default function Dashboard() {
                     <div className="grid grid-cols-3 gap-4">
                       <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
                         <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #EFEDE4' }}>
-                          <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Needs attention</p>
+                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Needs attention</p>
                           {pendingBatches.length > 0 && (() => {
                             const acct = (accounts as any[]).find((a: any) => a.status !== 'closed' && a.currency === pendingBatches[0]?.currency) || (accounts as any[]).find((a: any) => a.status !== 'closed');
                             if (!acct) return (
@@ -827,7 +827,7 @@ export default function Dashboard() {
                         {pendingBatches.slice(0, 4).map((b: any) => {
                           const sym = (CSYM as any)[b.currency] || "€";
                           return (
-                            <div key={b.id} className="flex items-center justify-between" style={{ padding: '10px 16px', borderTop: '1px solid #F4F3EC' }}>
+                            <div key={b.id} className="flex items-center justify-between" style={{ padding: '13px 16px', borderTop: '1px solid #F4F3EC' }}>
                               <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
                                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#F59E0B', flexShrink: 0 }} />
                                 <button onClick={() => setSelectedId(b.id)} style={{ fontSize: 12, fontWeight: 500, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -879,7 +879,7 @@ export default function Dashboard() {
                     <div className="grid grid-cols-3 gap-4">
                       <div style={{ ...card, gridColumn: 'span 2', overflow: 'hidden' }}>
                         <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
-                          <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Recent Batches</p>
+                          <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Recent Batches</p>
                           <button onClick={() => setPage("batches")} style={{ fontSize: 11, fontWeight: 500, color: '#6E6C62', background: 'none', border: 'none', cursor: 'pointer' }}
                             onMouseEnter={e => e.currentTarget.style.color = '#1B1A16'} onMouseLeave={e => e.currentTarget.style.color = '#6E6C62'}>
                             View all →
@@ -889,7 +889,7 @@ export default function Dashboard() {
                           const sym = (CSYM as any)[b.currency] || "€";
                           return (
                             <div key={b.id} className="flex items-center justify-between cursor-pointer transition-colors"
-                              style={{ padding: '10px 16px', borderTop: '1px solid #F4F3EC' }}
+                              style={{ padding: '13px 16px', borderTop: '1px solid #F4F3EC' }}
                               onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                               onClick={() => setSelectedId(b.id)}>
                               <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
@@ -964,9 +964,9 @@ export default function Dashboard() {
 
           {/* ─ Batches tab ─ */}
           {page === "batches" && (
-            <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'auto' }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'auto' }}>
               <div className="flex items-center justify-between" style={{ padding: '12px 16px', borderBottom: '1px solid #ECEAE0' }}>
-                <h2 style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>{filtered.length} {filtered.length === 1 ? "Batch" : "Batches"}</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>{filtered.length} {filtered.length === 1 ? "Batch" : "Batches"}</h2>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5" style={{ background: '#F4F3EC', borderRadius: 8, padding: '6px 12px', border: '1px solid transparent' }}>
                     <Search className="w-3.5 h-3.5" style={{ color: '#CBC9BF' }} />
@@ -1016,7 +1016,7 @@ export default function Dashboard() {
                     <tr style={{ background: '#F8F7F2' }}>
                       {["Batch", "Ccy", "#", "FIAT Total", "USDC", "Timing", "Status", "Created"].map((h, i) => (
                         <th key={h} style={{
-                          fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62',
+                          fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195',
                           paddingTop: 8, paddingBottom: 8, paddingLeft: i === 0 ? 16 : 12, paddingRight: i === 7 ? 16 : 12,
                           textAlign: i === 0 ? 'left' : i === 3 || i === 4 || i === 7 ? 'right' : 'center',
                         }}>{h}</th>
@@ -1076,8 +1076,8 @@ export default function Dashboard() {
                   { label: "USDC Confirmed", value: reconciliation?.totals?.usdcConfirmed, pre: "$" },
                   { label: "Exceptions", value: reconciliation?.exceptionBatches, pre: "", flag: true },
                 ].map((k) => (
-                  <div key={k.label} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: '14px 16px' }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>{k.label}</p>
+                  <div key={k.label} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: '14px 16px' }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>{k.label}</p>
                     <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, fontVariantNumeric: 'tabular-nums', color: k.flag ? ((k.value ?? 0) > 0 ? '#DC2626' : '#059669') : '#1B1A16' }}>
                       {k.pre}{typeof k.value === "number" ? k.value.toLocaleString("en", { minimumFractionDigits: k.flag ? 0 : 2, maximumFractionDigits: k.flag ? 0 : 2 }) : "—"}
                     </p>
@@ -1105,13 +1105,13 @@ export default function Dashboard() {
               </div>
 
               {/* Reconciliation table */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid #ECEAE0', background: '#F8F7F2' }}>
                         {["Batch", "Ccy", "Status", "Fiat Exp.", "Fiat Rcvd", "USDC Conv.", "USDC Conf.", "Payouts", "Reconciliation"].map((h, i) => (
-                          <th key={h} style={{ padding: '10px 14px', textAlign: i > 2 && i < 7 ? 'right' : 'left', fontSize: 10, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#6E6C62' }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 14px', textAlign: i > 2 && i < 7 ? 'right' : 'left', fontSize: 10, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#A3A195' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1166,11 +1166,11 @@ export default function Dashboard() {
 
           {/* ─ Merchants tab ─ */}
           {page === "merchants" && (
-            <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 20px', borderBottom: '1px solid #ECEAE0' }}>
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div>
-                    <h2 style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Registered Merchants</h2>
+                    <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Registered Merchants</h2>
                     <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 2 }}>Register each merchant's wallet address once. They'll be matched automatically on batch uploads.</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1201,7 +1201,7 @@ export default function Dashboard() {
                   <thead>
                     <tr style={{ background: '#F8F7F2' }}>
                       {["Name", "Wallet Address", "KYC", "Screening", "Status", "Registered", ""].map((h, i) => (
-                        <th key={h || "actions"} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: i === 6 ? 'right' : 'left' }}>{h}</th>
+                        <th key={h || "actions"} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: i === 6 ? 'right' : 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1210,11 +1210,11 @@ export default function Dashboard() {
                       <tr key={m.id} className="transition-colors"
                         style={{ borderTop: '1px solid #EFEDE4' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#F8F7F2'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td style={{ padding: '10px 16px' }}>
+                        <td style={{ padding: '13px 16px' }}>
                           <span style={{ fontSize: 12, fontWeight: 500, display: 'block', color: m.status === "disabled" ? '#96948A' : '#1B1A16' }}>{m.name}</span>
                           {m.email && <span style={{ fontSize: 10, color: '#96948A', display: 'block', marginTop: 1 }}>{m.email}</span>}
                         </td>
-                        <td style={{ padding: '10px 16px' }}>
+                        <td style={{ padding: '13px 16px' }}>
                           <div className="flex items-center gap-1.5">
                             <span style={{ fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{m.walletAddress.slice(0, 8)}...{m.walletAddress.slice(-4)}</span>
                             <button onClick={() => copyText(m.walletAddress)} style={{ color: '#CBC9BF', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -1223,14 +1223,14 @@ export default function Dashboard() {
                           </div>
                         </td>
                         {/* KYC reliance attestation — verification lives on the relying party's system */}
-                        <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                           <span title={`KYC performed by ${m.kycReliedOn || "Paystrax (acquirer)"}${m.kycRef ? ` · ref ${m.kycRef}` : ""}${m.kycAttestedAt ? ` · attested ${new Date(m.kycAttestedAt).toLocaleDateString()}` : ""}`}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#EFF6FF', color: '#1D4ED8' }}>
                             <ShieldCheck style={{ width: 11, height: 11 }} /> Relied · {(m.kycReliedOn || "Paystrax").split(" ")[0]}
                           </span>
                         </td>
                         {/* Destination-wallet screening — our obligation */}
-                        <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                           {m.walletScreenStatus === "flagged" ? (
                             <span title={`Flagged by ${m.walletScreenProvider}${m.walletScreenedAt ? ` · ${new Date(m.walletScreenedAt).toLocaleString()}` : ""}`}
                               style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: '#FEF2F2', color: '#DC2626' }}>
@@ -1248,9 +1248,9 @@ export default function Dashboard() {
                             </button>
                           )}
                         </td>
-                        <td style={{ padding: '10px 16px' }}><Badge status={m.status || "active"} /></td>
-                        <td style={{ padding: '10px 16px', fontSize: 11, color: '#777777', whiteSpace: 'nowrap' }}>{timeAgo(m.createdAt)}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                        <td style={{ padding: '13px 16px' }}><Badge status={m.status || "active"} /></td>
+                        <td style={{ padding: '13px 16px', fontSize: 11, color: '#777777', whiteSpace: 'nowrap' }}>{timeAgo(m.createdAt)}</td>
+                        <td style={{ padding: '13px 16px', textAlign: 'right' }}>
                           {currentUser?.role !== "viewer" && (
                             <div className="flex items-center gap-1 justify-end">
                               <button onClick={() => setEditingMerchant({ ...m })}
@@ -1291,13 +1291,13 @@ export default function Dashboard() {
                 </p>
                 <button onClick={() => { setShowOpenAccount(true); setOpenedAccount(null); setNewAccountLabel(""); }}
                   className="flex items-center gap-1.5"
-                  style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ padding: '13px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
                   <Landmark className="w-3.5 h-3.5" /> Open account
                 </button>
               </div>
 
               {accounts.length === 0 ? (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, padding: '48px 0', textAlign: 'center' }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
                   <Landmark className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 10 }} />
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>No collection accounts yet</p>
                   <p style={{ fontSize: 12, color: '#6E6C62', marginTop: 2 }}>Open your first account to receive payout funding. 9 currencies available.</p>
@@ -1305,7 +1305,7 @@ export default function Dashboard() {
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   {accounts.map((a: any) => (
-                    <div key={a.id} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
+                    <div key={a.id} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 18, opacity: a.status === 'closed' ? 0.55 : 1 }}>
                       <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
                         <div className="flex items-center gap-2.5">
                           <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', padding: '4px 10px', borderRadius: 8, background: '#1B1A16', color: '#FFFFFF' }}>{a.currency}</span>
@@ -1355,8 +1355,8 @@ export default function Dashboard() {
                   { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: '#1B1A16', hint: "What Paystrax pays Fybrus for the settled payouts." },
                   { label: "Net Delivered to Merchants", val: revenue?.netToMerchants, color: '#54524A', hint: "USDC value delivered after all fees.", usd: true },
                 ].map((c) => (
-                  <div key={c.label} title={c.hint} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>{c.label}</p>
+                  <div key={c.label} title={c.hint} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 16 }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>{c.label}</p>
                     <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.color }}>
                       {c.usd ? "$" : "€"}{(c.val || 0).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
@@ -1365,7 +1365,7 @@ export default function Dashboard() {
               </div>
 
               {/* Markup control */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 20 }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 20 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Default Paystrax markup</p>
                 <p style={{ fontSize: 11, color: '#6E6C62', marginBottom: 12 }}>Applied to every merchant unless overridden individually (Merchants → Edit). Set in basis points — 100 bps = 1%.</p>
                 <div className="flex items-center gap-3">
@@ -1384,26 +1384,26 @@ export default function Dashboard() {
               </div>
 
               {/* Per-merchant breakdown */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16' }}>Markup earned by merchant</p></div>
                 <div style={{ overflowX: 'auto' }}>
                 <table className="w-full" style={{ minWidth: 720 }}>
                   <thead><tr style={{ background: '#F8F7F2' }}>
                     {["Merchant", "Markup rate", "Payout", "Settled volume", "Fybrus fee", "Paystrax markup"].map((h, i) => (
-                      <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62', padding: '8px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
+                      <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195', padding: '10px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {(revenue?.byMerchant ?? []).map((r: any, i: number) => (
                       <tr key={i} style={{ borderTop: '1px solid #F0EFE4' }}>
-                        <td style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.merchant}</td>
-                        <td style={{ padding: '10px 16px', fontSize: 12, color: '#54524A', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
-                        <td style={{ padding: '10px 16px' }}>
+                        <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.merchant}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, color: '#54524A', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
+                        <td style={{ padding: '13px 16px' }}>
                           <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: r.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payoutMethod === 'fiat' ? 'Fiat' : 'Stablecoin'}</span>
                         </td>
-                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>€{r.volume.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>€{r.fybrusFee.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", fontWeight: 600, color: '#059669' }}>€{r.markup.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>€{r.volume.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>€{r.fybrusFee.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '13px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", fontWeight: 600, color: '#059669' }}>€{r.markup.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
                     {(!revenue || (revenue.byMerchant ?? []).length === 0) && (
@@ -1426,8 +1426,8 @@ export default function Dashboard() {
                   { label: "Flagged Wallets", n: alertsData?.flaggedMerchants?.length ?? 0, color: '#D97706', bg: '#FFFBEB' },
                   { label: "Reconciliation Exceptions", n: alertsData?.reconExceptions?.length ?? 0, color: '#1D4ED8', bg: '#EFF6FF' },
                 ].map(c => (
-                  <div key={c.label} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>{c.label}</p>
+                  <div key={c.label} style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 16 }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{c.label}</p>
                     <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.n > 0 ? c.color : '#059669' }}>{c.n}</p>
                   </div>
                 ))}
@@ -1439,7 +1439,7 @@ export default function Dashboard() {
 
               {/* Open tickets */}
               {supportTickets.length > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 20 }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', padding: 20 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16', marginBottom: 10 }}>Open tickets with Fybrus Customer Care</p>
                   <div className="space-y-2">
                     {supportTickets.map((t: any) => (
@@ -1458,7 +1458,7 @@ export default function Dashboard() {
 
               {/* All clear */}
               {(alertsData?.total ?? 0) === 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, padding: '48px 0', textAlign: 'center' }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, padding: '48px 0', textAlign: 'center' }}>
                   <CheckCircle2 className="w-8 h-8 mx-auto" style={{ color: '#059669', marginBottom: 8 }} />
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16' }}>All clear</p>
                   <p style={{ fontSize: 12, color: '#6E6C62', marginTop: 2 }}>No failed payouts, flagged wallets, or reconciliation exceptions.</p>
@@ -1467,7 +1467,7 @@ export default function Dashboard() {
 
               {/* Payout failures */}
               {(alertsData?.failedPayouts?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#DC2626' }}>Payout failures</p></div>
                   {alertsData.failedPayouts.map((a: any, i: number) => (
                     <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #DC2626' }}>
@@ -1493,7 +1493,7 @@ export default function Dashboard() {
 
               {/* Flagged wallets */}
               {(alertsData?.flaggedMerchants?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#D97706' }}>Flagged wallets</p></div>
                   {alertsData.flaggedMerchants.map((a: any, i: number) => (
                     <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #D97706' }}>
@@ -1515,7 +1515,7 @@ export default function Dashboard() {
 
               {/* Reconciliation exceptions */}
               {(alertsData?.reconExceptions?.length ?? 0) > 0 && (
-                <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+                <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#1D4ED8' }}>Reconciliation exceptions</p></div>
                   {alertsData.reconExceptions.map((a: any, i: number) => (
                     <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid #F4F3EC', borderLeft: '3px solid #1D4ED8' }}>
@@ -1543,9 +1543,9 @@ export default function Dashboard() {
           {page === "audit" && (
             <div className="space-y-5">
               {/* Audit trail */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 18, boxShadow: '0 1px 1px rgba(27,26,22,0.02), 0 8px 24px -12px rgba(27,26,22,0.07), 0 24px 56px -28px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
                 <div className="flex items-center justify-between" style={{ padding: '12px 20px', borderBottom: '1px solid #ECEAE0' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>
                     <ClipboardList className="w-4 h-4 inline mr-1.5 -mt-0.5" style={{ color: '#2E6DB4' }} />
                     Audit Trail
                   </h3>
@@ -1576,12 +1576,12 @@ export default function Dashboard() {
                 <table className="w-full">
                   <thead>
                     <tr style={{ background: '#F8F7F2' }}>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 20px', textAlign: 'left' }}>Timestamp</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: 'left' }}>Action</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: 'left' }}>Entity</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: 'left' }}>Actor</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: 'left' }}>IP</th>
-                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 20px', textAlign: 'left' }}>Detail</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '8px 20px', textAlign: 'left' }}>Timestamp</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Action</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Entity</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Actor</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>IP</th>
+                      <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '8px 20px', textAlign: 'left' }}>Detail</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1598,10 +1598,10 @@ export default function Dashboard() {
                           <td style={{ padding: '10px 20px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", whiteSpace: 'nowrap', color: '#54524A' }}>
                             {e.createdAt ? timeAgo(e.createdAt) : "—"}
                           </td>
-                          <td style={{ padding: '10px 16px' }}>
+                          <td style={{ padding: '13px 16px' }}>
                             <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: `${color}18`, color }}>{e.action.replace(/_/g, " ")}</span>
                           </td>
-                          <td style={{ padding: '10px 16px', fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>
+                          <td style={{ padding: '13px 16px', fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>
                             {e.entityRef?.startsWith("BATCH-") ? (
                               <button onClick={() => { const b = (batches as any[]).find((x: any) => x.batchRef === e.entityRef); if (b) setSelectedId(b.id); }} title="Open batch detail"
                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: '#1D4ED8' }}
@@ -1610,8 +1610,8 @@ export default function Dashboard() {
                               </button>
                             ) : (e.entityRef || "—")}
                           </td>
-                          <td style={{ padding: '10px 16px', fontSize: 12, color: '#54524A' }}>{e.actor}</td>
-                          <td style={{ padding: '10px 16px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{e.ipAddress || "—"}</td>
+                          <td style={{ padding: '13px 16px', fontSize: 12, color: '#54524A' }}>{e.actor}</td>
+                          <td style={{ padding: '13px 16px', fontSize: 11, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>{e.ipAddress || "—"}</td>
                           <td style={{ padding: '10px 20px', fontSize: 12, color: '#54524A' }}>{e.detail}</td>
                         </tr>
                       );
@@ -1637,7 +1637,7 @@ export default function Dashboard() {
           {page === "settings" && (
             <div className="space-y-5">
               {/* User Accounts */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 16, padding: 24 }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
                 <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
                   <div>
                     <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 2 }}>User Accounts</h3>
@@ -1711,12 +1711,12 @@ export default function Dashboard() {
               </div>
 
               {/* Approval Controls */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 16, padding: 24 }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Approval Controls</h3>
                 <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>Configure how batches are approved before they can be advanced through the settlement flow.</p>
                 <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: dualApproval ? '#EFF6FF' : '#F8F7F2', border: `1px solid ${dualApproval ? '#BFDBFE' : '#ECEAE0'}` }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Dual Approval</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Dual Approval</p>
                     <p style={{ fontSize: 11, color: '#615F56', marginTop: 2 }}>
                       When enabled, batches must be approved by a user different from the creator before they can be advanced. This prevents single-person fraud.
                     </p>
@@ -1744,7 +1744,7 @@ export default function Dashboard() {
               </div>
 
               {/* Batch processing mode */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 16, padding: 24 }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Batch Processing</h3>
                 <p style={{ fontSize: 12, color: '#615F56', marginBottom: 16 }}>How a batch behaves once funds land in the collection account.</p>
                 <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderRadius: 12, background: autoProcess ? '#ECFDF5' : '#F8F7F2', border: `1px solid ${autoProcess ? '#A7F3D0' : '#ECEAE0'}` }}>
@@ -1765,7 +1765,7 @@ export default function Dashboard() {
               </div>
 
               {/* Password — demo only */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 16, padding: 24 }}>
+              <div style={{ background: '#FFFFFF', border: '1px solid rgba(27,26,22,0.05)', borderRadius: 20, padding: 26 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Demo Mode</h3>
                 <p style={{ fontSize: 12, color: '#615F56', marginBottom: 12 }}>This is a demo environment. All accounts share the password <code style={{ fontSize: 11, padding: '1px 6px', borderRadius: 4, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>demo123</code></p>
                 <p style={{ fontSize: 11, color: '#6E6C62' }}>
@@ -1858,7 +1858,7 @@ export default function Dashboard() {
             onClick={() => fileRef.current?.click()}
             onMouseEnter={e => e.currentTarget.style.borderColor = '#CBC9BF'} onMouseLeave={e => e.currentTarget.style.borderColor = '#DCDAD0'}>
             <Upload className="w-8 h-8 mx-auto" style={{ color: '#CBC9BF', marginBottom: 8 }} />
-            <p style={{ fontSize: 13, fontWeight: 500, color: '#1B1A16' }}>Click to select CSV file</p>
+            <p style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', color: '#1B1A16' }}>Click to select CSV file</p>
             <p style={{ fontSize: 11, color: '#6E6C62', marginTop: 4 }}>Supports .csv files up to 10MB</p>
             <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setUploadStep("loading"); parseCSV(f); } }} />
           </div>
@@ -1913,7 +1913,7 @@ export default function Dashboard() {
                   { label: "Total", value: `${sym}${total.toLocaleString("en", { minimumFractionDigits: 2 })}` },
                 ].map(s => (
                   <div key={s.label} style={{ padding: '10px 12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>{s.label}</p>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{s.label}</p>
                     <p style={{ fontSize: 14, fontWeight: 600, color: '#1B1A16', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{s.value}</p>
                   </div>
                 ))}
@@ -1925,7 +1925,7 @@ export default function Dashboard() {
                   <thead>
                     <tr style={{ background: '#F8F7F2' }}>
                       {["#", "Merchant", "Amount", "Wallet Address", "Status"].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', textAlign: 'left' }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 12px', fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', textAlign: 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1988,17 +1988,17 @@ export default function Dashboard() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24, textAlign: 'left' }}>
               <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>Batch Reference</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Batch Reference</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{createdBatch.batchRef}</p>
               </div>
               <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>Total Amount</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Total Amount</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
                   {({ EUR: "€", USD: "$", AUD: "A$" } as any)[createdBatch.currency] || "€"}{parseFloat(createdBatch.totalFiat || createdBatch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div style={{ padding: '12px', borderRadius: 8, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>Merchants</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#A3A195' }}>Merchants</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#1B1A16', marginTop: 4 }}>{createdBatch.merchantCount} payees</p>
               </div>
             </div>
@@ -2461,23 +2461,23 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 16 }}>
               <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>{detail.batch.currency || "EUR"} Total</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>{detail.batch.currency || "EUR"} Total</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', color: '#1B1A16', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}{parseFloat(detail.batch.totalFiat || detail.batch.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}</p>
               </div>
               <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>USDC Total</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>USDC Total</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, fontVariantNumeric: 'tabular-nums', color: detail.batch.totalUsdc ? '#1B1A16' : '#CBC9BF' }}>
                   {detail.batch.totalUsdc ? `$${parseFloat(detail.batch.totalUsdc).toLocaleString("en", { minimumFractionDigits: 2 })}` : "Pending conversion"}
                 </p>
               </div>
               <div style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>FX Rate</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>FX Rate</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.exchangeRate ? '#54524A' : '#CBC9BF' }}>
                   {detail.batch.exchangeRate ? parseFloat(detail.batch.exchangeRate).toFixed(4) : "—"}
                 </p>
               </div>
               <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>Fees</p>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195' }}>Fees</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? '#1B1A16' : '#CBC9BF' }}>
                   {detail.batch.feeBps ? `${{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                 </p>
@@ -2614,20 +2614,20 @@ export default function Dashboard() {
               <table className="w-full" style={{ minWidth: 760 }}>
                 <thead>
                   <tr style={{ background: '#F8F7F2', borderBottom: '1px solid #ECEAE0' }}>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 16px', textAlign: 'left' }}>Merchant</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'right' }}>{detail.batch.currency || "EUR"}</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'right' }}>USDC</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'left' }}>Wallet</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'center' }}>Status</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'left' }}>Confirmed</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'left' }}>TX Hash</th>
-                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62', padding: '8px 12px', textAlign: 'left' }}>Travel Rule</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 16px', textAlign: 'left' }}>Merchant</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'right' }}>{detail.batch.currency || "EUR"}</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'right' }}>USDC</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Wallet</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'center' }}>Status</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Confirmed</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>TX Hash</th>
+                    <th style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#A3A195', padding: '10px 12px', textAlign: 'left' }}>Travel Rule</th>
                   </tr>
                 </thead>
                 <tbody>
                   {detail.payouts?.map((r: any) => (
                     <tr key={r.payout.id} style={{ borderTop: '1px solid #EFEDE4' }}>
-                      <td style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>
+                      <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>
                         {r.merchant?.name}
                         <span title={(r.payout.payoutMethod === 'fiat') ? 'Paid in fiat (USDC off-ramped)' : 'Paid in USDC'} style={{ marginLeft: 6, fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: r.payout.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payout.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payout.payoutMethod === 'fiat' ? 'FIAT' : 'USDC'}</span>
                       </td>

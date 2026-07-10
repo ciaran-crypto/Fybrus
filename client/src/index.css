@@ -5,19 +5,42 @@
 body {
   margin: 0;
   font-family: 'Geist', -apple-system, system-ui, sans-serif;
-  background: #F7F6F1;
+  /* warm paper with a soft light source top-left — reads as depth, not flat beige */
+  background:
+    radial-gradient(1100px 480px at 18% -8%, rgba(255, 255, 253, 0.9) 0%, rgba(255, 255, 253, 0) 60%),
+    linear-gradient(180deg, #FAF9F4 0%, #F5F4EE 100%);
+  background-attachment: fixed;
   color: #1B1A16;
   min-height: 100vh;
+  font-size: 13px;
+  letter-spacing: 0.001em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01" on, "cv05" on;
 }
 
-::selection { background: #1B1A16; color: #F7F6F1; }
+::selection { background: #10493C; color: #EAFFF7; }
 
-button { transition: background .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease, box-shadow .15s ease; }
+/* Smooth everything that changes state */
+button, a, tr, input, select, textarea {
+  transition: background .18s ease, color .18s ease, border-color .18s ease,
+              opacity .18s ease, box-shadow .22s ease, transform .18s ease;
+}
+button:active { transform: translateY(0.5px); }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
+/* Refined focus — soft teal ring, brand-coherent */
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 148, 118, 0.18), 0 0 0 1px rgba(16, 148, 118, 0.45) !important;
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(27,26,22,0.14); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(27,26,22,0.24); }
+::-webkit-scrollbar-thumb { background: rgba(27,26,22,0.12); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(27,26,22,0.22); background-clip: content-box; }
+
+/* Cards lift gently on hover when they're interactive */
+@media (prefers-reduced-motion: no-preference) {
+  .lift:hover { transform: translateY(-1px); box-shadow: 0 2px 3px rgba(27,26,22,0.03), 0 14px 32px -14px rgba(27,26,22,0.10), 0 32px 64px -30px rgba(27,26,22,0.12) !important; }
+}
