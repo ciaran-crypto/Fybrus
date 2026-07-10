@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Geist', -apple-system, system-ui, sans-serif;
+  background: #F7F6F1;
+  color: #1B1A16;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: #1B1A16; color: #F7F6F1; }
+
+button { transition: background .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease, box-shadow .15s ease; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(27,26,22,0.14); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(27,26,22,0.24); }

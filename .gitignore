@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+api-dist/
+
+# env & secrets — NEVER commit
+.env
+.env*
+
+# deploy
+.vercel
+
+# os / editor
+.DS_Store
+*.log
