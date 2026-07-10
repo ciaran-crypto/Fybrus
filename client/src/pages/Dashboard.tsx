@@ -79,7 +79,7 @@ function Overlay({ open, onClose, children, wide }: { open: boolean; onClose: ()
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 60 }} role="dialog" aria-modal="true"
       onKeyDown={e => { if (e.key === "Escape") onClose(); }}>
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
+      <div className="absolute inset-0" style={{ background: 'rgba(18,34,28,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 60 }} onClick={onClose} />
       <div className={"relative max-h-[85vh] overflow-y-auto max-w-[95vw] " + (wide ? "w-[920px]" : "w-[500px]")}
         style={{ background: 'var(--surface)', borderRadius: 24, padding: 30, border: '1px solid var(--line)', boxShadow: 'var(--shadow-modal)', zIndex: 61 }}>
         <button onClick={onClose} className="absolute top-5 right-5 transition-colors" style={{ color: 'var(--text-3)' }}
@@ -207,6 +207,8 @@ export default function Dashboard() {
   const [reconSearch, setReconSearch] = useState("");
   const [reconFilter, setReconFilter] = useState("all"); // all, exceptions, reconciled
   const [currencyFilter, setCurrencyFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [newMerchant, setNewMerchant] = useState({ name: "", walletAddress: "", email: "", kycRef: "", markupBps: "", payoutMethod: "stablecoin" });
@@ -539,6 +541,8 @@ export default function Dashboard() {
   const filtered = batches.filter((b: any) => {
     if (statusFilter !== "all" && b.status !== statusFilter) return false;
     if (currencyFilter !== "all" && (b.currency || "EUR") !== currencyFilter) return false;
+    if (dateFrom && new Date(b.createdAt) < new Date(dateFrom + "T00:00:00")) return false;
+    if (dateTo && new Date(b.createdAt) > new Date(dateTo + "T23:59:59")) return false;
     const q = search.toLowerCase();
     if (q && !b.batchRef.toLowerCase().includes(q) && !(b.createdBy || "").toLowerCase().includes(q)) return false;
     return true;
@@ -695,7 +699,7 @@ export default function Dashboard() {
       {/* ─ Right content ─ */}
       <div style={{ flex: 1, marginLeft: 234, minHeight: '100vh' }}>
         {/* ─ Header ─ */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(16,17,15,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid var(--line)', padding: '15px 32px' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.55)', backdropFilter: 'saturate(160%) blur(16px)', WebkitBackdropFilter: 'saturate(160%) blur(16px)', borderBottom: '1px solid var(--line)', padding: '15px 32px' }}>
           <h1 style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
             {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : page === "accounts" ? "Collection Accounts" : "Audit & Compliance"}
           </h1>
@@ -809,18 +813,18 @@ export default function Dashboard() {
                           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 132, display: 'block', marginTop: 8 }} aria-label="Daily payout volume, last 30 days">
                             <defs>
                               <linearGradient id="volFill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stopColor="#2BD9A5" stopOpacity="0.30" />
-                                <stop offset="1" stopColor="#2BD9A5" stopOpacity="0.02" />
+                                <stop offset="0" stopColor="#14BC90" stopOpacity="0.30" />
+                                <stop offset="1" stopColor="#14BC90" stopOpacity="0.02" />
                               </linearGradient>
                             </defs>
                             {[0.33, 0.66].map(f => (
-                              <line key={f} x1={PAD} x2={W - PAD} y1={BASE - f * (BASE - TOP)} y2={BASE - f * (BASE - TOP)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                              <line key={f} x1={PAD} x2={W - PAD} y1={BASE - f * (BASE - TOP)} y2={BASE - f * (BASE - TOP)} stroke="rgba(21,34,28,0.06)" strokeWidth="1" />
                             ))}
-                            <line x1={PAD} x2={W - PAD} y1={BASE} y2={BASE} stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+                            <line x1={PAD} x2={W - PAD} y1={BASE} y2={BASE} stroke="rgba(21,34,28,0.12)" strokeWidth="1" />
                             <path d={area} fill="url(#volFill)" />
-                            <path d={d} fill="none" stroke="#2BD9A5" strokeWidth="2.25" strokeLinecap="round" />
-                            <circle cx={pts[29][0]} cy={pts[29][1]} r="4" fill="#2BD9A5" />
-                            <circle cx={pts[29][0]} cy={pts[29][1]} r="8" fill="#2BD9A5" opacity="0.18" />
+                            <path d={d} fill="none" stroke="#0FA37C" strokeWidth="2.25" strokeLinecap="round" />
+                            <circle cx={pts[29][0]} cy={pts[29][1]} r="4" fill="#0FA37C" />
+                            <circle cx={pts[29][0]} cy={pts[29][1]} r="8" fill="#0FA37C" opacity="0.18" />
                           </svg>
                         );
                       })()}
@@ -1012,6 +1016,15 @@ export default function Dashboard() {
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search batches..."
                       className="outline-none" style={{ background: 'transparent', fontSize: 12, color: 'var(--ink)', width: 120 }} />
                   </div>
+                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="From date"
+                    style={{ padding: '6px 9px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: dateFrom ? 'var(--ink)' : 'var(--text-4)', cursor: 'pointer' }} />
+                  <span style={{ fontSize: 11, color: 'var(--text-4)' }}>→</span>
+                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="To date"
+                    style={{ padding: '6px 9px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: dateTo ? 'var(--ink)' : 'var(--text-4)', cursor: 'pointer' }} />
+                  {(dateFrom || dateTo) && (
+                    <button onClick={() => { setDateFrom(""); setDateTo(""); }} title="Clear dates"
+                      style={{ fontSize: 11, color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>clear</button>
+                  )}
                   <select value={currencyFilter} onChange={e => setCurrencyFilter(e.target.value)} aria-label="Filter by currency"
                     style={{ padding: '7px 10px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}>
                     <option value="all">All currencies</option>

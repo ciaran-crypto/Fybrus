@@ -3,54 +3,57 @@
 @tailwind utilities;
 
 :root {
-  /* ── Fybrus dark system ── */
-  --bg: #0E0F0D;
-  --surface: #171815;
-  --inset: #1E1F1B;
-  --inset-2: #1B1C18;
-  --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.15);
-  --track: rgba(255, 255, 255, 0.08);
+  /* ── Fybrus glass-light system: airy base, colour auras, translucent surfaces ── */
+  --bg: #F5F8F6;
+  --surface: rgba(255, 255, 255, 0.66);
+  --inset: rgba(18, 60, 48, 0.045);
+  --inset-2: rgba(18, 60, 48, 0.035);
+  --line: rgba(18, 50, 40, 0.08);
+  --line-strong: rgba(18, 50, 40, 0.17);
+  --track: rgba(18, 50, 40, 0.09);
 
-  --ink: #F1F0E9;
-  --text-2: #C7C5B9;
-  --text-3: #9A988C;
-  --text-4: #7B796F;
-  --text-faint: #565549;
+  --ink: #15221C;
+  --text-2: #3D4A44;
+  --text-3: #616E67;
+  --text-4: #8C978F;
+  --text-faint: #B4BEB7;
 
-  --cta: #12A87E;
-  --cta-hover: #17BD8F;
-  --cta-soft: rgba(43, 217, 165, 0.35);
+  --cta: linear-gradient(135deg, #14BC90 0%, #0A8E6A 100%);
+  --cta-hover: linear-gradient(135deg, #1BCD9E 0%, #0FA37C 100%);
+  --cta-soft: rgba(20, 188, 144, 0.35);
 
-  --green: #34D9A4;
-  --green-line: rgba(52, 217, 164, 0.32);
-  --tint-green: rgba(52, 217, 164, 0.10);
-  --blue: #6FA5FF;
-  --blue-line: rgba(111, 165, 255, 0.32);
-  --tint-blue: rgba(111, 165, 255, 0.10);
-  --amber: #F5B04C;
-  --amber-strong: #FFC46B;
-  --amber-line: rgba(245, 176, 76, 0.34);
-  --tint-amber: rgba(245, 176, 76, 0.10);
-  --red: #FF7268;
-  --red-line: rgba(255, 114, 104, 0.34);
-  --tint-red: rgba(255, 114, 104, 0.10);
+  --green: #0B8F6C;
+  --green-line: rgba(11, 143, 108, 0.35);
+  --tint-green: rgba(20, 188, 144, 0.13);
+  --blue: #2E63D8;
+  --blue-line: rgba(46, 99, 216, 0.32);
+  --tint-blue: rgba(46, 99, 216, 0.10);
+  --amber: #C0700E;
+  --amber-strong: #96570B;
+  --amber-line: rgba(192, 112, 14, 0.35);
+  --tint-amber: rgba(240, 156, 32, 0.14);
+  --red: #D93025;
+  --red-line: rgba(217, 48, 37, 0.32);
+  --tint-red: rgba(217, 48, 37, 0.10);
 
-  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.045),
-                 0 10px 28px -14px rgba(0, 0, 0, 0.55),
-                 0 28px 64px -32px rgba(0, 0, 0, 0.55);
-  --shadow-modal: inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-                  0 24px 64px -16px rgba(0, 0, 0, 0.8);
+  /* glass: inner white light + soft drop */
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.75),
+                 0 1px 2px rgba(21, 34, 28, 0.04),
+                 0 16px 40px -20px rgba(21, 34, 28, 0.14);
+  --shadow-modal: inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+                  0 24px 64px -20px rgba(21, 34, 28, 0.25),
+                  0 48px 96px -32px rgba(21, 34, 28, 0.18);
 }
 
 body {
   margin: 0;
   font-family: 'Geist', -apple-system, system-ui, sans-serif;
-  /* deep charcoal with a faint teal aurora top-left — depth without noise */
+  /* colour auras that shine through the translucent cards */
   background:
-    radial-gradient(1100px 520px at 12% -12%, rgba(43, 217, 165, 0.07) 0%, rgba(43, 217, 165, 0) 55%),
-    radial-gradient(900px 400px at 95% 0%, rgba(111, 165, 255, 0.04) 0%, rgba(111, 165, 255, 0) 50%),
-    linear-gradient(180deg, #111210 0%, #0D0E0C 100%);
+    radial-gradient(1000px 520px at 12% -10%, rgba(20, 188, 144, 0.16) 0%, rgba(20, 188, 144, 0) 55%),
+    radial-gradient(900px 460px at 92% -4%, rgba(46, 99, 216, 0.10) 0%, rgba(46, 99, 216, 0) 55%),
+    radial-gradient(800px 500px at 70% 108%, rgba(20, 188, 144, 0.08) 0%, rgba(20, 188, 144, 0) 55%),
+    linear-gradient(180deg, #F8FBF9 0%, #F1F5F2 100%);
   background-attachment: fixed;
   color: var(--ink);
   min-height: 100vh;
@@ -62,7 +65,7 @@ body {
   font-feature-settings: "ss01" on, "cv05" on;
 }
 
-::selection { background: #2BD9A5; color: #06231B; }
+::selection { background: #14BC90; color: #06231B; }
 
 button, a, tr, input, select, textarea {
   transition: background .18s ease, color .18s ease, border-color .18s ease,
@@ -70,18 +73,16 @@ button, a, tr, input, select, textarea {
 }
 button:active { transform: translateY(0.5px); }
 
-input, select, textarea { color-scheme: dark; }
-
 input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(43, 217, 165, 0.22), 0 0 0 1px rgba(43, 217, 165, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(20, 188, 144, 0.20), 0 0 0 1px rgba(20, 188, 144, 0.5) !important;
 }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); background-clip: content-box; }
+::-webkit-scrollbar-thumb { background: rgba(21,34,28,0.16); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(21,34,28,0.28); background-clip: content-box; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .lift:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.06), 0 14px 36px -14px rgba(0,0,0,0.6), 0 0 24px -8px rgba(43,217,165,0.12) !important; }
+  .lift:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.8), 0 4px 8px rgba(21,34,28,0.05), 0 20px 48px -20px rgba(21,34,28,0.18) !important; }
 }
