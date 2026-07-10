@@ -199,7 +199,7 @@ export default function Dashboard() {
     { name: "CloudScale Hosting", amount: 8300, wallet: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db" },
     { name: "DataBridge Analytics", amount: 7800, wallet: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2" },
   ]);
-  const [page, setPage] = useState<"dashboard" | "batches" | "merchants" | "audit" | "settings" | "reconciliation" | "alerts">("dashboard");
+  const [page, setPage] = useState<"dashboard" | "batches" | "merchants" | "audit" | "settings" | "reconciliation" | "alerts" | "revenue">("dashboard");
   const [auditFilter, setAuditFilter] = useState("all");
   const [auditSearch, setAuditSearch] = useState("");
   const [merchantSearch, setMerchantSearch] = useState("");
@@ -209,7 +209,7 @@ export default function Dashboard() {
   const [currencyFilter, setCurrencyFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [newMerchant, setNewMerchant] = useState({ name: "", walletAddress: "", email: "", kycRef: "" });
+  const [newMerchant, setNewMerchant] = useState({ name: "", walletAddress: "", email: "", kycRef: "", markupBps: "", payoutMethod: "stablecoin" });
   // Batch creation options
   const [batchCurrency, setBatchCurrency] = useState("EUR");
   const [batchTiming, setBatchTiming] = useState("asap");
@@ -312,6 +312,24 @@ export default function Dashboard() {
     queryKey: ["alerts"],
     queryFn: async () => { const r = await fetch("/api/alerts"); return r.json(); },
     enabled: loggedIn, refetchInterval: 30000,
+  });
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => { const r = await fetch("/api/settings"); return r.json(); },
+    enabled: loggedIn,
+  });
+  const { data: revenue } = useQuery({
+    queryKey: ["revenue"],
+    queryFn: async () => { const r = await fetch("/api/revenue"); return r.json(); },
+    enabled: loggedIn && page === "revenue",
+  });
+  const [markupInput, setMarkupInput] = useState<string>("");
+  const saveMarkupMut = useMutation({
+    mutationFn: async (bps: string) => {
+      const r = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ defaultMarkupBps: Number(bps), actor: currentUser?.email }) });
+      if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["settings"] }); qc.invalidateQueries({ queryKey: ["revenue"] }); },
   });
   const { data: supportTickets = [] } = useQuery({
     queryKey: ["support"],
@@ -448,10 +466,10 @@ export default function Dashboard() {
       const r = await fetch("/api/merchants", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["merchants"] }); setShowAddMerchant(false); setNewMerchant({ name: "", walletAddress: "", email: "", kycRef: "" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["merchants"] }); setShowAddMerchant(false); setNewMerchant({ name: "", walletAddress: "", email: "", kycRef: "", markupBps: "", payoutMethod: "stablecoin" }); },
   });
   const updateMerchantMut = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name?: string; walletAddress?: string; email?: string; status?: string; kycRef?: string }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name?: string; walletAddress?: string; email?: string; status?: string; kycRef?: string; markupBps?: any; payoutMethod?: string }) => {
       const r = await fetch(`/api/merchants/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
     },
@@ -574,6 +592,7 @@ export default function Dashboard() {
             { key: "batches", label: "Payout Batches", icon: FileText },
             { key: "reconciliation", label: "Reconciliation", icon: Scale },
             { key: "merchants", label: "Merchants", icon: Users },
+            { key: "revenue", label: "Revenue", icon: TrendingUp },
             { key: "alerts", label: "Alerts", icon: Bell },
             { key: "audit", label: "Audit & Compliance", icon: ClipboardList },
             { key: "settings", label: "Settings", icon: Settings },
@@ -632,7 +651,7 @@ export default function Dashboard() {
         {/* ─ Header ─ */}
         <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(14px)', WebkitBackdropFilter: 'saturate(180%) blur(14px)', borderBottom: '1px solid #E7E5DB', padding: '12px 32px' }}>
           <h1 style={{ fontSize: 16, fontWeight: 600, color: '#1B1A16', letterSpacing: '-0.01em' }}>
-            {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : "Audit & Compliance"}
+            {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : "Audit & Compliance"}
           </h1>
           <div className="flex items-center gap-2">
             {/* Integration mode badge — reflects /api/providers */}
@@ -799,9 +818,9 @@ export default function Dashboard() {
                       <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
                         <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62', marginBottom: 8 }}>Settlement Metrics</p>
                         <div className="space-y-3">
-                          <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Completion Rate</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? '#059669' : '#D97706' }}>{analytics.summary.completionRate.toFixed(0)}%</span></div>
-                          <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Payout Success</span><span style={{ fontWeight: 600, color: analytics.summary.payoutSuccessRate >= 90 ? '#059669' : '#D97706' }}>{analytics.summary.payoutSuccessRate.toFixed(0)}%</span></div>
-                          <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg Settlement</span><span style={{ fontWeight: 600, color: '#1B1A16' }}>{analytics.summary.avgSettlementHours > 0 ? `${analytics.summary.avgSettlementHours.toFixed(1)}h` : "—"}</span></div>
+                          <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? '#059669' : '#D97706' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: '#96948A', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
+                          <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: '#1B1A16' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: '#D97706', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
+                          <div title="Median time from funds received to USDC confirmed on-chain. Settlement runs on a stablecoin rail — minutes, not banking-days." className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg Settlement</span><span style={{ fontWeight: 600, color: '#059669' }}>{analytics.summary.avgSettlementMinutes > 0 ? `~${Math.round(analytics.summary.avgSettlementMinutes)} min` : "—"}</span></div>
                           <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Avg FX Rate</span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
                           <div title="Platform fee: 9 basis points (0.09%) of each batch, deducted before conversion" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: '#54524A' }}>Fees Collected (9 bps)</span><span style={{ fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#059669' }}>€{(analytics.summary.totalFees || 0).toLocaleString("en", { minimumFractionDigits: 2 })}</span></div>
                         </div>
@@ -1160,6 +1179,80 @@ export default function Dashboard() {
                 {deleteMerchantMut.isError && <p style={{ padding: '8px 16px', fontSize: 11, color: '#DC2626' }}>{(deleteMerchantMut.error as Error).message}</p>}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ─ Revenue & Fees tab ─ */}
+          {page === "revenue" && (
+            <div className="space-y-5">
+              <p style={{ fontSize: 11, lineHeight: 1.55, color: '#6E6C62', padding: '10px 14px', borderRadius: 10, background: '#F4F3EC', border: '1px solid #ECEAE0' }}>
+                Fybrus charges a fixed <strong>{settings ? (settings.fybrusFeeBps/100).toFixed(2) : "0.09"}%</strong> ({settings?.fybrusFeeBps ?? 9} bps) on each payout. On top of that, Paystrax sets its own markup — collected from merchants and <strong>owed back to Paystrax by Fybrus</strong>. The numbers below are settled (confirmed) payouts only.
+              </p>
+
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: "Owed to Paystrax (markup)", val: revenue?.markupOwed, color: '#059669', hint: "Your markup on settled payouts — rebated to you by Fybrus." },
+                  { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: '#1B1A16', hint: "What Paystrax pays Fybrus for the settled payouts." },
+                  { label: "Net Delivered to Merchants", val: revenue?.netToMerchants, color: '#54524A', hint: "USDC value delivered after all fees.", usd: true },
+                ].map((c) => (
+                  <div key={c.label} title={c.hint} style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 16 }}>
+                    <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62' }}>{c.label}</p>
+                    <p style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 4, color: c.color }}>
+                      {c.usd ? "$" : "€"}{(c.val || 0).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Markup control */}
+              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', padding: 20 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16', marginBottom: 4 }}>Default Paystrax markup</p>
+                <p style={{ fontSize: 11, color: '#6E6C62', marginBottom: 12 }}>Applied to every merchant unless overridden individually (Merchants → Edit). Set in basis points — 100 bps = 1%.</p>
+                <div className="flex items-center gap-3">
+                  <input type="number" min={0} max={1000}
+                    value={markupInput !== "" ? markupInput : (settings?.defaultMarkupBps ?? "")}
+                    onChange={e => setMarkupInput(e.target.value)}
+                    className="outline-none" style={{ width: 120, padding: '8px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', color: '#1B1A16' }} />
+                  <span style={{ fontSize: 12, color: '#6E6C62' }}>bps ({(((markupInput !== "" ? Number(markupInput) : (settings?.defaultMarkupBps ?? 0)))/100).toFixed(2)}%)</span>
+                  <button onClick={() => saveMarkupMut.mutate(markupInput !== "" ? markupInput : String(settings?.defaultMarkupBps ?? 0))}
+                    disabled={saveMarkupMut.isPending}
+                    style={{ fontSize: 12, fontWeight: 500, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#1B1A16', color: '#FFFFFF', cursor: 'pointer' }}>
+                    {saveMarkupMut.isPending ? "Saving…" : "Save markup"}
+                  </button>
+                  {saveMarkupMut.isSuccess && markupInput === "" && <span style={{ fontSize: 11, color: '#059669' }}>Saved</span>}
+                </div>
+              </div>
+
+              {/* Per-merchant breakdown */}
+              <div style={{ background: '#FFFFFF', border: '1px solid #E7E5DB', borderRadius: 14, boxShadow: '0 1px 2px rgba(27,26,22,0.04), 0 12px 32px -20px rgba(27,26,22,0.10)', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid #EFEDE4' }}><p style={{ fontSize: 12, fontWeight: 600, color: '#1B1A16' }}>Markup earned by merchant</p></div>
+                <div style={{ overflowX: 'auto' }}>
+                <table className="w-full" style={{ minWidth: 720 }}>
+                  <thead><tr style={{ background: '#F8F7F2' }}>
+                    {["Merchant", "Markup rate", "Payout", "Settled volume", "Fybrus fee", "Paystrax markup"].map((h, i) => (
+                      <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6E6C62', padding: '8px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {(revenue?.byMerchant ?? []).map((r: any, i: number) => (
+                      <tr key={i} style={{ borderTop: '1px solid #F0EFE4' }}>
+                        <td style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.merchant}</td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, color: '#54524A', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
+                        <td style={{ padding: '10px 16px' }}>
+                          <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: r.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payoutMethod === 'fiat' ? 'Fiat' : 'Stablecoin'}</span>
+                        </td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }}>€{r.volume.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#54524A' }}>€{r.fybrusFee.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '10px 16px', fontSize: 12, textAlign: 'right', fontFamily: "'Geist Mono', ui-monospace, monospace", fontWeight: 600, color: '#059669' }}>€{r.markup.toLocaleString("en", { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                    {(!revenue || (revenue.byMerchant ?? []).length === 0) && (
+                      <tr><td colSpan={6} style={{ padding: '24px 16px', fontSize: 12, color: '#96948A', textAlign: 'center' }}>No settled payouts yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1526,6 +1619,10 @@ export default function Dashboard() {
           <div className="text-center" style={{ paddingTop: 16, paddingBottom: 32 }}>
             <p style={{ fontSize: 11, color: '#AAAAAA' }}>
               This dashboard is confidential. &copy; 2026 Paystrax.
+            </p>
+            <p style={{ fontSize: 10, color: '#B8B6AC', marginTop: 6, letterSpacing: '0.04em' }}>
+              Powered by <span style={{ fontWeight: 600, color: '#0F766E' }}>Fybrus</span>
+              <span style={{ color: '#34D399', fontWeight: 600 }}>.</span>
             </p>
           </div>
         </main>
@@ -1982,11 +2079,32 @@ export default function Dashboard() {
                 placeholder="e.g. PSX-KYC-4F2A91"
                 className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 12, color: '#1B1A16', fontFamily: "'Geist Mono', ui-monospace, monospace" }} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Markup (bps)</label>
+                <input type="number" min={0} max={1000} value={editingMerchant.markupBps ?? ""} onChange={e => setEditingMerchant({ ...editingMerchant, markupBps: e.target.value })}
+                  placeholder={`default (${settings?.defaultMarkupBps ?? 25})`}
+                  className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #DCDAD0', fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", color: '#1B1A16' }} />
+                <span style={{ fontSize: 9, color: '#96948A' }}>blank = use platform default</span>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: '#6E6C62', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Payout method</label>
+                <div className="flex gap-1.5">
+                  {[["stablecoin", "Stablecoin"], ["fiat", "Fiat"]].map(([v, l]) => (
+                    <button key={v} onClick={() => setEditingMerchant({ ...editingMerchant, payoutMethod: v })}
+                      style={{ flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                        border: '1px solid ' + ((editingMerchant.payoutMethod || 'stablecoin') === v ? '#1B1A16' : '#DCDAD0'),
+                        background: (editingMerchant.payoutMethod || 'stablecoin') === v ? '#1B1A16' : '#FFFFFF',
+                        color: (editingMerchant.payoutMethod || 'stablecoin') === v ? '#FFFFFF' : '#54524A' }}>{l}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           {updateMerchantMut.isError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 8 }}>{(updateMerchantMut.error as Error).message}</p>}
           <div className="flex justify-end gap-2" style={{ marginTop: 16 }}>
             <button onClick={() => setEditingMerchant(null)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#615F56', background: 'transparent', border: '1px solid #E5E3D9', cursor: 'pointer' }}>Cancel</button>
-            <button onClick={() => updateMerchantMut.mutate({ id: editingMerchant.id, name: editingMerchant.name, walletAddress: editingMerchant.walletAddress, email: editingMerchant.email, kycRef: editingMerchant.kycRef })}
+            <button onClick={() => updateMerchantMut.mutate({ id: editingMerchant.id, name: editingMerchant.name, walletAddress: editingMerchant.walletAddress, email: editingMerchant.email, kycRef: editingMerchant.kycRef, markupBps: editingMerchant.markupBps === "" ? null : editingMerchant.markupBps, payoutMethod: editingMerchant.payoutMethod })}
               disabled={!editingMerchant.name || !editingMerchant.walletAddress || updateMerchantMut.isPending}
               className="disabled:opacity-40"
               style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1B1A16', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}>
@@ -2036,6 +2154,26 @@ export default function Dashboard() {
               style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', background: '#FFFFFF', color: '#1B1A16' }}
               onFocus={e => e.currentTarget.style.borderColor = '#1B1A16'} onBlur={e => e.currentTarget.style.borderColor = '#DCDAD0'} />
             <span style={{ fontSize: 10, color: '#96948A', marginTop: 4, display: 'block' }}>KYC is performed by the relying party (Paystrax as acquirer) — record their case reference here.</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Markup (bps)</label>
+              <input type="number" min={0} max={1000} value={newMerchant.markupBps} onChange={e => setNewMerchant({ ...newMerchant, markupBps: e.target.value })}
+                placeholder={`default (${settings?.defaultMarkupBps ?? 25})`}
+                className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid #DCDAD0', color: '#1B1A16' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', display: 'block', marginBottom: 4, color: '#6E6C62', textTransform: 'uppercase' as const }}>Payout method</label>
+              <div className="flex gap-1.5">
+                {[["stablecoin", "Stablecoin"], ["fiat", "Fiat"]].map(([v, l]) => (
+                  <button key={v} type="button" onClick={() => setNewMerchant({ ...newMerchant, payoutMethod: v })}
+                    style={{ flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                      border: '1px solid ' + (newMerchant.payoutMethod === v ? '#1B1A16' : '#DCDAD0'),
+                      background: newMerchant.payoutMethod === v ? '#1B1A16' : '#FFFFFF',
+                      color: newMerchant.payoutMethod === v ? '#FFFFFF' : '#54524A' }}>{l}</button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex justify-end gap-2" style={{ marginTop: 20 }}>
@@ -2134,12 +2272,14 @@ export default function Dashboard() {
                   {detail.batch.exchangeRate ? parseFloat(detail.batch.exchangeRate).toFixed(4) : "—"}
                 </p>
               </div>
-              <div title="Platform fee, charged at 9 basis points (0.09%) on the fiat amount and deducted before conversion — so the USDC total reflects the net amount." style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
-                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>Fee ({detail.batch.feeBps || 0} bps)</p>
+              <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid #E5E3D9', background: '#F8F7F2' }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: '#6E6C62' }}>Fees</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? '#1B1A16' : '#CBC9BF' }}>
-                  {detail.batch.feeBps ? `${{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}${parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
+                  {detail.batch.feeBps ? `${{ EUR: "€", USD: "$", AUD: "A$" }[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                 </p>
-                {detail.batch.feeBps ? <p style={{ fontSize: 9, color: '#96948A', marginTop: 2 }}>deducted before conversion</p> : <p style={{ fontSize: 9, color: '#96948A', marginTop: 2 }}>no fee on this batch</p>}
+                {detail.batch.feeBps
+                  ? <p style={{ fontSize: 9, color: '#96948A', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Paystrax markup <span style={{ color: '#059669' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>
+                  : <p style={{ fontSize: 9, color: '#96948A', marginTop: 2 }}>no fee on this batch</p>}
               </div>
             </div>
 
@@ -2283,10 +2423,15 @@ export default function Dashboard() {
                 <tbody>
                   {detail.payouts?.map((r: any) => (
                     <tr key={r.payout.id} style={{ borderTop: '1px solid #EFEDE4' }}>
-                      <td style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>{r.merchant?.name}</td>
+                      <td style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: '#1B1A16' }}>
+                        {r.merchant?.name}
+                        <span title={(r.payout.payoutMethod === 'fiat') ? 'Paid in fiat (USDC off-ramped)' : 'Paid in USDC'} style={{ marginLeft: 6, fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: r.payout.payoutMethod === 'fiat' ? '#EFF6FF' : '#ECFDF5', color: r.payout.payoutMethod === 'fiat' ? '#1D4ED8' : '#059669' }}>{r.payout.payoutMethod === 'fiat' ? 'FIAT' : 'USDC'}</span>
+                      </td>
                       <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', color: '#1B1A16', fontVariantNumeric: 'tabular-nums' }}>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.fiatAmount || r.payout.eurAmount).toLocaleString("en", { minimumFractionDigits: 2 })}</td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.payout.usdcAmount ? '#1B1A16' : '#CBC9BF' }}>
-                        {r.payout.usdcAmount ? `$${parseFloat(r.payout.usdcAmount).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
+                      <td title={r.payout.payoutMethod === 'fiat' && r.payout.payoutFiatAmount ? `Off-ramped to ${CSYM[detail.batch.currency] || '€'}${parseFloat(r.payout.payoutFiatAmount).toLocaleString('en',{minimumFractionDigits:2})} at ${r.payout.offRampRate}` : ''} style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.payout.usdcAmount ? '#1B1A16' : '#CBC9BF' }}>
+                        {r.payout.payoutMethod === 'fiat' && r.payout.payoutFiatAmount
+                          ? <span>{CSYM[detail.batch.currency] || "€"}{parseFloat(r.payout.payoutFiatAmount).toLocaleString("en", { minimumFractionDigits: 2 })}<span style={{ fontSize: 9, color: '#96948A', fontWeight: 400, display: 'block' }}>via ${parseFloat(r.payout.usdcAmount || "0").toLocaleString("en", { maximumFractionDigits: 0 })} USDC</span></span>
+                          : (r.payout.usdcAmount ? `$${parseFloat(r.payout.usdcAmount).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—")}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         <div className="flex items-center gap-1">

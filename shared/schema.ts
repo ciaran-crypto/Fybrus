@@ -18,6 +18,10 @@ export const merchants = pgTable("merchants", {
   walletScreenStatus: text("wallet_screen_status").default("unscreened"), // unscreened, clear, flagged
   walletScreenProvider: text("wallet_screen_provider"),
   walletScreenedAt: timestamp("wallet_screened_at"),
+  // Paystrax markup (bps) on top of the Fybrus fee. null = use platform default.
+  markupBps: integer("markup_bps"),
+  // How this merchant is paid out: "stablecoin" (USDC) or "fiat" (off-ramped)
+  payoutMethod: text("payout_method").default("stablecoin"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -31,8 +35,9 @@ export const batches = pgTable("batches", {
   exchangeRate: decimal("exchange_rate", { precision: 12, scale: 6 }),
   payoutTiming: text("payout_timing").default("asap"),
   // Platform fee, charged in bps on the fiat amount and deducted before conversion
-  feeBps: integer("fee_bps").default(0),
-  feeAmount: decimal("fee_amount", { precision: 14, scale: 2 }).default("0"), // asap, scheduled
+  feeBps: integer("fee_bps").default(0),                                        // Fybrus fee (9 bps)
+  feeAmount: decimal("fee_amount", { precision: 14, scale: 2 }).default("0"),
+  markupTotal: decimal("markup_total", { precision: 14, scale: 2 }).default("0"), // Paystrax markup owed back to them
   scheduledDate: timestamp("scheduled_date"),
   status: text("status").default("pending"),
   createdBy: text("created_by"), // email of creator
@@ -54,6 +59,13 @@ export const payouts = pgTable("payouts", {
   walletAddress: text("wallet_address").notNull(),
   txHash: text("tx_hash"),
   status: text("status").default("pending"),
+  // Fee breakdown per payout
+  fybrusFeeAmount: decimal("fybrus_fee_amount", { precision: 14, scale: 2 }), // our 9 bps
+  markupAmount: decimal("markup_amount", { precision: 14, scale: 2 }),        // Paystrax's markup (owed back)
+  // Payout method: "stablecoin" (receives usdcAmount) or "fiat" (USDC off-ramped to payoutFiatAmount)
+  payoutMethod: text("payout_method").default("stablecoin"),
+  payoutFiatAmount: decimal("payout_fiat_amount", { precision: 14, scale: 2 }), // fiat delivered (fiat method)
+  offRampRate: decimal("off_ramp_rate", { precision: 12, scale: 6 }),           // USDC → fiat rate (leg 2)
   // Travel rule (EU TFR / FATF R.16) — our obligation: originator/beneficiary
   // data transmitted with every crypto transfer. Snapshot stored for audit.
   failureReason: text("failure_reason"), // human-readable reason when status = failed
@@ -96,6 +108,12 @@ export const supportTickets = pgTable("support_tickets", {
   status: text("status").default("open"), // open, resolved
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const platformSettings = pgTable("platform_settings", {
+  id: integer("id").primaryKey().default(1),
+  defaultMarkupBps: integer("default_markup_bps").notNull().default(25), // Paystrax default markup
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertMerchantSchema = createInsertSchema(merchants);

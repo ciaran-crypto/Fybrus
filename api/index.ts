@@ -174,7 +174,14 @@ const merchants = pgTable("merchants", {
   walletScreenStatus: text("wallet_screen_status").default("unscreened"),
   walletScreenProvider: text("wallet_screen_provider"),
   walletScreenedAt: timestamp("wallet_screened_at"),
+  markupBps: integer("markup_bps"),
+  payoutMethod: text("payout_method").default("stablecoin"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+const platformSettings = pgTable("platform_settings", {
+  id: integer("id").primaryKey().default(1),
+  defaultMarkupBps: integer("default_markup_bps").notNull().default(25),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 const batches = pgTable("batches", {
@@ -188,6 +195,7 @@ const batches = pgTable("batches", {
   payoutTiming: text("payout_timing").default("asap"),
   feeBps: integer("fee_bps").default(0),
   feeAmount: decimal("fee_amount", { precision: 14, scale: 2 }).default("0"),
+  markupTotal: decimal("markup_total", { precision: 14, scale: 2 }).default("0"),
   scheduledDate: timestamp("scheduled_date"),
   status: text("status").default("pending"),
   createdBy: text("created_by"),
@@ -209,6 +217,11 @@ const payouts = pgTable("payouts", {
   walletAddress: text("wallet_address").notNull(),
   txHash: text("tx_hash"),
   status: text("status").default("pending"),
+  fybrusFeeAmount: decimal("fybrus_fee_amount", { precision: 14, scale: 2 }),
+  markupAmount: decimal("markup_amount", { precision: 14, scale: 2 }),
+  payoutMethod: text("payout_method").default("stablecoin"),
+  payoutFiatAmount: decimal("payout_fiat_amount", { precision: 14, scale: 2 }),
+  offRampRate: decimal("off_ramp_rate", { precision: 12, scale: 6 }),
   // Travel rule (EU TFR / FATF R.16) — snapshot of the transmitted payload
   failureReason: text("failure_reason"),
   travelRuleStatus: text("travel_rule_status").default("pending"),
@@ -315,7 +328,7 @@ app.post("/api/users/seed", async (_r, res) => {
 // Merchants
 app.get("/api/merchants", async (_r, res) => { res.json(await db.select().from(merchants).orderBy(desc(merchants.createdAt))); });
 app.post("/api/merchants", async (req, res) => {
-  const { name, walletAddress, email, kycRef, kycReliedOn } = req.body;
+  const { name, walletAddress, email, kycRef, kycReliedOn, markupBps, payoutMethod } = req.body;
   if (!name || !walletAddress) return res.status(400).json({ message: "Name and wallet required" });
   if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) return res.status(400).json({ message: "Invalid wallet address" });
   const screen = await walletScreeningProvider.screen(walletAddress);
@@ -323,6 +336,8 @@ app.post("/api/merchants", async (req, res) => {
     name, walletAddress, email,
     kycReliedOn: kycReliedOn || "Paystrax (acquirer)", kycRef: kycRef || null, kycAttestedAt: new Date(),
     walletScreenStatus: screen.status, walletScreenProvider: screen.provider, walletScreenedAt: new Date(),
+    markupBps: (markupBps === "" || markupBps == null) ? null : Number(markupBps),
+    payoutMethod: payoutMethod === "fiat" ? "fiat" : "stablecoin",
   }).returning();
   await logAudit("merchant_registered", "merchant", m.id, m.name, `Wallet ${walletAddress.slice(0, 8)}... · screening: ${screen.status}${screen.reason ? ` (${screen.reason})` : ""}`);
   res.json(m);
@@ -362,6 +377,8 @@ app.patch("/api/merchants/:id", async (req, res) => {
   if (req.body.status) updates.status = req.body.status;
   if (req.body.kycRef !== undefined && req.body.kycRef !== existing.kycRef) { updates.kycRef = req.body.kycRef || null; updates.kycAttestedAt = new Date(); }
   if (req.body.kycReliedOn) updates.kycReliedOn = req.body.kycReliedOn;
+  if (req.body.markupBps !== undefined) updates.markupBps = (req.body.markupBps === "" || req.body.markupBps == null) ? null : Number(req.body.markupBps);
+  if (req.body.payoutMethod) updates.payoutMethod = req.body.payoutMethod === "fiat" ? "fiat" : "stablecoin";
   if (!Object.keys(updates).length) return res.status(400).json({ message: "No fields to update" });
   const [u] = await db.update(merchants).set(updates).where(eq(merchants.id, req.params.id)).returning();
   await logAudit("merchant_updated", "merchant", u.id, u.name, `Updated: ${Object.keys(updates).join(", ")}`);
@@ -401,32 +418,40 @@ app.post("/api/batches", async (req, res) => {
   const manualDupes = manualWallets.filter((w: string, i: number) => manualWallets.indexOf(w) !== i);
   if (manualDupes.length > 0) return res.status(400).json({ message: `Duplicate wallet addresses found: ${[...new Set(manualDupes)].join(", ")}` });
   const totalFiat = entries.reduce((s: number, e: any) => s + parseFloat(e.amount), 0);
-  const FEE_BPS = 9; // platform fee, deducted from fiat before conversion
-  const feeAmount = +(totalFiat * FEE_BPS / 10000).toFixed(2);
+  const FEE_BPS = 9; // Fybrus platform fee (fixed)
+  const defaultMarkupBps = (await getSettings()).defaultMarkupBps;
   const batchRef = `BATCH-${Date.now().toString(36).toUpperCase()}`;
   const [batch] = await db.insert(batches).values({
     batchRef, currency: currency.toUpperCase(), totalFiat: totalFiat.toFixed(2), totalEur: totalFiat.toFixed(2),
-    feeBps: FEE_BPS, feeAmount: feeAmount.toFixed(2),
+    feeBps: FEE_BPS, feeAmount: "0", markupTotal: "0",
     merchantCount: entries.length, status: "pending", payoutTiming, createdBy,
     scheduledDate: payoutTiming === "scheduled" && scheduledDate ? new Date(scheduledDate) : null,
   }).returning();
+  let feeTotal = 0, markupTotal = 0;
   for (const entry of entries) {
     // Ethereum addresses are case-insensitive — match by lowercase to avoid duplicate merchants
     let [m] = await db.select().from(merchants).where(sql`lower(${merchants.walletAddress}) = ${entry.walletAddress.toLowerCase()}`);
     if (!m) {
-      // Auto-registration goes through the same screening as manual registration
       const screen = await walletScreeningProvider.screen(entry.walletAddress);
       [m] = await db.insert(merchants).values({
-        name: entry.merchantName, walletAddress: entry.walletAddress,
-        kycAttestedAt: new Date(),
+        name: entry.merchantName, walletAddress: entry.walletAddress, kycAttestedAt: new Date(),
         walletScreenStatus: screen.status, walletScreenProvider: screen.provider, walletScreenedAt: new Date(),
       }).returning();
       await logAudit("merchant_registered", "merchant", m.id, m.name, `Auto-registered from batch · screening: ${screen.status}${screen.reason ? ` (${screen.reason})` : ""}`, createdBy);
     }
-    await db.insert(payouts).values({ batchId: batch.id, merchantId: m.id, fiatAmount: parseFloat(entry.amount).toFixed(2), eurAmount: parseFloat(entry.amount).toFixed(2), walletAddress: entry.walletAddress, status: "pending" });
+    const amt = parseFloat(entry.amount);
+    const mBps = (m.markupBps ?? defaultMarkupBps);
+    const fybrusFee = +(amt * FEE_BPS / 10000).toFixed(2);
+    const markup = +(amt * mBps / 10000).toFixed(2);
+    feeTotal += fybrusFee; markupTotal += markup;
+    await db.insert(payouts).values({
+      batchId: batch.id, merchantId: m.id, fiatAmount: amt.toFixed(2), eurAmount: amt.toFixed(2), walletAddress: entry.walletAddress, status: "pending",
+      fybrusFeeAmount: fybrusFee.toFixed(2), markupAmount: markup.toFixed(2), payoutMethod: m.payoutMethod || "stablecoin",
+    });
   }
-  await logAudit("batch_created", "batch", batch.id, batch.batchRef, `${entries.length} merchants, ${currency} ${totalFiat.toFixed(2)}`, createdBy);
-  res.json(batch);
+  await db.update(batches).set({ feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2) }).where(eq(batches.id, batch.id));
+  await logAudit("batch_created", "batch", batch.id, batch.batchRef, `${entries.length} merchants, ${currency} ${totalFiat.toFixed(2)} · Fybrus fee ${currency} ${feeTotal.toFixed(2)} · Paystrax markup ${currency} ${markupTotal.toFixed(2)}`, createdBy);
+  res.json({ ...batch, feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2) });
 });
 app.patch("/api/batches/:id/status", async (req, res) => {
   try {
@@ -458,13 +483,26 @@ app.patch("/api/batches/:id/status", async (req, res) => {
     const [batch] = await db.update(batches).set(updates).where(eq(batches.id, req.params.id)).returning();
 
     if (status === "converting" && batch.exchangeRate) {
-      const rate = parseFloat(batch.exchangeRate); const fiat = parseFloat(batch.totalFiat || batch.totalEur);
-      // Platform fee (feeBps) is deducted from the fiat before conversion
-      const feeRate = (batch.feeBps || 0) / 10000;
-      const netFiat = fiat - parseFloat(batch.feeAmount || "0");
-      await db.update(batches).set({ totalUsdc: (netFiat * rate).toFixed(6) }).where(eq(batches.id, batch.id));
+      const rate = parseFloat(batch.exchangeRate);
+      const OFFRAMP_SPREAD = 0.002; // 0.20% spread on the USDC→fiat off-ramp leg
       const ps = await db.select().from(payouts).where(eq(payouts.batchId, batch.id));
-      for (const p of ps) await db.update(payouts).set({ usdcAmount: (parseFloat(p.fiatAmount || p.eurAmount) * (1 - feeRate) * rate).toFixed(6), status: "processing" }).where(eq(payouts.id, p.id));
+      let usdcTotal = 0;
+      for (const p of ps) {
+        // net = gross − Fybrus fee − Paystrax markup, then converted to USDC (leg 1)
+        const gross = parseFloat(p.fiatAmount || p.eurAmount);
+        const net = gross - parseFloat(p.fybrusFeeAmount || "0") - parseFloat(p.markupAmount || "0");
+        const usdc = net * rate;
+        usdcTotal += usdc;
+        const upd: any = { usdcAmount: usdc.toFixed(6), status: "processing" };
+        if ((p.payoutMethod || "stablecoin") === "fiat") {
+          // leg 2: off-ramp USDC back to the merchant's fiat, net of spread
+          const offRamp = (1 / rate) * (1 - OFFRAMP_SPREAD);
+          upd.offRampRate = offRamp.toFixed(6);
+          upd.payoutFiatAmount = (usdc * offRamp).toFixed(2);
+        }
+        await db.update(payouts).set(upd).where(eq(payouts.id, p.id));
+      }
+      await db.update(batches).set({ totalUsdc: usdcTotal.toFixed(6) }).where(eq(batches.id, batch.id));
     }
 
     // ── sending: screen wallets + transmit travel rule, then dispatch via the SettlementProvider ──
@@ -484,7 +522,14 @@ app.patch("/api/batches/:id/status", async (req, res) => {
             blocked++; failed++;
             continue;
           }
-          // Compliance gate 2: travel rule data must accompany the transfer.
+          if ((p.payoutMethod || "stablecoin") === "fiat") {
+            // Fiat payout: USDC is off-ramped to the merchant's fiat account.
+            // No transfer TO a merchant wallet, so no travel rule to transmit.
+            await db.update(payouts).set({ txHash: "SEPA-" + crypto.randomBytes(6).toString("hex").toUpperCase(), status: "processing" }).where(eq(payouts.id, p.id));
+            sent++;
+            continue;
+          }
+          // Compliance gate 2: travel rule data must accompany the crypto transfer.
           const tr = await travelRuleProvider.transmit({
             originator: originatorIdentity(),
             beneficiary: { name: merchById.get(p.merchantId)?.name || "Unknown merchant", walletAddress: p.walletAddress },
@@ -578,14 +623,20 @@ app.get("/api/analytics", async (_r, res) => {
   const volumeByBatch = allB.map(b => ({ ref: b.batchRef, currency: b.currency || "EUR", fiat: parseFloat(b.totalFiat || b.totalEur), usdc: b.totalUsdc ? parseFloat(b.totalUsdc) : 0, status: b.status }));
   const confirmed = allP.filter(p => p.status === "confirmed");
   const avgRate = completed.length ? completed.reduce((s, b) => s + (b.exchangeRate ? parseFloat(b.exchangeRate) : 0), 0) / completed.length : 0;
-  const times = completed.filter(b => b.completedAt && b.createdAt).map(b => (new Date(b.completedAt!).getTime() - new Date(b.createdAt!).getTime()) / 3600000);
+  // Settlement time = funds received → on-chain confirmation, in MINUTES.
+  // NOT creation→completion (that would include however long a batch waited for
+  // funding). On a stablecoin rail this is minutes, not hours.
+  const times = completed
+    .filter(b => b.completedAt && b.fiatReceivedAt)
+    .map(b => (new Date(b.completedAt!).getTime() - new Date(b.fiatReceivedAt!).getTime()) / 60000)
+    .filter(mins => mins >= 0);
   res.json({ volumeByBatch, statusCounts, payoutStatusCounts, volByCurrency, summary: {
     totalBatches: allB.length, completedBatches: completed.length, totalMerchants: allM.length, totalPayouts: allP.length,
     confirmedPayouts: confirmed.length, failedPayouts: allP.filter(p => p.status === "failed").length,
     totalFiatProcessed: allB.reduce((s, b) => s + parseFloat(b.totalFiat || b.totalEur), 0),
     totalUsdcDispatched: allB.reduce((s, b) => s + (b.totalUsdc ? parseFloat(b.totalUsdc) : 0), 0),
     totalFees: allB.reduce((s, b) => s + (b.feeAmount ? parseFloat(b.feeAmount) : 0), 0),
-    avgExchangeRate: avgRate, avgSettlementHours: times.length ? times.reduce((s, t) => s + t, 0) / times.length : 0,
+    avgExchangeRate: avgRate, avgSettlementMinutes: times.length ? times.reduce((s, t) => s + t, 0) / times.length : 0,
     completionRate: allB.length ? (completed.length / allB.length * 100) : 0,
     payoutSuccessRate: allP.length ? (confirmed.length / allP.length * 100) : 0,
   }});
@@ -652,6 +703,52 @@ app.get("/api/reports/csv", async (_r, res) => {
 
 // ── Provider / integration status (drives the mode badge + PARTNERSHIPS wiring) ──
 app.get("/api/providers", (_r, res) => res.json(providerStatus()));
+
+// ── Platform settings: Fybrus fee (fixed) + Paystrax default markup ──
+const FYBRUS_FEE_BPS = 9;
+async function getSettings() {
+  const [s] = await db.select().from(platformSettings).where(eq(platformSettings.id, 1));
+  return s || { id: 1, defaultMarkupBps: 25 };
+}
+app.get("/api/settings", async (_r, res) => {
+  const s = await getSettings();
+  res.json({ fybrusFeeBps: FYBRUS_FEE_BPS, defaultMarkupBps: s.defaultMarkupBps });
+});
+app.put("/api/settings", async (req, res) => {
+  const bps = Number(req.body.defaultMarkupBps);
+  if (!Number.isFinite(bps) || bps < 0 || bps > 1000) return res.status(400).json({ message: "Markup must be 0–1000 bps" });
+  await db.insert(platformSettings).values({ id: 1, defaultMarkupBps: Math.round(bps), updatedAt: new Date() })
+    .onConflictDoUpdate({ target: platformSettings.id, set: { defaultMarkupBps: Math.round(bps), updatedAt: new Date() } });
+  await logAudit("settings_updated", "settings", undefined, "markup", `Default Paystrax markup set to ${Math.round(bps)} bps`, req.body.actor || "admin");
+  res.json({ fybrusFeeBps: FYBRUS_FEE_BPS, defaultMarkupBps: Math.round(bps) });
+});
+
+// ── Revenue: what Paystrax is owed (markup) and what they pay Fybrus (fee) ──
+app.get("/api/revenue", async (_r, res) => {
+  const allP = await db.select().from(payouts);
+  const allB = await db.select().from(batches);
+  const allM = await db.select().from(merchants);
+  const mById = new Map(allM.map(m => [m.id, m]));
+  const bById = new Map(allB.map(b => [b.id, b]));
+  const settled = allP.filter(p => p.status === "confirmed");
+  const num = (v: any) => (v ? parseFloat(v) : 0);
+  const markupOwed = settled.reduce((s, p) => s + num(p.markupAmount), 0);
+  const fybrusFees = settled.reduce((s, p) => s + num(p.fybrusFeeAmount), 0);
+  // by merchant
+  const byMerchant: Record<string, any> = {};
+  for (const p of settled) {
+    const m = mById.get(p.merchantId); if (!m) continue;
+    const k = m.id;
+    byMerchant[k] = byMerchant[k] || { merchant: m.name, markupBps: m.markupBps, payoutMethod: m.payoutMethod || "stablecoin", payouts: 0, volume: 0, markup: 0, fybrusFee: 0 };
+    byMerchant[k].payouts++; byMerchant[k].volume += num(p.fiatAmount);
+    byMerchant[k].markup += num(p.markupAmount); byMerchant[k].fybrusFee += num(p.fybrusFeeAmount);
+  }
+  res.json({
+    markupOwed, fybrusFees, netToMerchants: settled.reduce((s, p) => s + num(p.usdcAmount), 0),
+    settledPayouts: settled.length,
+    byMerchant: Object.values(byMerchant).sort((a: any, b: any) => b.markup - a.markup),
+  });
+});
 
 // ── Reconciliation: money trail + exceptions across the lifecycle ──
 app.get("/api/reconciliation", async (_r, res) => {
@@ -776,6 +873,13 @@ app.post("/api/seed", async (_r, res) => {
     { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: "julijavi@paystrax.com", detail: "Full payout report exported", createdAt: new Date(now - 5 * day) },
     { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: "vaivani@paystrax.com",  detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
   ]);
+
+  // Normalize seeded data so metrics are coherent: apply the 9 bps fee,
+  // recompute USDC net-of-fee, and set realistic minute-level settlement times
+  // (funds received → on-chain confirmation).
+  await db.execute(sql`UPDATE batches SET fee_bps = 9, fee_amount = ROUND(total_fiat * 0.0009, 2), total_usdc = ROUND(total_fiat * (1 - 0.0009) * COALESCE(exchange_rate, 1.08), 6) WHERE status = 'completed' AND total_usdc IS NOT NULL`);
+  await db.execute(sql`UPDATE batches SET completed_at = fiat_received_at + make_interval(secs => (300 + floor(random()*360))::int) WHERE status = 'completed' AND fiat_received_at IS NOT NULL`);
+  await db.execute(sql`UPDATE payouts p SET usdc_amount = ROUND(p.fiat_amount * (1 - 0.0009) * COALESCE(b.exchange_rate, 1.08), 6), confirmed_at = b.completed_at FROM batches b WHERE p.batch_id = b.id AND b.status = 'completed' AND p.status = 'confirmed'`);
 
   res.json({ message: "Seeded", batches: 7, merchants: merchantData.length });
 });

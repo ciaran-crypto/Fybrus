@@ -774,11 +774,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? completedBatches.reduce((s, b) => s + (b.exchangeRate ? parseFloat(b.exchangeRate) : 0), 0) / completedBatches.length
         : 0;
 
-      // Settlement time (completed batches: completedAt - createdAt)
+      // Settlement time = funds received → on-chain confirmation, in MINUTES.
+      // NOT creation→completion (that includes waiting-for-funds time). On a
+      // stablecoin rail this is minutes, not hours.
       const settlementTimes = completedBatches
-        .filter(b => b.completedAt && b.createdAt)
-        .map(b => (new Date(b.completedAt!).getTime() - new Date(b.createdAt!).getTime()) / 3600000); // hours
-      const avgSettlementHours = settlementTimes.length > 0
+        .filter(b => b.completedAt && b.fiatReceivedAt)
+        .map(b => (new Date(b.completedAt!).getTime() - new Date(b.fiatReceivedAt!).getTime()) / 60000)
+        .filter(mins => mins >= 0);
+      const avgSettlementMinutes = settlementTimes.length > 0
         ? settlementTimes.reduce((s, t) => s + t, 0) / settlementTimes.length
         : 0;
 
@@ -803,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalUsdcDispatched: totalUsdc,
           totalFees: allBatches.reduce((sum, b) => sum + (b.feeAmount ? parseFloat(b.feeAmount) : 0), 0),
           avgExchangeRate: avgRate,
-          avgSettlementHours,
+          avgSettlementMinutes,
           failedBatches: allBatches.filter(b => b.status === "failed").length,
           activeBatches: allBatches.filter(b => b.status !== "completed" && b.status !== "failed").length,
           completionRate: allBatches.length > 0 ? (completedBatches.length / allBatches.length * 100) : 0,
