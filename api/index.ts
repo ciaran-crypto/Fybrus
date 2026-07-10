@@ -791,7 +791,7 @@ app.get("/api/revenue", async (_r, res) => {
   for (const p of settled) {
     const m = mById.get(p.merchantId); if (!m) continue;
     const k = m.id;
-    byMerchant[k] = byMerchant[k] || { merchant: m.name, markupBps: m.markupBps, payoutMethod: m.payoutMethod || "stablecoin", payouts: 0, volume: 0, markup: 0, fybrusFee: 0 };
+    byMerchant[k] = byMerchant[k] || { merchantId: m.id, merchant: m.name, markupBps: m.markupBps, payoutMethod: m.payoutMethod || "stablecoin", payouts: 0, volume: 0, markup: 0, fybrusFee: 0 };
     byMerchant[k].payouts++; byMerchant[k].volume += num(p.fiatAmount);
     byMerchant[k].markup += num(p.markupAmount); byMerchant[k].fybrusFee += num(p.fybrusFeeAmount);
   }

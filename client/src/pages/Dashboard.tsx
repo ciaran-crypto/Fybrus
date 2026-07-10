@@ -324,6 +324,7 @@ export default function Dashboard() {
     enabled: loggedIn && (page === "revenue" || page === "dashboard"),
   });
   const [markupInput, setMarkupInput] = useState<string>("");
+  const [rowBps, setRowBps] = useState<Record<string, string>>({}); // per-merchant inline edits on Revenue
   const saveMarkupMut = useMutation({
     mutationFn: async (bps: string) => {
       const r = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ defaultMarkupBps: Number(bps), actor: currentUser?.email }) });
@@ -498,7 +499,7 @@ export default function Dashboard() {
       const r = await fetch(`/api/merchants/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["merchants"] }); setEditingMerchant(null); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["merchants"] }); qc.invalidateQueries({ queryKey: ["revenue"] }); setEditingMerchant(null); },
   });
   const deleteMerchantMut = useMutation({
     mutationFn: async (id: string) => {
@@ -699,19 +700,7 @@ export default function Dashboard() {
             {page === "dashboard" ? "Overview" : page === "batches" ? "Payout Batches" : page === "merchants" ? "Merchants" : page === "settings" ? "Settings" : page === "reconciliation" ? "Reconciliation" : page === "alerts" ? "Alerts & Resolution" : page === "revenue" ? "Revenue & Fees" : page === "accounts" ? "Collection Accounts" : "Audit & Compliance"}
           </h1>
           <div className="flex items-center gap-2">
-            {/* Integration mode badge — reflects /api/providers */}
-            {providers && (
-              <div title={`FX ${providers.fx?.mode} · Settlement ${providers.settlement?.mode} · Fiat ${providers.fiat?.mode} · Screening ${providers.screening?.mode} · Travel rule ${providers.travelRule?.mode}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--inset)' }}>
-                <Zap style={{ width: 12, height: 12, color: providers.fx?.live ? 'var(--green)' : 'var(--text-4)' }} />
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>
-                  FX <b style={{ color: providers.fx?.live ? 'var(--green)' : 'var(--text-4)' }}>{providers.fx?.live ? 'Live · ECB' : 'Mock'}</b>
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>·</span>
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-4)' }}>Rails Mock</span>
-              </div>
-            )}
-            {(page === "dashboard" || page === "batches") && currentUser?.role !== "viewer" && (
+                        {(page === "dashboard" || page === "batches") && currentUser?.role !== "viewer" && (
               <>
                 <button onClick={() => setShowManual(true)} className="flex items-center gap-1.5 transition-colors"
                   style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--line)', color: 'var(--text-2)', background: 'var(--surface)' }}
@@ -874,17 +863,29 @@ export default function Dashboard() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }} title={`${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })}`}>{abbr(sym, num(b.totalFiat || b.totalEur))} {b.currency}</span>
+                                {(() => {
+                                  const acct = (accounts as any[]).find((a: any) => a.status !== 'closed' && a.currency === b.currency);
+                                  return acct ? (
+                                    <button onClick={() => copyText(acct.iban.replace(/ /g, ""))}
+                                      title={`Wire ${sym}${num(b.totalFiat || b.totalEur).toLocaleString("en", { minimumFractionDigits: 2 })} from your bank to ${acct.iban} (${acct.bic}) — the batch funds automatically when it lands.`}
+                                      className="flex items-center gap-1.5"
+                                      style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>
+                                      <Copy className="w-3 h-3" /> Copy transfer details
+                                    </button>
+                                  ) : (
+                                    <button onClick={() => setPage("accounts")} style={{ fontSize: 11, fontWeight: 500, color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer' }}>Open {b.currency} account →</button>
+                                  );
+                                })()}
                                 <button onClick={() => simulateSettlementMut.mutate(b.batchRef)} disabled={simulateSettlementMut.isPending}
-                                  title="Posts the same webhook Banking Circle sends when the fiat lands"
-                                  className="disabled:opacity-40"
-                                  style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>
-                                  {simulateSettlementMut.isPending ? "Funding…" : "Fund now"}
+                                  title="Demo only — pretends the wire has landed by posting the bank's settlement webhook"
+                                  style={{ fontSize: 10, color: 'var(--text-4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                                  {simulateSettlementMut.isPending ? "simulating…" : "simulate receipt (demo)"}
                                 </button>
                               </div>
                             </div>
                           );
                         })}
-                        {pendingBatches.length > 0 && <p style={{ fontSize: 10, color: 'var(--text-4)', padding: '8px 16px 10px' }}>Demo IBAN — “Fund now” simulates the bank’s settlement webhook. In production Banking Circle triggers this automatically.</p>}
+                        {pendingBatches.length > 0 && <p style={{ fontSize: 10, color: 'var(--text-4)', padding: '8px 16px 10px' }}>Batches fund themselves when your wire reaches the collection account — Banking Circle notifies the platform automatically. Nothing is “paid” from this dashboard.</p>}
                       </div>
 
                       <div style={{ ...card, padding: 16 }}>
@@ -1405,7 +1406,7 @@ export default function Dashboard() {
               {/* Markup control */}
               <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Default Paystrax markup</p>
-                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 12 }}>Applied to every merchant unless overridden individually (Merchants → Edit). Set in basis points — 100 bps = 1%.</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 12 }}>The fallback rate for merchants without their own rate. Every merchant’s rate is editable inline in the table below — type a value and press Enter (blank = use this default). 100 bps = 1%.</p>
                 <div className="flex items-center gap-3">
                   <input type="number" min={0} max={1000}
                     value={markupInput !== "" ? markupInput : (settings?.defaultMarkupBps ?? "")}
@@ -1435,7 +1436,19 @@ export default function Dashboard() {
                     {(revenue?.byMerchant ?? []).map((r: any, i: number) => (
                       <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
                         <td style={{ padding: '13px 16px', fontSize: 12, fontWeight: 500, color: 'var(--ink)' }}>{r.merchant}</td>
-                        <td style={{ padding: '13px 16px', fontSize: 12, color: 'var(--text-2)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{r.markupBps != null ? `${r.markupBps} bps` : `${settings?.defaultMarkupBps ?? 25} bps (default)`}</td>
+                        <td style={{ padding: '8px 16px' }}>
+                          <div className="flex items-center gap-1.5">
+                            <input type="number" min={0} max={1000}
+                              value={rowBps[r.merchantId] ?? (r.markupBps ?? "")}
+                              placeholder={String(settings?.defaultMarkupBps ?? 25)}
+                              onChange={e => setRowBps({ ...rowBps, [r.merchantId]: e.target.value })}
+                              onKeyDown={e => { if (e.key === "Enter") { updateMerchantMut.mutate({ id: r.merchantId, markupBps: (rowBps[r.merchantId] ?? "") === "" ? null : rowBps[r.merchantId] }); } }}
+                              onBlur={() => { const v = rowBps[r.merchantId]; if (v !== undefined && v !== String(r.markupBps ?? "")) updateMerchantMut.mutate({ id: r.merchantId, markupBps: v === "" ? null : v }); }}
+                              className="outline-none"
+                              style={{ width: 62, padding: '5px 8px', borderRadius: 7, fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--ink)', textAlign: 'right' }} />
+                            <span style={{ fontSize: 10, color: 'var(--text-4)' }}>bps{r.markupBps == null && (rowBps[r.merchantId] ?? "") === "" ? " · default" : ""}</span>
+                          </div>
+                        </td>
                         <td style={{ padding: '13px 16px' }}>
                           <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: r.payoutMethod === 'fiat' ? 'var(--tint-blue)' : 'var(--tint-green)', color: r.payoutMethod === 'fiat' ? 'var(--blue)' : 'var(--green)' }}>{r.payoutMethod === 'fiat' ? 'Fiat' : 'Stablecoin'}</span>
                         </td>
@@ -1479,13 +1492,13 @@ export default function Dashboard() {
               {supportTickets.length > 0 && (
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 10 }}>Open tickets with Fybrus Customer Care</p>
-                  <div className="space-y-2">
-                    {supportTickets.map((t: any) => (
-                      <div key={t.id} className="flex items-center gap-3" style={{ fontSize: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--inset)', border: '1px solid var(--line)' }}>
-                        <LifeBuoy style={{ width: 14, height: 14, color: 'var(--blue)', flexShrink: 0 }} />
+                  <div>
+                    {supportTickets.map((t: any, i: number) => (
+                      <div key={t.id} className="flex items-center gap-3" style={{ fontSize: 12, padding: '9px 2px', borderTop: i > 0 ? '1px solid var(--line)' : 'none' }}>
+                        <LifeBuoy style={{ width: 13, height: 13, color: 'var(--blue)', flexShrink: 0 }} />
                         <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", color: 'var(--blue)', fontWeight: 500 }}>{t.ticketRef}</span>
-                        <span style={{ flex: 1, color: 'var(--text-2)' }}>{t.subject}</span>
-                        <span style={{ fontSize: 10, color: 'var(--text-4)' }}>{timeAgo(t.createdAt)}</span>
+                        <span style={{ flex: 1, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-4)', flexShrink: 0 }}>{timeAgo(t.createdAt)}</span>
                         <Badge status={t.status === "open" ? "processing" : "completed"} />
                       </div>
                     ))}
@@ -1508,21 +1521,21 @@ export default function Dashboard() {
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--red)' }}>Payout failures</p></div>
                   {alertsData.failedPayouts.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--red)' }}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
-                            {a.merchant} — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
-                          </p>
-                          <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
-                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef} · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)}</p>
-                          {!a.retryable && <p style={{ fontSize: 11, color: 'var(--amber-strong)', background: 'var(--tint-amber)', border: '1px solid var(--amber-line)', borderRadius: 6, padding: '6px 10px', marginTop: 8, lineHeight: 1.5 }}>This is a compliance block, not a technical error — retrying will not deliver it. Review the merchant's wallet, or contact Fybrus Customer Care if you believe this is a false positive.</p>}
-                        </div>
-                        <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>View batch</button>
-                          {a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--amber-line)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--amber-strong)' }}>Retry</button>}
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
-                        </div>
+                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--red)', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
+                          <span style={{ fontWeight: 600 }}>{a.merchant}</span> — {({ EUR: "€", USD: "$", AUD: "A$" } as any)[a.currency] || "€"}{parseFloat(a.amount).toLocaleString("en", { minimumFractionDigits: 2 })} not delivered
+                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.batchRef}</span>
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 2, lineHeight: 1.45, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>
+                          {a.reason}{!a.retryable && <span style={{ color: 'var(--amber-strong)' }}>  — compliance block; retrying won't deliver it</span>}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+                        <button onClick={() => setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>View batch</button>
+                        {a.retryable && <button onClick={() => retryFailedMut.mutate(a.batchId)} disabled={retryFailedMut.isPending} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--amber-strong)' }}>Retry</button>}
+                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
                       </div>
                     </div>
                   ))}
@@ -1534,17 +1547,18 @@ export default function Dashboard() {
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--amber)' }}>Flagged wallets</p></div>
                   {alertsData.flaggedMerchants.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--amber)' }}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{a.merchant}</p>
-                          <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.5 }}>{a.reason}</p>
-                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · screened by {a.provider}</p>
-                        </div>
-                        <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>Review merchant</button>
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
-                        </div>
+                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--amber)', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12.5, color: 'var(--ink)' }}>
+                          <span style={{ fontWeight: 600 }}>{a.merchant}</span>
+                          <span style={{ color: 'var(--text-4)', fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11 }}>  · {a.walletAddress.slice(0, 10)}…{a.walletAddress.slice(-4)} · {a.provider}</span>
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>{a.reason}</p>
+                      </div>
+                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+                        <button onClick={() => setPage("merchants")} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>Review merchant</button>
+                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
                       </div>
                     </div>
                   ))}
@@ -1556,19 +1570,15 @@ export default function Dashboard() {
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}><p style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)' }}>Reconciliation exceptions</p></div>
                   {alertsData.reconExceptions.map((a: any, i: number) => (
-                    <div key={i} style={{ padding: '16px 20px', borderBottom: '1px solid var(--inset-2)', borderLeft: '3px solid var(--blue)' }}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
-                          <ul style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.6, paddingLeft: 16, listStyle: 'disc' }}>
-                            {a.exceptions.map((x: string, j: number) => <li key={j}>{x}</li>)}
-                          </ul>
-                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 6, lineHeight: 1.5 }}>Exceptions usually follow from a blocked or failed payout in this batch — the money trail shows exactly where the difference is. They clear when the underlying payout is resolved.</p>
-                        </div>
-                        <div className="flex flex-col gap-1.5" style={{ flexShrink: 0 }}>
-                          <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--line-strong)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-2)' }}>View batch</button>
-                          <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: 'none', background: 'var(--cta)', color: '#FFFFFF', cursor: 'pointer' }}>Get help</button>
-                        </div>
+                    <div key={i} className="flex items-center gap-3" style={{ padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--blue)', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{a.batchRef}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.exceptions.join(' · ')}>{a.exceptions.join(' · ')} — clears when the underlying payout is resolved</p>
+                      </div>
+                      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+                        <button onClick={() => a.batchId && setSelectedId(a.batchId)} style={{ fontSize: 11, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>View batch</button>
+                        <button onClick={() => openCare(a)} style={{ fontSize: 11, fontWeight: 500, padding: '4px 11px', borderRadius: 999, border: '1px solid var(--line-strong)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer' }}>Get help</button>
                       </div>
                     </div>
                   ))}
