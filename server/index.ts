@@ -10,5 +10,5 @@ const server = await registerRoutes(app);
 const port = parseInt(process.env.PORT || "3001", 10);
 const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
 server.listen({ port, host }, () => {
-  console.log(`[paystrax] Server running on http://${host}:${port}`);
+  console.log(`[fybrus] Server running on http://${host}:${port}`);
 });

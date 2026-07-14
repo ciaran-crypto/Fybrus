@@ -1,4 +1,4 @@
-# Paystrax Payouts — Engineering Reference
+# Fybrus Payouts — Engineering Reference
 
 A technical reference for an engineer taking this codebase forward. For *what the product is and the business roadmap*, read [`PRODUCT.md`](./PRODUCT.md). For *per-partner go-live steps*, read [`PARTNERSHIPS.md`](./PARTNERSHIPS.md).
 
@@ -67,7 +67,7 @@ npm run build:local
 ./run-prod.sh         # API + static frontend on :3001
 ```
 
-Demo logins (password `demo123` for all): `julijavi@paystrax.com` (admin), `vaivani@paystrax.com` (approver).
+Demo logins (password `demo123` for all): `julijavi@fybrus.com` (admin), `vaivani@fybrus.com` (approver).
 
 ---
 
@@ -105,7 +105,7 @@ Six tables (`shared/schema.ts`). All money is `decimal` — **never floats**. Fi
 | walletAddress | text | destination USDC wallet (`0x` + 40 hex) |
 | email | text | optional |
 | status | text | `active` \| `disabled` |
-| kycReliedOn | text | who performed KYC (reliance model) — default "Paystrax (acquirer)" |
+| kycReliedOn | text | who performed KYC (reliance model) — default "the acquirer (acquirer)" |
 | kycRef | text | case ref on the relying party's system |
 | kycAttestedAt | timestamp | when reliance was recorded |
 | walletScreenStatus | text | `unscreened` \| `clear` \| `flagged` |
@@ -198,7 +198,7 @@ Transitions run through `PATCH /api/batches/:id/status`. Guard: you may only mov
 
 ## 7. Compliance logic
 
-- **KYC = reliance.** No KYC is performed here. Merchants carry an attestation (`kycReliedOn`, `kycRef`, `kycAttestedAt`) pointing to the relying party's system. UI shows a "Relied · Paystrax" chip.
+- **KYC = reliance.** No KYC is performed here. Merchants carry an attestation (`kycReliedOn`, `kycRef`, `kycAttestedAt`) pointing to the relying party's system. UI shows a "Relied · Acquirer" chip.
 - **Wallet screening (our obligation).** At registration *and* at every dispatch. Mock rule: any wallet ending `0bad` is `flagged`. A flagged wallet blocks **only that payout**; the rest of the batch proceeds. Live = Chainalysis/Elliptic/TRM-shaped (§9).
 - **Travel rule (our obligation, EU TFR / FATF R.16).** Originator/beneficiary payload transmitted **before** settlement on every payout (no de-minimis). Payload snapshot + `TR-…` ref stored on the payout. Live = Notabene/21-shaped.
 - **Reconciliation** (`computeReconciliation`, `shared/providers.ts`). Per batch, compares fiat expected/received and USDC converted/sent/confirmed. Exception rules:

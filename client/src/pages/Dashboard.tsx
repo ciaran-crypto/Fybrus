@@ -128,8 +128,8 @@ function LoginScreen({ onLogin, error: externalError }: { onLogin: (email: strin
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
       <div className="w-[400px]" style={{ background: 'var(--surface)', padding: 40, borderRadius: 26, border: '1px solid var(--line)', boxShadow: 'var(--shadow-modal)' }}>
         <div className="mb-6">
-          <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.01em', color: 'var(--ink)' }}>PAYSTRAX<span style={{ color: 'var(--green)' }}>.</span></span>
-          <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.06em', color: 'var(--text-3)', textTransform: 'uppercase' as const, marginTop: 4 }}>Payments Portal</p>
+          <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.01em', color: 'var(--ink)' }}>FYBRUS<span style={{ color: 'var(--green)' }}>.</span></span>
+          <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.06em', color: 'var(--text-3)', textTransform: 'uppercase' as const, marginTop: 4 }}>Merchant Treasury</p>
         </div>
 
         <p style={{ fontSize: 13, color: 'var(--text-2)' }} className="mb-6">Sign in to your dashboard</p>
@@ -172,7 +172,7 @@ type AppUser = { id: string; email: string; name: string; role: UserRole; initia
 
 export default function Dashboard() {
   // Demo mode: no login required — always authenticated as a default demo user
-  const DEMO_USER: AppUser = { id: "demo", email: "demo@paystrax.com", name: "Demo User", role: "admin", initials: "DU" };
+  const DEMO_USER: AppUser = { id: "demo", email: "demo@fybrus.com", name: "Demo User", role: "admin", initials: "DU" };
   const [loggedIn, setLoggedIn] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(DEMO_USER);
   const [dualApproval, setDualApprovalRaw] = useState<boolean>(() => localStorage.getItem("psx-dual-approval") !== "off");
@@ -430,7 +430,7 @@ export default function Dashboard() {
           body: JSON.stringify({
             entries: g.map(x => ({ merchantName: x.name, amount: x.amount.toString(), walletAddress: x.wallet })),
             currency: ccy, payoutTiming: batchTiming, scheduledDate: batchTiming === "scheduled" ? batchDate : null,
-            createdBy: currentUser?.email || "paystrax",
+            createdBy: currentUser?.email || "ops",
           }),
         });
         if (!r.ok) { const e = await r.json(); throw new Error(`${ccy}: ${e.message}`); }
@@ -449,7 +449,7 @@ export default function Dashboard() {
     mutationFn: async (ent: typeof entries) => {
       const r = await fetch("/api/batches", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entries: ent, currency: batchCurrency, payoutTiming: batchTiming, scheduledDate: batchTiming === "scheduled" ? batchDate : null, createdBy: currentUser?.email || "paystrax" }),
+        body: JSON.stringify({ entries: ent, currency: batchCurrency, payoutTiming: batchTiming, scheduledDate: batchTiming === "scheduled" ? batchDate : null, createdBy: currentUser?.email || "ops" }),
       });
       if (!r.ok) { const e = await r.json(); throw new Error(e.message); } return r.json();
     },
@@ -598,7 +598,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
     const csv = "merchant_name,amount,currency,wallet_address\nTechFlow Solutions,5000.00,EUR,0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18\nNordic Supplies,3200.50,USD,0x8Ba1f109551bD432803012645Ac136ddd64DBA72\nDelta Pharma,1800.00,AED,0x5d3F2E7A91c04B7dE2586B2C21A00e614EdA4b3f\n";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "paystrax-batch-template.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "fybrus-batch-template.csv"; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -612,7 +612,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
       const user = await r.json();
       setCurrentUser(user);
       setLoggedIn(true);
-      try { localStorage.setItem("paystrax_user", JSON.stringify(user)); } catch {}
+      try { localStorage.setItem("fybrus_user", JSON.stringify(user)); } catch {}
     } catch (e: any) { setLoginError("Connection error — is the API server running?"); }
   }} error={loginError} />;
 
@@ -630,8 +630,8 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
       <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 234, background: '#121310', borderRight: '1px solid var(--line)', display: 'flex', flexDirection: 'column', padding: '20px 12px', zIndex: 50 }}>
         {/* Logo */}
         <div style={{ padding: '0 8px', marginBottom: 32 }}>
-          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.01em', color: '#FFFFFF' }}>PAYSTRAX<span style={{ color: '#34D399' }}>.</span></span>
-          <span style={{ display: 'block', fontSize: 8, fontWeight: 500, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' as const, marginTop: 2 }}>Payments Portal</span>
+          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.01em', color: '#FFFFFF' }}>FYBRUS<span style={{ color: '#34D399' }}>.</span></span>
+          <span style={{ display: 'block', fontSize: 8, fontWeight: 500, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' as const, marginTop: 2 }}>Merchant Treasury</span>
         </div>
 
         {/* Nav */}
@@ -982,7 +982,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
                                 <div title={`Batches fully processed: ${analytics.summary.completedBatches} of ${analytics.summary.totalBatches}`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Batch Completion</span><span style={{ fontWeight: 600, color: analytics.summary.completionRate >= 80 ? 'var(--green)' : 'var(--amber)' }}>{analytics.summary.completionRate.toFixed(0)}% <span style={{ color: 'var(--text-4)', fontWeight: 400 }}>({analytics.summary.completedBatches}/{analytics.summary.totalBatches})</span></span></div>
                                 <div title={`Payouts confirmed on-chain: ${analytics.summary.confirmedPayouts} of ${analytics.summary.totalPayouts}. Non-confirmed here are compliance-blocked, not technical failures.`} className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Payouts Confirmed</span><span style={{ fontWeight: 600, color: 'var(--ink)' }}>{analytics.summary.confirmedPayouts}/{analytics.summary.totalPayouts}{analytics.summary.failedPayouts > 0 ? <span style={{ color: 'var(--amber)', fontWeight: 400 }}> · {analytics.summary.failedPayouts} blocked</span> : null}</span></div>
                                 <div className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Avg FX Rate</span><span style={{ fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{analytics.summary.avgExchangeRate.toFixed(4)}</span></div>
-                                <div title="Paystrax markup earned on settled payouts — see the Revenue page" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Markup Owed (Paystrax)</span><button onClick={() => setPage("revenue")} style={{ fontWeight: 600, color: 'var(--blue)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{revenue ? abbr("€", revenue.markupOwed || 0) : "View →"}</button></div>
+                                <div title="Acquirer markup earned on settled payouts — see the Revenue page" className="flex justify-between" style={{ fontSize: 12 }}><span style={{ color: 'var(--text-2)' }}>Markup Owed (Acquirer)</span><button onClick={() => setPage("revenue")} style={{ fontWeight: 600, color: 'var(--blue)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{revenue ? abbr("€", revenue.markupOwed || 0) : "View →"}</button></div>
                               </div>
                             </div>
 
@@ -1295,9 +1295,9 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
                         </td>
                         {/* KYC reliance attestation — verification lives on the relying party's system */}
                         <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
-                          <span title={`KYC performed by ${m.kycReliedOn || "Paystrax (acquirer)"}${m.kycRef ? ` · ref ${m.kycRef}` : ""}${m.kycAttestedAt ? ` · attested ${new Date(m.kycAttestedAt).toLocaleDateString()}` : ""}`}
+                          <span title={`KYC performed by ${m.kycReliedOn || "Acquirer of record"}${m.kycRef ? ` · ref ${m.kycRef}` : ""}${m.kycAttestedAt ? ` · attested ${new Date(m.kycAttestedAt).toLocaleDateString()}` : ""}`}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: 'var(--tint-blue)', color: 'var(--blue)' }}>
-                            <ShieldCheck style={{ width: 11, height: 11 }} /> Relied · {(m.kycReliedOn || "Paystrax").split(" ")[0]}
+                            <ShieldCheck style={{ width: 11, height: 11 }} /> Relied · {(m.kycReliedOn || "Acquirer").split(" ")[0]}
                           </span>
                         </td>
                         {/* Destination-wallet screening — our obligation */}
@@ -1422,13 +1422,13 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
           {page === "revenue" && (
             <div className="space-y-5">
               <p style={{ fontSize: 11, lineHeight: 1.55, color: 'var(--text-3)', padding: '10px 14px', borderRadius: 10, background: 'var(--inset-2)', border: '1px solid var(--line)' }}>
-                Fybrus charges a fixed <strong>{settings ? (settings.fybrusFeeBps/100).toFixed(2) : "0.09"}%</strong> ({settings?.fybrusFeeBps ?? 9} bps) on each payout. On top of that, Paystrax sets its own markup — collected from merchants and <strong>owed back to Paystrax by Fybrus</strong>. The numbers below are settled (confirmed) payouts only.
+                Fybrus charges a fixed <strong>{settings ? (settings.fybrusFeeBps/100).toFixed(2) : "0.09"}%</strong> ({settings?.fybrusFeeBps ?? 9} bps) on each payout. On top of that, the acquirer sets its own markup — collected from merchants and <strong>owed back to the acquirer by Fybrus</strong>. The numbers below are settled (confirmed) payouts only.
               </p>
 
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Owed to Paystrax (markup)", val: revenue?.markupOwed, color: 'var(--green)', hint: "Your markup on settled payouts — rebated to you by Fybrus." },
-                  { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: 'var(--ink)', hint: "What Paystrax pays Fybrus for the settled payouts." },
+                  { label: "Owed to Acquirer (markup)", val: revenue?.markupOwed, color: 'var(--green)', hint: "Your markup on settled payouts — rebated to you by Fybrus." },
+                  { label: "Fybrus Fees (9 bps)", val: revenue?.fybrusFees, color: 'var(--ink)', hint: "What the acquirer pays Fybrus for the settled payouts." },
                   { label: "Net Delivered to Merchants", val: revenue?.netToMerchants, color: 'var(--text-2)', hint: "USDC value delivered after all fees.", usd: true },
                 ].map((c) => (
                   <div key={c.label} title={c.hint} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 16 }}>
@@ -1442,7 +1442,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
 
               {/* Markup control */}
               <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, boxShadow: 'var(--shadow-card)', padding: 20 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Default Paystrax markup</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Default acquirer markup</p>
                 <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 12 }}>The fallback rate for merchants without their own rate. Every merchant’s rate is editable inline in the table below — type a value and press Enter (blank = use this default). 100 bps = 1%.</p>
                 <div className="flex items-center gap-3">
                   <input type="number" min={0} max={1000}
@@ -1478,7 +1478,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
                 <div style={{ overflowX: 'auto' }}>
                 <table className="w-full" style={{ minWidth: 720 }}>
                   <thead><tr style={{ background: 'var(--inset)' }}>
-                    {["Merchant", "Markup rate", "Payout", "Settled volume", "Fybrus fee", "Paystrax markup"].map((h, i) => (
+                    {["Merchant", "Markup rate", "Payout", "Settled volume", "Fybrus fee", "Acquirer markup"].map((h, i) => (
                       <th key={h} style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-4)', padding: '10px 16px', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</th>
                     ))}
                   </tr></thead>
@@ -1873,7 +1873,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
           {/* Footer */}
           <div className="text-center" style={{ paddingTop: 16, paddingBottom: 32 }}>
             <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>
-              This dashboard is confidential. &copy; 2026 Paystrax.
+              This dashboard is confidential. &copy; 2026 Fybrus.
             </p>
             <p style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 6, letterSpacing: '0.04em' }}>
               Powered by <span style={{ fontWeight: 600, color: 'var(--cta)' }}>Fybrus</span>
@@ -2153,7 +2153,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
               <div style={{ background: 'var(--surface)', borderRadius: 8, border: '1px solid var(--amber-line)', padding: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
-                    { label: "Account Name", value: "Paystrax Ltd" },
+                    { label: "Account Name", value: "Fybrus Client Funds" },
                     { label: "IBAN", value: "IE29 AIBK 9311 5212 3456 78" },
                     { label: "BIC / SWIFT", value: "AIBKIE2D" },
                     { label: "Bank", value: "AIB, Dublin" },
@@ -2312,7 +2312,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
       {/* ─ Add user dialog ─ */}
       <Overlay open={showAddUser} onClose={() => setShowAddUser(false)}>
         <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Add New User</h3>
-        <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Create a new user account for the Paystrax dashboard.</p>
+        <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>Create a new user account for the Fybrus dashboard.</p>
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
             <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Full Name</label>
@@ -2321,7 +2321,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
           </div>
           <div>
             <label style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', color: 'var(--text-3)', textTransform: 'uppercase' as const, display: 'block', marginBottom: 4 }}>Email</label>
-            <input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="e.g. jane@paystraxdemo.com"
+            <input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="e.g. jane@fybrus.com"
               className="w-full outline-none" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line-strong)', fontSize: 13, color: 'var(--ink)' }} />
           </div>
           <div>
@@ -2457,7 +2457,7 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
               className="w-full outline-none"
               style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontFamily: "'Geist Mono', ui-monospace, monospace", border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)' }}
               onFocus={e => e.currentTarget.style.borderColor = 'var(--ink)'} onBlur={e => e.currentTarget.style.borderColor = 'var(--line-strong)'} />
-            <span style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 4, display: 'block' }}>KYC is performed by the relying party (Paystrax as acquirer) — record their case reference here.</span>
+            <span style={{ fontSize: 10, color: 'var(--text-4)', marginTop: 4, display: 'block' }}>KYC is performed by the relying party (your acquirer) — record their case reference here.</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -2620,13 +2620,13 @@ const SUPPORTED_CCYS = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", 
                   {detail.batch.exchangeRate ? parseFloat(detail.batch.exchangeRate).toFixed(4) : "—"}
                 </p>
               </div>
-              <div title="Fybrus fee (9 bps) + Paystrax markup, both deducted from the fiat before conversion. The markup is owed back to Paystrax." style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
+              <div title="Fybrus fee (9 bps) + acquirer markup, both deducted from the fiat before conversion. The markup is owed back to the acquirer." style={{ borderRadius: 12, padding: 12, border: '1px solid var(--line)', background: 'var(--inset)' }}>
                 <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: 'var(--text-4)' }}>Fees</p>
                 <p style={{ fontSize: 18, fontWeight: 600, fontFamily: "'Geist Mono', ui-monospace, monospace", letterSpacing: '-0.03em', marginTop: 2, color: detail.batch.feeBps ? 'var(--ink)' : 'var(--text-faint)' }}>
                   {detail.batch.feeBps ? `${(CSYM as any)[detail.batch.currency as string] || "€"}${(parseFloat(detail.batch.feeAmount || "0") + parseFloat(detail.batch.markupTotal || "0")).toLocaleString("en", { minimumFractionDigits: 2 })}` : "—"}
                 </p>
                 {detail.batch.feeBps
-                  ? <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Paystrax markup <span style={{ color: 'var(--green)' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>
+                  ? <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2, lineHeight: 1.4 }}>Fybrus €{parseFloat(detail.batch.feeAmount || "0").toLocaleString("en", { minimumFractionDigits: 2 })} · Acquirer markup <span style={{ color: 'var(--green)' }}>€{parseFloat(detail.batch.markupTotal || "0").toLocaleString("en", { minimumFractionDigits: 2 })}</span></p>
                   : <p style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 2 }}>no fee on this batch</p>}
               </div>
             </div>

@@ -58,7 +58,7 @@ Check the live state any time: `GET /api/providers`.
 ### 4. Compliance: KYC reliance + wallet screening — `walletScreeningProvider`
 
 **KYC model = reliance.** Underlying-merchant KYC is performed on a separate
-system by the relying party (Paystrax as acquirer). This app does **no KYC** —
+system by the relying party (the client acquirer). This app does **no KYC** —
 it records the attestation only: `kyc_relied_on`, `kyc_ref` (case ref on the
 other system), `kyc_attested_at` per merchant.
 
@@ -101,7 +101,7 @@ SCREENING_MODE=mock                   # → live when a screening partner is wir
 SCREENING_API_KEY=                    # screening partner key
 TRAVEL_RULE_MODE=mock                 # → live when a travel-rule network is wired
 TRAVEL_RULE_API_KEY=                  # travel-rule partner key
-TRAVEL_RULE_ORIGINATOR=               # originator legal name (default: Paystrax (originating PSP))
+TRAVEL_RULE_ORIGINATOR=               # originator legal name (default: the acquirer (originating PSP))
 TRAVEL_RULE_ORIGINATOR_REF=           # originator account ref (default: PSX-MASTER-EUR)
 TRAVEL_RULE_ORIGINATOR_COUNTRY=       # ISO country (default: LT)
 # (outbound BC also needs the mTLS client cert + OAuth client id/secret)

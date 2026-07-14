@@ -103,8 +103,8 @@ interface TravelRulePayload {
 interface TravelRuleResult { ref: string; status: "transmitted"; provider: string; payload: TravelRulePayload; transmittedAt: string; }
 function originatorIdentity() {
   return {
-    name: process.env.TRAVEL_RULE_ORIGINATOR || "Paystrax (originating PSP)",
-    accountRef: process.env.TRAVEL_RULE_ORIGINATOR_REF || "PSX-MASTER-EUR",
+    name: process.env.TRAVEL_RULE_ORIGINATOR || "Fybrus (originating PSP)",
+    accountRef: process.env.TRAVEL_RULE_ORIGINATOR_REF || "FYB-MASTER-EUR",
     country: process.env.TRAVEL_RULE_ORIGINATOR_COUNTRY || "LT",
   };
 }
@@ -168,7 +168,7 @@ const merchants = pgTable("merchants", {
   email: text("email"),
   status: text("status").default("active"),
   // KYC reliance model — attestation only; verification lives on the relying party's system
-  kycReliedOn: text("kyc_relied_on").default("Paystrax (acquirer)"),
+  kycReliedOn: text("kyc_relied_on").default("Acquirer of record"),
   kycRef: text("kyc_ref"),
   kycAttestedAt: timestamp("kyc_attested_at"),
   // Destination-wallet screening — our obligation
@@ -250,7 +250,7 @@ const auditLog = pgTable("audit_log", {
   entityType: text("entity_type"),
   entityId: text("entity_id"),
   entityRef: text("entity_ref"),
-  actor: text("actor").default("paystrax"),
+  actor: text("actor").default("ops"),
   detail: text("detail"),
   ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
@@ -286,7 +286,7 @@ const app = express();
 app.use(express.json());
 
 async function logAudit(action: string, entityType?: string, entityId?: string, entityRef?: string, detail?: string, actor?: string) {
-  try { await db.insert(auditLog).values({ action, entityType, entityId, entityRef, detail, actor: actor || "paystrax" }); } catch (e) { console.error(e); }
+  try { await db.insert(auditLog).values({ action, entityType, entityId, entityRef, detail, actor: actor || "ops" }); } catch (e) { console.error(e); }
 }
 
 // Health
@@ -331,8 +331,8 @@ app.post("/api/users/seed", async (_r, res) => {
   const existing = await db.select().from(users);
   if (existing.length) return res.json({ message: "Users exist", count: existing.length });
   await db.insert(users).values([
-    { email: "julijavi@paystrax.com", name: "Julija Vilkute", role: "admin", password: "demo123" },
-    { email: "vaivani@paystrax.com",  name: "Vaiva Niuklyte", role: "approver", password: "demo123" },
+    { email: "julijavi@fybrus.com", name: "Julija Vilkute", role: "admin", password: "demo123" },
+    { email: "vaivani@fybrus.com",  name: "Vaiva Niuklyte", role: "approver", password: "demo123" },
   ]);
   res.json({ message: "Seeded", count: 2 });
 });
@@ -346,7 +346,7 @@ app.post("/api/merchants", async (req, res) => {
   const screen = await walletScreeningProvider.screen(walletAddress);
   const [m] = await db.insert(merchants).values({
     name, walletAddress, email,
-    kycReliedOn: kycReliedOn || "Paystrax (acquirer)", kycRef: kycRef || null, kycAttestedAt: new Date(),
+    kycReliedOn: kycReliedOn || "Acquirer of record", kycRef: kycRef || null, kycAttestedAt: new Date(),
     walletScreenStatus: screen.status, walletScreenProvider: screen.provider, walletScreenedAt: new Date(),
     markupBps: (markupBps === "" || markupBps == null) ? null : Number(markupBps),
     payoutMethod: payoutMethod === "fiat" ? "fiat" : "stablecoin",
@@ -415,7 +415,7 @@ app.get("/api/batches/:id", async (req, res) => {
   res.json({ batch, payouts: ps });
 });
 app.post("/api/batches", async (req, res) => {
-  const { entries, currency = "EUR", payoutTiming = "asap", scheduledDate, createdBy = "paystrax" } = req.body;
+  const { entries, currency = "EUR", payoutTiming = "asap", scheduledDate, createdBy = "ops" } = req.body;
   if (!entries?.length) return res.status(400).json({ message: "No entries" });
   const VALID_CURRENCIES = ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "USD", "AUD", "AED"];
   if (!VALID_CURRENCIES.includes(currency.toUpperCase())) return res.status(400).json({ message: `Currency must be one of: ${VALID_CURRENCIES.join(", ")}` });
@@ -462,7 +462,7 @@ app.post("/api/batches", async (req, res) => {
     });
   }
   await db.update(batches).set({ feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2) }).where(eq(batches.id, batch.id));
-  await logAudit("batch_created", "batch", batch.id, batch.batchRef, `${entries.length} merchants, ${currency} ${totalFiat.toFixed(2)} · Fybrus fee ${currency} ${feeTotal.toFixed(2)} · Paystrax markup ${currency} ${markupTotal.toFixed(2)}`, createdBy);
+  await logAudit("batch_created", "batch", batch.id, batch.batchRef, `${entries.length} merchants, ${currency} ${totalFiat.toFixed(2)} · Fybrus fee ${currency} ${feeTotal.toFixed(2)} · acquirer markup ${currency} ${markupTotal.toFixed(2)}`, createdBy);
   res.json({ ...batch, feeAmount: feeTotal.toFixed(2), markupTotal: markupTotal.toFixed(2) });
 });
 app.patch("/api/batches/:id/status", async (req, res) => {
@@ -500,7 +500,7 @@ app.patch("/api/batches/:id/status", async (req, res) => {
       const ps = await db.select().from(payouts).where(eq(payouts.batchId, batch.id));
       let usdcTotal = 0;
       for (const p of ps) {
-        // net = gross − Fybrus fee − Paystrax markup, then converted to USDC (leg 1)
+        // net = gross − Fybrus fee − acquirer markup, then converted to USDC (leg 1)
         const gross = parseFloat(p.fiatAmount || p.eurAmount);
         const net = gross - parseFloat(p.fybrusFeeAmount || "0") - parseFloat(p.markupAmount || "0");
         const usdc = net * rate;
@@ -703,21 +703,21 @@ app.get("/api/audit/csv", async (_r, res) => {
   const csv = rows.map(r =>
     `${r.createdAt},${r.action},${r.entityType ?? ""},${r.entityRef ?? ""},${r.actor ?? ""},${(r.detail ?? "").replace(/,/g, ";")}`
   ).join("\n");
-  await logAudit("report_exported", "audit", undefined, "paystrax-audit-log.csv", `Audit log CSV exported — ${rows.length} entries`);
+  await logAudit("report_exported", "audit", undefined, "fybrus-audit-log.csv", `Audit log CSV exported — ${rows.length} entries`);
   res.setHeader("Content-Type", "text/csv");
-  res.setHeader("Content-Disposition", "attachment; filename=paystrax-audit-log.csv");
+  res.setHeader("Content-Disposition", "attachment; filename=fybrus-audit-log.csv");
   res.send(header + csv);
 });
 app.get("/api/reports/csv", async (_r, res) => {
   const rows = await db.select({ payout: payouts, merchant: merchants, batch: batches }).from(payouts).leftJoin(merchants, eq(payouts.merchantId, merchants.id)).leftJoin(batches, eq(payouts.batchId, batches.id));
   const csv = "Batch,Currency,Merchant,Amount,USDC,Wallet,Status,TX Hash,Travel Rule Ref\n" + rows.map(r => `${r.batch?.batchRef},${r.batch?.currency},${r.merchant?.name},${r.payout.fiatAmount},${r.payout.usdcAmount || ""},${r.payout.walletAddress},${r.payout.status},${r.payout.txHash || ""},${r.payout.travelRuleRef || ""}`).join("\n");
-  res.setHeader("Content-Type", "text/csv"); res.setHeader("Content-Disposition", "attachment; filename=paystrax-report.csv"); res.send(csv);
+  res.setHeader("Content-Type", "text/csv"); res.setHeader("Content-Disposition", "attachment; filename=fybrus-report.csv"); res.send(csv);
 });
 
 // ── Provider / integration status (drives the mode badge + PARTNERSHIPS wiring) ──
 app.get("/api/providers", (_r, res) => res.json(providerStatus()));
 
-// ── Platform settings: Fybrus fee (fixed) + Paystrax default markup ──
+// ── Platform settings: Fybrus fee (fixed) + acquirer default markup ──
 const FYBRUS_FEE_BPS = 9;
 async function getSettings() {
   const [s] = await db.select().from(platformSettings).where(eq(platformSettings.id, 1));
@@ -732,7 +732,7 @@ app.put("/api/settings", async (req, res) => {
   if (!Number.isFinite(bps) || bps < 0 || bps > 1000) return res.status(400).json({ message: "Markup must be 0–1000 bps" });
   await db.insert(platformSettings).values({ id: 1, defaultMarkupBps: Math.round(bps), updatedAt: new Date() })
     .onConflictDoUpdate({ target: platformSettings.id, set: { defaultMarkupBps: Math.round(bps), updatedAt: new Date() } });
-  await logAudit("settings_updated", "settings", undefined, "markup", `Default Paystrax markup set to ${Math.round(bps)} bps`, req.body.actor || "admin");
+  await logAudit("settings_updated", "settings", undefined, "markup", `Default acquirer markup set to ${Math.round(bps)} bps`, req.body.actor || "admin");
   res.json({ fybrusFeeBps: FYBRUS_FEE_BPS, defaultMarkupBps: Math.round(bps) });
 });
 
@@ -776,7 +776,7 @@ app.patch("/api/accounts/:id", async (req, res) => {
   res.json(a);
 });
 
-// ── Revenue: what Paystrax is owed (markup) and what they pay Fybrus (fee) ──
+// ── Revenue: what the acquirer is owed (markup) and what they pay Fybrus (fee) ──
 app.get("/api/revenue", async (_r, res) => {
   const allP = await db.select().from(payouts);
   const allB = await db.select().from(batches);
@@ -815,7 +815,7 @@ app.get("/api/reconciliation/csv", async (_r, res) => {
   const { rows } = computeReconciliation(allB as any, allP as any);
   const csv = "Batch,Currency,Status,Fiat Expected,Fiat Received,USDC Converted,USDC Sent,USDC Confirmed,Payouts Confirmed/Total,Reconciled,Exceptions\n" +
     rows.map(r => `${r.batchRef},${r.currency},${r.status},${r.fiatExpected.toFixed(2)},${r.fiatReceived.toFixed(2)},${r.usdcConverted.toFixed(2)},${r.usdcSent.toFixed(2)},${r.usdcConfirmed.toFixed(2)},${r.payoutsConfirmed}/${r.payoutsTotal},${r.reconciled ? "YES" : "NO"},"${r.exceptions.join("; ")}"`).join("\n");
-  res.setHeader("Content-Type", "text/csv"); res.setHeader("Content-Disposition", "attachment; filename=paystrax-reconciliation.csv"); res.send(csv);
+  res.setHeader("Content-Type", "text/csv"); res.setHeader("Content-Disposition", "attachment; filename=fybrus-reconciliation.csv"); res.send(csv);
 });
 
 // ── Banking Circle inbound settlement webhook (funds a batch) ──
@@ -845,7 +845,7 @@ app.post("/api/seed", async (_r, res) => {
   const addr = () => "0x" + crypto.randomBytes(20).toString("hex");
   const day = 86400000;
   const now = Date.now();
-  const CREATOR = "julijavi@paystrax.com", APPROVER = "vaivani@paystrax.com";
+  const CREATOR = "julijavi@fybrus.com", APPROVER = "vaivani@fybrus.com";
   const DEFAULT_MARKUP = 25, FEE_BPS = 9, OFFRAMP_SPREAD = 0.002;
 
   // ── Merchant book: ~70 merchants, tiered like a real acquirer portfolio ──
@@ -870,8 +870,8 @@ app.post("/api/seed", async (_r, res) => {
   const merchantRows = book.map((b, i) => ({
     name: b.name, walletAddress: addr(),
     email: `ap@${b.name.toLowerCase().replace(/[^a-z]/g, "").slice(0, 12)}.com`,
-    kycReliedOn: "Paystrax (acquirer)",
-    kycRef: "PSX-KYC-" + crypto.randomBytes(3).toString("hex").toUpperCase(),
+    kycReliedOn: "Acquirer of record",
+    kycRef: "ACQ-KYC-" + crypto.randomBytes(3).toString("hex").toUpperCase(),
     kycAttestedAt: new Date(now - rnd(40, 200) * day),
     walletScreenStatus: "clear", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - rnd(1, 90) * day),
     // a few negotiated rates: whales pay less, some smalls pay more
@@ -885,7 +885,7 @@ app.post("/api/seed", async (_r, res) => {
 
   const [shady] = await db.insert(merchants).values({
     name: "Shady Imports Ltd", walletAddress: "0x" + crypto.randomBytes(18).toString("hex") + "0bad",
-    email: "ap@shady.example", kycReliedOn: "Paystrax (acquirer)", kycRef: "PSX-KYC-TEST01", kycAttestedAt: new Date(now - 3 * day),
+    email: "ap@shady.example", kycReliedOn: "Acquirer of record", kycRef: "PSX-KYC-TEST01", kycAttestedAt: new Date(now - 3 * day),
     walletScreenStatus: "flagged", walletScreenProvider: "mock-screening", walletScreenedAt: new Date(now - 3 * day),
     markupBps: null, payoutMethod: "stablecoin", createdAt: new Date(now - 3 * day),
   }).returning();
@@ -936,7 +936,7 @@ app.post("/api/seed", async (_r, res) => {
         const offRamp = (1 / rate) * (1 - OFFRAMP_SPREAD);
         pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "confirmed", confirmedAt: new Date(completed), txHash: "SEPA-" + crypto.randomBytes(6).toString("hex").toUpperCase(), offRampRate: offRamp.toFixed(6), payoutFiatAmount: (usdc * offRamp).toFixed(2) });
       } else {
-        pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "confirmed", confirmedAt: new Date(completed), txHash: "0x" + crypto.randomBytes(32).toString("hex"), travelRuleStatus: "transmitted", travelRuleRef: "TR-" + crypto.randomBytes(6).toString("hex").toUpperCase(), travelRuleAt: new Date(completed), travelRuleData: JSON.stringify({ originator: { name: "Paystrax (originating PSP)", accountRef: "PSX-MASTER-EUR", country: "LT" }, beneficiary: { name: m.name, walletAddress: m.walletAddress }, transfer: { asset: "USDC", amount: usdc.toFixed(6), reference: ref } }) });
+        pRows.push({ ...base, usdcAmount: usdc.toFixed(6), status: "confirmed", confirmedAt: new Date(completed), txHash: "0x" + crypto.randomBytes(32).toString("hex"), travelRuleStatus: "transmitted", travelRuleRef: "TR-" + crypto.randomBytes(6).toString("hex").toUpperCase(), travelRuleAt: new Date(completed), travelRuleData: JSON.stringify({ originator: { name: "Fybrus (originating PSP)", accountRef: "FYB-MASTER-EUR", country: "LT" }, beneficiary: { name: m.name, walletAddress: m.walletAddress }, transfer: { asset: "USDC", amount: usdc.toFixed(6), reference: ref } }) });
       }
     }
     // usdcTotal must equal the sum of ALL payout USDC (incl. blocked) for recon
@@ -977,7 +977,7 @@ app.post("/api/seed", async (_r, res) => {
   auditRows.push(
     { action: "login", entityType: "user", entityRef: CREATOR, actor: CREATOR, detail: "Signed in", createdAt: new Date(now - 2 * 3600000) },
     { action: "login", entityType: "user", entityRef: APPROVER, actor: APPROVER, detail: "Signed in", createdAt: new Date(now - 5 * 3600000) },
-    { action: "report_exported", entityType: "report", entityRef: "paystrax-report.csv", actor: CREATOR, detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
+    { action: "report_exported", entityType: "report", entityRef: "fybrus-report.csv", actor: CREATOR, detail: "Full payout report exported", createdAt: new Date(now - 2 * day) },
   );
   for (let i = 0; i < auditRows.length; i += 60) await db.insert(auditLog).values(auditRows.slice(i, i + 60));
 

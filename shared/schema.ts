@@ -9,16 +9,16 @@ export const merchants = pgTable("merchants", {
   email: text("email"),
   status: text("status").default("active"),
   // KYC reliance model: underlying-merchant KYC is performed on a separate
-  // system by the relying party (e.g. Paystrax as acquirer). We record the
+  // system by the relying party (the acquirer). We record the
   // attestation, not the verification.
-  kycReliedOn: text("kyc_relied_on").default("Paystrax (acquirer)"), // who performed KYC
+  kycReliedOn: text("kyc_relied_on").default("Acquirer of record"), // who performed KYC
   kycRef: text("kyc_ref"),                                            // file/case ref on that system
   kycAttestedAt: timestamp("kyc_attested_at"),
   // Destination-wallet screening (sanctions/illicit exposure) — our obligation
   walletScreenStatus: text("wallet_screen_status").default("unscreened"), // unscreened, clear, flagged
   walletScreenProvider: text("wallet_screen_provider"),
   walletScreenedAt: timestamp("wallet_screened_at"),
-  // Paystrax markup (bps) on top of the Fybrus fee. null = use platform default.
+  // acquirer markup (bps) on top of the Fybrus fee. null = use platform default.
   markupBps: integer("markup_bps"),
   // How this merchant is paid out: "stablecoin" (USDC) or "fiat" (off-ramped)
   payoutMethod: text("payout_method").default("stablecoin"),
@@ -37,7 +37,7 @@ export const batches = pgTable("batches", {
   // Platform fee, charged in bps on the fiat amount and deducted before conversion
   feeBps: integer("fee_bps").default(0),                                        // Fybrus fee (9 bps)
   feeAmount: decimal("fee_amount", { precision: 14, scale: 2 }).default("0"),
-  markupTotal: decimal("markup_total", { precision: 14, scale: 2 }).default("0"), // Paystrax markup owed back to them
+  markupTotal: decimal("markup_total", { precision: 14, scale: 2 }).default("0"), // acquirer markup owed back to them
   scheduledDate: timestamp("scheduled_date"),
   status: text("status").default("pending"),
   createdBy: text("created_by"), // email of creator
@@ -61,7 +61,7 @@ export const payouts = pgTable("payouts", {
   status: text("status").default("pending"),
   // Fee breakdown per payout
   fybrusFeeAmount: decimal("fybrus_fee_amount", { precision: 14, scale: 2 }), // our 9 bps
-  markupAmount: decimal("markup_amount", { precision: 14, scale: 2 }),        // Paystrax's markup (owed back)
+  markupAmount: decimal("markup_amount", { precision: 14, scale: 2 }),        // acquirer's markup (owed back)
   // Payout method: "stablecoin" (receives usdcAmount) or "fiat" (USDC off-ramped to payoutFiatAmount)
   payoutMethod: text("payout_method").default("stablecoin"),
   payoutFiatAmount: decimal("payout_fiat_amount", { precision: 14, scale: 2 }), // fiat delivered (fiat method)
@@ -83,7 +83,7 @@ export const auditLog = pgTable("audit_log", {
   entityType: text("entity_type"), // batch, payout, merchant
   entityId: text("entity_id"),
   entityRef: text("entity_ref"), // human-readable ref like BATCH-PS001
-  actor: text("actor").default("paystrax"),
+  actor: text("actor").default("ops"),
   detail: text("detail"),
   ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
@@ -112,7 +112,7 @@ export const supportTickets = pgTable("support_tickets", {
 
 export const platformSettings = pgTable("platform_settings", {
   id: integer("id").primaryKey().default(1),
-  defaultMarkupBps: integer("default_markup_bps").notNull().default(25), // Paystrax default markup
+  defaultMarkupBps: integer("default_markup_bps").notNull().default(25), // acquirer default markup
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

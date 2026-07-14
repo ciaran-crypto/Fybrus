@@ -165,7 +165,7 @@ export const fiatRailProvider: FiatRailProvider =
 
 // ── Destination-wallet screening (sanctions / illicit-exposure) ─────────────
 // Under the KYC reliance model, underlying-merchant KYC lives on the relying
-// party's system (e.g. Paystrax as acquirer) — we only record the attestation.
+// party's system (the acquirer) — we only record the attestation.
 // Wallet screening, however, is OUR obligation before dispatching USDC.
 export interface WalletScreenResult {
   status: "clear" | "flagged";
@@ -236,8 +236,8 @@ export interface TravelRuleProvider {
 // Originator identity (the platform operator) — override via env when known.
 export function originatorIdentity() {
   return {
-    name: process.env.TRAVEL_RULE_ORIGINATOR || "Paystrax (originating PSP)",
-    accountRef: process.env.TRAVEL_RULE_ORIGINATOR_REF || "PSX-MASTER-EUR",
+    name: process.env.TRAVEL_RULE_ORIGINATOR || "Fybrus (originating PSP)",
+    accountRef: process.env.TRAVEL_RULE_ORIGINATOR_REF || "FYB-MASTER-EUR",
     country: process.env.TRAVEL_RULE_ORIGINATOR_COUNTRY || "LT",
   };
 }

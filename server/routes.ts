@@ -91,8 +91,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existing = await db.select().from(schema.users);
       if (existing.length > 0) return res.json({ message: "Users already exist", count: existing.length });
       await db.insert(schema.users).values([
-        { email: "julijavi@paystrax.com", name: "Julija Vilkute", role: "admin", password: "demo123" },
-        { email: "vaivani@paystrax.com",  name: "Vaiva Niuklyte", role: "approver", password: "demo123" },
+        { email: "julijavi@fybrus.com", name: "Julija Vilkute", role: "admin", password: "demo123" },
+        { email: "vaivani@fybrus.com",  name: "Vaiva Niuklyte", role: "approver", password: "demo123" },
       ]);
       res.json({ message: "Demo users seeded", count: 2 });
     } catch (e: any) { console.error(e); res.status(500).json({ message: "An internal error occurred" }); }
@@ -115,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const screen = await walletScreeningProvider.screen(walletAddress);
       const [m] = await db.insert(schema.merchants).values({
         name, walletAddress, email,
-        kycReliedOn: kycReliedOn || "Paystrax (acquirer)",
+        kycReliedOn: kycReliedOn || "Acquirer of record",
         kycRef: kycRef || null,
         kycAttestedAt: new Date(),
         walletScreenStatus: screen.status,
@@ -254,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalFiat = rows.reduce((s, r) => s + r.amount, 0);
       const batchRef = `BATCH-${Date.now().toString(36).toUpperCase()}`;
 
-      const createdBy = req.body.createdBy || "paystrax";
+      const createdBy = req.body.createdBy || "ops";
       const FEE_BPS_U = 9;
       const feeAmountU = +(totalFiat * FEE_BPS_U / 10000).toFixed(2);
       const [batch] = await db.insert(schema.batches).values({
@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Manual batch creation
   app.post("/api/batches", async (req, res) => {
     try {
-      const { entries, currency = "EUR", payoutTiming = "asap", scheduledDate, createdBy = "paystrax" } = req.body;
+      const { entries, currency = "EUR", payoutTiming = "asap", scheduledDate, createdBy = "ops" } = req.body;
       if (!entries?.length) return res.status(400).json({ message: "No entries" });
 
       const VALID_CURRENCIES = ["EUR", "USD", "AUD"];
@@ -509,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const csv = "Batch,Currency,Status,Fiat Expected,Fiat Received,USDC Converted,USDC Sent,USDC Confirmed,Payouts Confirmed/Total,Reconciled,Exceptions\n" +
         rows.map(r => `${r.batchRef},${r.currency},${r.status},${r.fiatExpected.toFixed(2)},${r.fiatReceived.toFixed(2)},${r.usdcConverted.toFixed(2)},${r.usdcSent.toFixed(2)},${r.usdcConfirmed.toFixed(2)},${r.payoutsConfirmed}/${r.payoutsTotal},${r.reconciled ? "YES" : "NO"},"${r.exceptions.join("; ")}"`).join("\n");
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", "attachment; filename=paystrax-reconciliation.csv");
+      res.setHeader("Content-Disposition", "attachment; filename=fybrus-reconciliation.csv");
       res.send(csv);
     } catch (e: any) { console.error(e); res.status(500).json({ message: "An internal error occurred" }); }
   });
@@ -565,10 +565,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).join("\n");
 
       await db.insert(schema.auditLog).values({
-        action: "report_exported", entityType: "report", detail: `Settlement CSV exported — ${rows.length} payout records`, actor: "paystrax",
+        action: "report_exported", entityType: "report", detail: `Settlement CSV exported — ${rows.length} payout records`, actor: "ops",
       });
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", "attachment; filename=paystrax-settlements.csv");
+      res.setHeader("Content-Disposition", "attachment; filename=fybrus-settlements.csv");
       res.send(header + csv);
     } catch (e: any) { console.error(e); res.status(500).json({ message: "An internal error occurred" }); }
   });
@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper to write audit entries
   async function logAudit(action: string, entityType?: string, entityId?: string, entityRef?: string, detail?: string, actor?: string) {
     try {
-      await db.insert(schema.auditLog).values({ action, entityType, entityId, entityRef, detail, actor: actor || "paystrax" });
+      await db.insert(schema.auditLog).values({ action, entityType, entityId, entityRef, detail, actor: actor || "ops" });
     } catch (e) { console.error("Audit log error:", e); }
   }
 
@@ -723,10 +723,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${r.createdAt},${r.action},${r.entityType ?? ""},${r.entityRef ?? ""},${r.actor ?? ""},${(r.detail ?? "").replace(/,/g, ";")}`
       ).join("\n");
       await db.insert(schema.auditLog).values({
-        action: "report_exported", entityType: "audit", detail: `Audit log CSV exported — ${rows.length} entries`, actor: "paystrax",
+        action: "report_exported", entityType: "audit", detail: `Audit log CSV exported — ${rows.length} entries`, actor: "ops",
       });
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", "attachment; filename=paystrax-audit-log.csv");
+      res.setHeader("Content-Disposition", "attachment; filename=fybrus-audit-log.csv");
       res.send(header + csv);
     } catch (e: any) { console.error(e); res.status(500).json({ message: "An internal error occurred" }); }
   });
@@ -823,22 +823,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existing.length > 0) return res.json({ message: "Already seeded" });
 
       const entries = [
-        { action: "login", detail: "User paystrax@legend.ie signed in from 192.168.1.100", actor: "paystrax" },
-        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS001", detail: "CSV upload: 5 merchants, EUR 45,250.00, timing: asap", actor: "paystrax" },
+        { action: "login", detail: "User ops@fybrus.com signed in from 192.168.1.100", actor: "ops" },
+        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS001", detail: "CSV upload: 5 merchants, EUR 45,250.00, timing: asap", actor: "ops" },
         { action: "batch_funded", entityType: "batch", entityRef: "BATCH-PS001", detail: "FIAT transfer of €45,250.00 EUR received and confirmed", actor: "legend" },
         { action: "batch_converted", entityType: "batch", entityRef: "BATCH-PS001", detail: "Converted €45,250.00 → 48,870.00 USDC at rate 1.0800", actor: "legend" },
         { action: "batch_sent", entityType: "batch", entityRef: "BATCH-PS001", detail: "5 on-chain payouts dispatched to merchant wallets", actor: "legend" },
         { action: "payout_confirmed", entityType: "payout", entityRef: "BATCH-PS001", detail: "5/5 payouts confirmed on-chain", actor: "system" },
         { action: "batch_completed", entityType: "batch", entityRef: "BATCH-PS001", detail: "Batch fully settled. All 5 merchants received USDC.", actor: "system" },
-        { action: "report_exported", detail: "Settlement report exported (CSV) — 12 payout records", actor: "paystrax" },
-        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS002", detail: "CSV upload: 4 merchants, USD 32,100.00, timing: asap", actor: "paystrax" },
+        { action: "report_exported", detail: "Settlement report exported (CSV) — 12 payout records", actor: "ops" },
+        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS002", detail: "CSV upload: 4 merchants, USD 32,100.00, timing: asap", actor: "ops" },
         { action: "batch_funded", entityType: "batch", entityRef: "BATCH-PS002", detail: "FIAT transfer of $32,100.00 USD received and confirmed", actor: "legend" },
         { action: "batch_converted", entityType: "batch", entityRef: "BATCH-PS002", detail: "Converted $32,100.00 → 34,668.00 USDC at rate 1.0800", actor: "legend" },
         { action: "batch_sent", entityType: "batch", entityRef: "BATCH-PS002", detail: "4 on-chain payouts dispatched. 1/4 confirmed so far.", actor: "legend" },
-        { action: "merchant_registered", entityType: "merchant", entityRef: "EuroLogistics GmbH", detail: "Wallet 0x78731D...cabaB registered", actor: "paystrax" },
-        { action: "merchant_registered", entityType: "merchant", entityRef: "SafeGuard Insurance", detail: "Wallet 0x17F6AD...c372 registered", actor: "paystrax" },
-        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS003", detail: "Manual entry: 3 merchants, AUD 18,900.00, timing: scheduled (29 Mar 2026)", actor: "paystrax" },
-        { action: "login", detail: "User paystrax@legend.ie signed in from 10.0.0.45", actor: "paystrax" },
+        { action: "merchant_registered", entityType: "merchant", entityRef: "EuroLogistics GmbH", detail: "Wallet 0x78731D...cabaB registered", actor: "ops" },
+        { action: "merchant_registered", entityType: "merchant", entityRef: "SafeGuard Insurance", detail: "Wallet 0x17F6AD...c372 registered", actor: "ops" },
+        { action: "batch_created", entityType: "batch", entityRef: "BATCH-PS003", detail: "Manual entry: 3 merchants, AUD 18,900.00, timing: scheduled (29 Mar 2026)", actor: "ops" },
+        { action: "login", detail: "User ops@fybrus.com signed in from 10.0.0.45", actor: "ops" },
       ];
 
       // Insert with staggered timestamps

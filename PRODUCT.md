@@ -1,6 +1,6 @@
-# Paystrax Payouts — Product Document
+# Fybrus Payouts — Product Document
 
-**Live demo:** https://paystrax-demo-v3.vercel.app · demo sign-ins: `julijavi@paystrax.com` / `vaivani@paystrax.com` (password `demo123`)
+**Live demo:** https://paystrax-demo-v3.vercel.app · demo sign-ins: `julijavi@fybrus.com` / `vaivani@fybrus.com` (password `demo123`)
 **Status:** high-fidelity working prototype · pre-MVP · pre-revenue · TRL 4 · no live funds have ever moved
 **Last updated:** 10 July 2026
 
@@ -8,7 +8,7 @@
 
 ## 1. What it is
 
-Paystrax Payouts is a **fiat-to-stablecoin merchant payout platform**. An acquirer/PSP (Paystrax) owes its merchants settlement money; instead of slow, expensive cross-border bank transfers, the platform collects that fiat once (EUR/USD/AUD), converts it to USDC at the live ECB reference rate, and pays every merchant's wallet in a single supervised batch — with bank-grade controls: dual approval, sanctions screening, travel-rule compliance, full audit trail, and money-trail reconciliation.
+Fybrus Payouts is a **fiat-to-stablecoin merchant payout platform**. A client acquirer/PSP owes its merchants settlement money; instead of slow, expensive cross-border bank transfers, the platform collects that fiat once (EUR/USD/AUD), converts it to USDC at the live ECB reference rate, and pays every merchant's wallet in a single supervised batch — with bank-grade controls: dual approval, sanctions screening, travel-rule compliance, full audit trail, and money-trail reconciliation.
 
 **Who uses it:** the acquirer's finance/ops team (creating and approving batches) and its compliance function (audit, screening, exceptions). Merchants are beneficiaries, not users.
 
@@ -37,7 +37,7 @@ Awaiting Funding → Funded → Converting → Sending → Completed
 
 ### Compliance model
 
-- **KYC = reliance.** Underlying-merchant KYC is performed on a separate system by the relying party (Paystrax as acquirer). This platform records the attestation only: relying party, case reference, date — shown as a "Relied · Paystrax" chip per merchant.
+- **KYC = reliance.** Underlying-merchant KYC is performed on a separate system by the relying party (the client acquirer). This platform records the attestation only: relying party, case reference, date — shown as a "Relied · Acquirer" chip per merchant.
 - **Wallet screening = our obligation.** Screened at registration *and* re-screened at every dispatch. Registration via batch upload gets the same screening as manual registration.
 - **Travel rule (EU TFR / FATF R.16) = our obligation** (confirmed). IVMS-shaped payload transmitted before settlement on every payout, no de-minimis; the transmitted snapshot + reference is stored per payout and shown in the batch detail.
 - **Audit trail** — every action (logins, batch events, rates + sources, blocks with reasons, retries, exports) is logged and exportable as CSV.
@@ -121,7 +121,7 @@ The gap to MVP is **partner onboarding, not code**. Engineering is ~8–10 weeks
 
 ## 9. Demo guide (5 minutes)
 
-1. Sign in as **Julija** (`julijavi@paystrax.com` / `demo123`).
+1. Sign in as **Julija** (`julijavi@fybrus.com` / `demo123`).
 2. **Manual Entry** → pick a registered merchant (autocomplete fills the wallet) → note the fee line → create.
 3. Try to approve it — blocked (own batch). Sign out, sign in as **Vaiva**, approve.
 4. Open the batch → **"Demo: Simulate incoming settlement"** — with auto-processing on it runs straight through: fee → live ECB rate → screening → travel rule → confirmed, each step in the Audit trail.
