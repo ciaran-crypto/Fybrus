@@ -101,8 +101,8 @@ SCREENING_MODE=mock                   # → live when a screening partner is wir
 SCREENING_API_KEY=                    # screening partner key
 TRAVEL_RULE_MODE=mock                 # → live when a travel-rule network is wired
 TRAVEL_RULE_API_KEY=                  # travel-rule partner key
-TRAVEL_RULE_ORIGINATOR=               # originator legal name (default: the acquirer (originating PSP))
-TRAVEL_RULE_ORIGINATOR_REF=           # originator account ref (default: PSX-MASTER-EUR)
+TRAVEL_RULE_ORIGINATOR=               # originator legal name (default: Fybrus (originating PSP))
+TRAVEL_RULE_ORIGINATOR_REF=           # originator account ref (default: FYB-MASTER-EUR)
 TRAVEL_RULE_ORIGINATOR_COUNTRY=       # ISO country (default: LT)
 # (outbound BC also needs the mTLS client cert + OAuth client id/secret)
 ```

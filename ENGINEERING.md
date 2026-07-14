@@ -44,8 +44,8 @@ This duplication is the single biggest source of defects in the project's histor
 ## 2. Local setup
 
 ```bash
-git clone <repo-url> paystrax-payouts
-cd paystrax-payouts
+git clone <repo-url> fybrus-payouts
+cd fybrus-payouts
 npm install
 ```
 
@@ -105,7 +105,7 @@ Six tables (`shared/schema.ts`). All money is `decimal` — **never floats**. Fi
 | walletAddress | text | destination USDC wallet (`0x` + 40 hex) |
 | email | text | optional |
 | status | text | `active` \| `disabled` |
-| kycReliedOn | text | who performed KYC (reliance model) — default "the acquirer (acquirer)" |
+| kycReliedOn | text | who performed KYC (reliance model) — default "Acquirer of record" |
 | kycRef | text | case ref on the relying party's system |
 | kycAttestedAt | timestamp | when reliance was recorded |
 | walletScreenStatus | text | `unscreened` \| `clear` \| `flagged` |
